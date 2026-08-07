@@ -45,8 +45,7 @@ class NotificationService {
 
   static async sendEmail(email, subject, htmlBody) {
     if (!email) return;
-    const fs = require('fs');
-    fs.appendFileSync('email_log.txt', `[${new Date().toISOString()}] Attempting to send to ${email}\n`);
+    console.log(`[${new Date().toISOString()}] Attempting to send to ${email}`);
     
     try {
       const transporter = await this.getTransporter();
@@ -56,9 +55,9 @@ class NotificationService {
         subject: subject,
         html: htmlBody,
       });
-      fs.appendFileSync('email_log.txt', `[${new Date().toISOString()}] Success: ${info.messageId}\n`);
+      console.log(`[${new Date().toISOString()}] Email Success: ${info.messageId}`);
     } catch (err) {
-      fs.appendFileSync('email_log.txt', `[${new Date().toISOString()}] Error: ${err.message}\n`);
+      console.error(`[${new Date().toISOString()}] Email Error: ${err.message}`);
       throw err;
     }
   }
