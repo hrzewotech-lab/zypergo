@@ -1,0 +1,43 @@
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import AdminLayout from '../pages/admin/AdminLayout';
+import LiveMapPage from '../pages/admin/LiveMapPage';
+import RiderManagementPage from '../pages/admin/RiderManagementPage';
+import AdminDashboard from './admin/AdminDashboard';
+import BookingManagement from './admin/BookingManagement';
+import PlatformConfig from './admin/PlatformConfig';
+import MarketingBroadcast from './admin/MarketingBroadcast';
+import HubManagement from './admin/HubManagement';
+import DispatchRouting from './admin/DispatchRouting';
+import FinancePricing from './admin/FinancePricing';
+import SupportTickets from './admin/SupportTickets';
+import Reports from './admin/Reports';
+import LoginScreen from '../components/Auth/LoginScreen';
+
+function AdminApp() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
+  
+  if (!isAuthenticated) {
+    return <LoginScreen role="SuperAdmin" onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="bookings" element={<BookingManagement />} />
+        <Route path="hubs" element={<HubManagement />} />
+        <Route path="dispatch" element={<DispatchRouting />} />
+        <Route path="rider-management" element={<RiderManagementPage />} />
+        <Route path="live-map" element={<LiveMapPage />} />
+        <Route path="finance" element={<FinancePricing />} />
+        <Route path="support" element={<SupportTickets />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="marketing" element={<MarketingBroadcast />} />
+        <Route path="settings" element={<PlatformConfig />} />
+      </Route>
+    </Routes>
+  );
+}
+
+export default AdminApp;

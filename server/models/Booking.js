@@ -1,0 +1,119 @@
+const mongoose = require('mongoose');
+
+const bookingSchema = new mongoose.Schema({
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false // Mocking auth, so this can be optional for now
+  },
+  pickupLocation: {
+    address: { type: String, required: true },
+    pincode: { type: String, required: true },
+    lat: { type: Number },
+    lng: { type: Number }
+  },
+  dropLocation: {
+    address: { type: String, required: true },
+    pincode: { type: String, required: true },
+    lat: { type: Number },
+    lng: { type: Number }
+  },
+  receiver: {
+    name: { type: String, required: true },
+    phone: { type: String, required: true }
+  },
+  packageDetails: {
+    category: { type: String, required: true, enum: ['Document', 'Clothes', 'Fertilizers', 'Books', 'Electronics', 'Medicine', 'Fragile Item', 'Commercial Package', 'General Parcel'] },
+    weight: { type: Number, required: true }, // in kg
+    dimensions: {
+      length: { type: Number }, // in cm
+      width: { type: Number },
+      height: { type: Number }
+    },
+    value: { type: Number, required: true },
+    description: { type: String },
+    fragile: { type: Boolean, default: false },
+    prohibitedDeclared: { type: Boolean, required: true }
+  },
+  photos: {
+    parcelUrl: { type: String },
+    senderUrl: { type: String },
+    billUrl: { type: String }
+  },
+  scheduling: {
+    type: { type: String, enum: ['Now', 'Later'], default: 'Now' },
+    date: { type: Date },
+    timeSlot: { type: String }
+  },
+  preferences: {
+    speed: { type: String, enum: ['Standard', 'Express'], default: 'Standard' },
+    handlingNotes: { type: String }
+  },
+  payment: {
+    mode: { type: String, enum: ['UPI', 'Card', 'NetBanking', 'Wallet', 'Cash'], required: true },
+    status: { type: String, enum: ['Pending', 'Completed', 'Failed', 'Refunded'], default: 'Pending' },
+    payer: { type: String, enum: ['Sender', 'Receiver'], required: true }
+  },
+  pricing: {
+    base: { type: Number, default: 0 },
+    distance: { type: Number, default: 0 },
+    weight: { type: Number, default: 0 },
+    volumetric: { type: Number, default: 0 },
+    total: { type: Number, default: 0 }
+  },
+  metadata: {
+    intracity: { type: Boolean, default: true },
+    vehicleType: { type: String, enum: ['Bike', 'Auto/Three-Wheeler', 'Mini Truck', 'Heavy Vehicle'] },
+    sourceHub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
+    destinationHub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
+    assignedPartner: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    deliveryType: { type: String, enum: ['Local Direct', 'Intercity Hub-and-Spoke'] }
+  },
+  assignedRaiders: [{
+    raiderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    assignedAt: { type: Date, default: Date.now },
+    status: { type: String, enum: ['Active', 'Handed Over'], default: 'Active' }
+  }],
+  transhipmentLogs: [{
+    fromRaider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    toRaider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    location: { lat: Number, lng: Number },
+    timestamp: { type: Date, default: Date.now },
+    status: { type: String, default: 'Transhipment Complete' }
+  }],
+  status: {
+    type: String,
+    enum: [
+      'Pending', 'Booking Confirmed', 'Rider Assigned', 'Rider On the Way', 
+      'Picked Up', 'Source Hub Received', 'Sorted', 'Partner Handover', 
+      'In Transit', 'Destination Hub Received', 'Out for Delivery', 
+      'Delivered', 'Delayed', 'Failed', 'Returned', 'Cancelled'
+    ],
+    default: 'Pending'
+  },
+  trackingId: { type: String, unique: true },
+  eta: { type: String },
+  proofOfDelivery: {
+    otp: { type: String },
+    signatureUrl: { type: String },
+    gpsLocation: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
+    timestamp: { type: Date }
+  },
+  rating: {
+    pickupRider: { type: Number, min: 1, max: 5 },
+    deliveryRider: { type: Number, min: 1, max: 5 },
+    overall: { type: Number, min: 1, max: 5 },
+    feedback: { type: String }
+  },
+  trackingHistory: [{
+    status: String,
+    timestamp: { type: Date, default: Date.now },
+    location: String,
+    description: String
+  }]
+}, { timestamps: true });
+
+module.exports = mongoose.model('Booking', bookingSchema);
