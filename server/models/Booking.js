@@ -110,9 +110,15 @@ const bookingSchema = new mongoose.Schema({
   },
   trackingHistory: [{
     status: String,
+    scanType: { type: String },
     timestamp: { type: Date, default: Date.now },
     location: String,
-    description: String
+    description: String,
+    scannedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    hubId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
+    deviceId: { type: String },
+    gps: { lat: Number, lng: Number },
+    parcelCondition: { type: String, default: 'Good' }
   }]
 }, { timestamps: true });
 

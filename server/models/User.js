@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   role: {
     type: String,
-    enum: ['Customer', 'Raider', 'SuperAdmin', 'OperationsStaff', 'HubStaff'],
+    enum: ['Customer', 'Raider', 'SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'PartnerManager', 'FinanceManager', 'SupportExecutive', 'Auditor'],
     required: true,
     default: 'Customer'
   },

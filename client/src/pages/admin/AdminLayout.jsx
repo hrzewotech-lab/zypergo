@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Map, Users, Menu, X, Home, Package, Truck, Network, FileText, Settings, DollarSign, LifeBuoy, Bell, Search, Megaphone } from 'lucide-react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Map, Users, Menu, X, Home, Package, Truck, Network, FileText, Settings, DollarSign, LifeBuoy, Bell, Search, Megaphone, Scan, ShieldBan, RotateCcw, AlertCircle, Banknote } from 'lucide-react';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -14,19 +14,36 @@ export default function AdminLayout() {
     }
   }, []);
 
-  const menuItems = [
-    { name: 'Control Tower', path: '/', icon: <Home size={18} /> },
-    { name: 'Bookings', path: '/bookings', icon: <Package size={18} /> },
-    { name: 'Hub Management', path: '/hubs', icon: <Network size={18} /> },
-    { name: 'Dispatch & Routing', path: '/dispatch', icon: <Truck size={18} /> },
-    { name: 'Rider Management', path: '/rider-management', icon: <Users size={18} /> },
-    { name: 'Live Map', path: '/live-map', icon: <Map size={18} /> },
-    { name: 'Finance & Pricing', path: '/finance', icon: <DollarSign size={18} /> },
-    { name: 'Support Tickets', path: '/support', icon: <LifeBuoy size={18} /> },
-    { name: 'Reports', path: '/reports', icon: <FileText size={18} /> },
-    { name: 'Marketing', path: '/marketing', icon: <Megaphone size={18} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={18} /> }
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('zypergo_token');
+    localStorage.removeItem('zypergo_user');
+    navigate('/login', { replace: true });
+    // Force a full reload to clear all states
+    window.location.reload();
+  };
+
+  const allMenuItems = [
+    { name: 'Control Tower', path: '/', icon: <Home size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager', 'FinanceManager'] },
+    { name: 'Bookings', path: '/bookings', icon: <Package size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'SupportExecutive', 'Auditor'] },
+    { name: 'Hub Management', path: '/hubs', icon: <Network size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager'] },
+    { name: 'Scanning & Manifests', path: '/scanning', icon: <Scan size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'] },
+    { name: 'Dispatch & Routing', path: '/dispatch', icon: <Truck size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'DispatchManager'] },
+    { name: 'Rider Management', path: '/rider-management', icon: <Users size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'] },
+    { name: 'Live Map', path: '/live-map', icon: <Map size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'] },
+    { name: 'Finance & Pricing', path: '/finance', icon: <DollarSign size={18} />, roles: ['SuperAdmin', 'FinanceManager', 'Auditor'] },
+    { name: 'Ledgers & Settlements', path: '/settlements', icon: <Banknote size={18} />, roles: ['SuperAdmin', 'FinanceManager', 'HubManager', 'Auditor'] },
+    { name: 'Serviceability Engine', path: '/serviceability', icon: <ShieldBan size={18} />, roles: ['SuperAdmin', 'OperationsAdmin'] },
+    { name: 'NDR & Exceptions', path: '/ndr', icon: <AlertCircle size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'SupportExecutive', 'HubManager'] },
+    { name: 'Reverse Logistics', path: '/returns', icon: <RotateCcw size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'] },
+    { name: 'Support Tickets', path: '/support', icon: <LifeBuoy size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'SupportExecutive'] },
+    { name: 'Reports', path: '/reports', icon: <FileText size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'FinanceManager', 'HubManager', 'Auditor'] },
+    { name: 'Marketing', path: '/marketing', icon: <Megaphone size={18} />, roles: ['SuperAdmin', 'PartnerManager'] },
+    { name: 'Settings', path: '/settings', icon: <Settings size={18} />, roles: ['SuperAdmin'] }
   ];
+
+  const menuItems = allMenuItems.filter(item => item.roles.includes(user.role) || user.role === 'SuperAdmin');
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans flex text-slate-800">
@@ -35,7 +52,7 @@ export default function AdminLayout() {
         <div className="p-6 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded bg-[#FFB703] text-slate-900 flex items-center justify-center font-black">Z</div>
-            <span className="text-xl font-bold text-white tracking-wide">ZyperGo<span className="text-[#006D77]">Admin</span></span>
+            <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-10" />
           </div>
           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X size={24} />
@@ -76,8 +93,11 @@ export default function AdminLayout() {
             })}
           </nav>
         </div>
-        <div className="p-4 border-t border-slate-800 text-xs text-center text-slate-500">
-          ZyperGo Operations v2.0
+        <div className="p-4 border-t border-slate-800 flex justify-between items-center">
+          <span className="text-xs text-slate-500">ZyperGo v2.0</span>
+          <button onClick={handleLogout} className="text-xs text-red-400 font-bold hover:text-red-300 transition-colors">
+            Logout
+          </button>
         </div>
       </div>
 
@@ -106,6 +126,9 @@ export default function AdminLayout() {
             <button className="text-slate-500 hover:text-slate-900 relative p-2 bg-slate-100 rounded-full">
               <Bell size={18} />
               <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-slate-100 rounded-full"></span>
+            </button>
+            <button onClick={handleLogout} className="hidden md:flex items-center gap-2 text-sm font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-100">
+              Logout
             </button>
           </div>
         </header>

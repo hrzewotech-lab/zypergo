@@ -17,9 +17,8 @@ export default function Navbar() {
     <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
       <div className="container mx-auto px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-12">
-          <Link to="/" className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg">Z</div>
-            ZYPERGO
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-10" />
           </Link>
           <nav className="hidden md:flex gap-8 text-sm font-semibold text-slate-600">
             {['Home', 'About', 'Features', 'Contact'].map(item => (

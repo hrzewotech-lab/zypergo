@@ -57,7 +57,10 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, phone, role, otp } = req.body;
 
-    const user = await User.findOne({ $or: [{ email }, { phone }], role });
+    // Support multiple roles for Hub Portal login
+    const hubRoles = ['HubManager', 'HubOperator'];
+    const roleQuery = hubRoles.includes(role) ? { role: { $in: hubRoles } } : { role };
+    const user = await User.findOne({ $or: [{ email }, { phone }], ...roleQuery });
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
@@ -108,10 +111,13 @@ exports.loginWithPassword = async (req, res) => {
     if (isEmail) query.email = identifier;
     else query.phone = identifier.replace(/\D/g, '');
 
-    const user = await User.findOne(query);
+    // Support multiple roles for Hub Portal login
+    const hubRoles = ['HubManager', 'HubOperator'];
+    const roleQuery = hubRoles.includes(role) ? { role: { $in: hubRoles } } : { role };
+    const user = await User.findOne({ ...query, ...roleQuery });
     
     if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
+      return res.status(404).json({ success: false, error: 'User not found. Please check your credentials.' });
     }
 
     if (!user.password) {

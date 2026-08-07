@@ -47,6 +47,33 @@ app.use('/api/partner', partnerRoutes);
 const hubRoutes = require('./routes/hubRoutes');
 app.use('/api/hub', hubRoutes);
 
+const scanRoutes = require('./routes/scanRoutes');
+app.use('/api/scan', scanRoutes);
+
+const manifestRoutes = require('./routes/manifestRoutes');
+app.use('/api/manifest', manifestRoutes);
+
+const dispatchRoutes = require('./routes/dispatchRoutes');
+app.use('/api/dispatch', dispatchRoutes);
+
+const pricingRoutes = require('./routes/pricingRoutes');
+app.use('/api/pricing', pricingRoutes);
+
+const serviceabilityRoutes = require('./routes/serviceabilityRoutes');
+app.use('/api/serviceability', serviceabilityRoutes);
+
+const returnRoutes = require('./routes/returnRoutes');
+app.use('/api/returns', returnRoutes);
+
+const ndrRoutes = require('./routes/ndrRoutes');
+app.use('/api/ndr', ndrRoutes);
+
+const financeRoutes = require('./routes/financeRoutes');
+app.use('/api/finance-settlements', financeRoutes);
+
+const analyticsRoutes = require('./routes/analyticsRoutes');
+app.use('/api/analytics', analyticsRoutes);
+
 const addressRoutes = require('./routes/addressRoutes');
 app.use('/api/addresses', addressRoutes);
 
