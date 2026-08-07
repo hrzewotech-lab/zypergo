@@ -10,7 +10,7 @@ import AboutPage from '../pages/public/AboutPage';
 import FeaturesPage from '../pages/public/FeaturesPage';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
-import DashboardNavbar from '../components/DashboardNavbar';
+import Navbar from '../components/public/Navbar';
 
 // New Pages
 import HowItWorksPage from '../pages/public/HowItWorksPage';
@@ -18,7 +18,6 @@ import IntracityDeliveryPage from '../pages/public/IntracityDeliveryPage';
 import IntercityDeliveryPage from '../pages/public/IntercityDeliveryPage';
 import ServiceableCitiesPage from '../pages/public/ServiceableCitiesPage';
 import CityLandingPage from '../pages/public/CityLandingPage';
-import BookParcelPage from '../pages/public/BookParcelPage';
 import PartnerEnquiryPage from '../pages/public/PartnerEnquiryPage';
 import RiderEnquiryPage from '../pages/public/RiderEnquiryPage';
 import BusinessEnquiryPage from '../pages/public/BusinessEnquiryPage';
@@ -40,7 +39,7 @@ function PortalLayout({ children }) {
   return (
     <div className="min-h-screen bg-[#f8f9fa] font-sans flex flex-col relative">
       {/* Top Navigation */}
-      <DashboardNavbar showSearch={showSearch} />
+      <Navbar />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col w-full mx-auto">
@@ -63,7 +62,6 @@ function PortalLayout({ children }) {
           <div>
             <h3 className="text-white font-bold mb-6 text-sm uppercase">Services</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/book" className="hover:text-white transition">Book Parcel</Link></li>
               <li><Link to="/track" className="hover:text-white transition">Track Shipment</Link></li>
               <li><Link to="/calculate" className="hover:text-white transition">Rate Calculator</Link></li>
               <li><Link to="/intracity-delivery" className="hover:text-white transition">Intracity Delivery</Link></li>
@@ -111,11 +109,11 @@ export default function PortalApp() {
       <Routes>
         {/* Core Features */}
         <Route path="/" element={<Home />} />
-        <Route path="/book" element={<BookParcelPage />} />
+
         <Route path="/track" element={<TrackShipment />} />
         <Route path="/track/:id" element={<TrackShipment />} />
         <Route path="/calculate" element={<RateCalculator />} />
-        
+
         {/* Services & Info */}
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/intracity-delivery" element={<IntracityDeliveryPage />} />
@@ -125,7 +123,7 @@ export default function PortalApp() {
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/faq" element={<FAQPage />} />
-        
+
         {/* Company & Enquiries */}
         <Route path="/about" element={<AboutPage />} />
         <Route path="/features" element={<FeaturesPage />} />
@@ -133,11 +131,11 @@ export default function PortalApp() {
         <Route path="/partner" element={<PartnerEnquiryPage />} />
         <Route path="/rider" element={<RiderEnquiryPage />} />
         <Route path="/business" element={<BusinessEnquiryPage />} />
-        
+
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        
+
         {/* Legal */}
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />

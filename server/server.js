@@ -14,35 +14,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database Connection
-let isConnected = false;
-
-const connectToDatabase = async () => {
-  if (isConnected) {
-    return;
-  }
-  
-  try {
-    const db = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/zypergo', {
-      serverSelectionTimeoutMS: 5000,
-    });
-    isConnected = db.connections[0].readyState === 1;
-    console.log('Connected to MongoDB');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-};
-
-// Apply database connection middleware
-app.use(async (req, res, next) => {
-  try {
-    await connectToDatabase();
-    next();
-  } catch (error) {
-    console.error('Failed to connect to database in middleware:', error);
-    res.status(500).json({ error: 'Database connection failed' });
-  }
-});
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/zypergo', {
+  serverSelectionTimeoutMS: 5000,
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch((error) => console.error('MongoDB connection error:', error));
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -82,8 +58,17 @@ app.use('/api/blogs', blogRoutes);
 
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+  });
+  
+  server.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Please kill the process using this port or change the PORT in .env`);
+      process.exit(1);
+    } else {
+      console.error('Server error:', e);
+    }
   });
 }
 

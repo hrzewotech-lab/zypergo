@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import AdminLayout from '../pages/admin/AdminLayout';
 import LiveMapPage from '../pages/admin/LiveMapPage';
 import RiderManagementPage from '../pages/admin/RiderManagementPage';
@@ -16,9 +16,15 @@ import LoginScreen from '../components/Auth/LoginScreen';
 
 function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
+  const navigate = useNavigate();
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    navigate('/', { replace: true });
+  };
   
   if (!isAuthenticated) {
-    return <LoginScreen role="SuperAdmin" onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <LoginScreen role="SuperAdmin" onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
@@ -36,6 +42,7 @@ function AdminApp() {
         <Route path="marketing" element={<MarketingBroadcast />} />
         <Route path="settings" element={<PlatformConfig />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

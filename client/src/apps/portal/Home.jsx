@@ -2,6 +2,8 @@ import React from 'react';
 import { Search, Truck, Zap, Check, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import Features3D from '../../components/public/Features3D';
+import VehicleScrollTrack from '../../components/public/VehicleScrollTrack';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -150,6 +152,12 @@ export default function Home() {
           
         </div>
       </section>
+
+      {/* 3D Features Section */}
+      <Features3D />
+
+      {/* Vehicle Scroll Track Section */}
+      <VehicleScrollTrack />
 
       {/* Streamlined Logistics Pipeline */}
       <section className="py-32 bg-white relative overflow-hidden">

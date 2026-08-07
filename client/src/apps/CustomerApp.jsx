@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import CustomerDashboard from './customer/CustomerDashboard';
 import BookingFlow from './customer/BookingFlow';
 import MyShipments from './customer/MyShipments';
@@ -7,6 +7,7 @@ import SupportCenter from './customer/SupportCenter';
 import TrackingTimeline from './customer/TrackingTimeline';
 import AddressBook from './customer/AddressBook';
 import LoginScreen from '../components/Auth/LoginScreen';
+import SignupScreen from '../components/Auth/SignupScreen';
 import { Search, Bell, Settings } from 'lucide-react';
 
 function CustomerLayout() {
@@ -24,7 +25,7 @@ function CustomerLayout() {
   const handleLogout = () => {
     localStorage.removeItem('zypergo_token');
     localStorage.removeItem('zypergo_user');
-    window.location.reload();
+    window.location.href = '/login';
   };
 
   const navItems = [
@@ -99,9 +100,21 @@ function CustomerLayout() {
 
 export default function CustomerApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
+  const navigate = useNavigate();
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    navigate('/', { replace: true });
+  };
   
   if (!isAuthenticated) {
-    return <LoginScreen role="Customer" onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginScreen role="Customer" onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/signup" element={<SignupScreen role="Customer" onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="*" element={<LoginScreen role="Customer" onLoginSuccess={handleLoginSuccess} />} />
+      </Routes>
+    );
   }
 
   return (
@@ -114,6 +127,7 @@ export default function CustomerApp() {
         <Route path="support" element={<SupportCenter />} />
         <Route path="booking" element={<BookingFlow />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

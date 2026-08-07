@@ -179,6 +179,12 @@ export default function LoginScreen({ role, onLoginSuccess }) {
             </p>
           </form>
         )}
+
+        <div className="mt-8 text-center border-t border-slate-100 pt-6">
+          <p className="text-sm text-slate-500">
+            Don't have an account? <a href="/signup" className="font-bold text-[#006D77] hover:underline">Sign up</a>
+          </p>
+        </div>
       </div>
     </div>
   );
