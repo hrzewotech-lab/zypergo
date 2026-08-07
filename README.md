@@ -57,22 +57,33 @@ npm run dev
 ```
 Open `http://localhost:5173` in your browser.
 
-## 🌍 Vercel Deployment & Subdomains
+## 🌍 Vercel Deployment (Two Projects)
 
-This project is configured to deploy effortlessly on Vercel as a single project.
+This project is configured using Vercel's officially recommended approach for monorepos. You will create **two separate projects** in your Vercel dashboard, both connected to this single GitHub repository.
 
-### Deployment Steps
-1. Push this complete folder to a GitHub repository.
-2. In Vercel, import the repository.
-3. Keep the **Framework Preset** as `Vite` or `Other`.
-4. Leave the **Root Directory** as `/` (the root of the repo).
-5. Deploy. Vercel will automatically read the `vercel.json` file, build the `client`, and deploy the `server/server.js` as a serverless function.
+### Project 1: Frontend (React/Vite)
+1. Go to Vercel and **Add New Project**.
+2. Select your `zypergo` GitHub repository.
+3. Set the **Root Directory** to `client`.
+4. Vercel will automatically detect Vite. Leave the build settings as default.
+5. In the **Environment Variables** section, add:
+   - `VITE_API_URL`: Set this to the URL of your backend (e.g., `https://zypergo-api.vercel.app/api`).
+6. Deploy!
+
+### Project 2: Backend (Node.js/Express)
+1. Go back to Vercel and **Add New Project**.
+2. Select the *same* `zypergo` GitHub repository.
+3. Set the **Root Directory** to `server`.
+4. Leave the Framework Preset as `Other`.
+5. Vercel will automatically use the `vercel.json` located inside the `server` folder to build your API as a serverless function.
+6. In the **Environment Variables** section, add your MongoDB URI, JWT Secret, Cloudinary keys, etc.
+7. Deploy!
 
 ### Subdomain Routing
-ZyperGo uses client-side host parsing (`window.location.hostname`) to serve different experiences based on the URL.
+ZyperGo uses client-side host parsing (`window.location.hostname`) to serve different experiences based on the URL (Admin, Partner, Raider, etc.).
 
-To enable this in production:
-1. Go to your project settings in Vercel.
+To enable this on the frontend:
+1. Go to your **Frontend Project Settings** in Vercel.
 2. Navigate to **Domains**.
 3. Add your base domain (e.g., `zypergo.com`).
 4. Add your subdomains or a wildcard domain (e.g., `*.zypergo.com`).
