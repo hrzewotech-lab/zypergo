@@ -48,10 +48,11 @@ export default function LoginPage() {
   const handleRoleSelect = (roleId) => {
     const currentHost = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
-    const baseDomain = currentHost.replace(/^(admin\.|customer\.|raider\.|hamali\.|partner\.|hub\.)/, '');
+    const baseDomain = currentHost.replace(/^(admin[.-]|customer[.-]|raider[.-]|hamali[.-]|partner[.-]|hub[.-])/, '');
     
-    // Redirect to subdomain login
-    window.location.assign(`http://${roleId}.${baseDomain}${port}/login`);
+    // Redirect to subdomain login (using hyphen for Vercel support)
+    const protocol = window.location.protocol;
+    window.location.assign(`${protocol}//${roleId}-${baseDomain}${port}/login`);
   };
 
   return (

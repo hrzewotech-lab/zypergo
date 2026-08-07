@@ -58,8 +58,8 @@ export default function Navbar() {
              <Link key={item} to={item === 'Home' ? '/' : `/${item.toLowerCase()}`} className="font-semibold text-slate-700 p-2 hover:bg-slate-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>{item}</Link>
           ))}
           <div className="h-px w-full bg-slate-100 my-2"></div>
-          <Link to="/login" className="font-bold text-center p-3 text-slate-900 border border-slate-200 rounded-lg">Log In</Link>
-          <Link to="/signup" className="font-bold text-center p-3 bg-blue-600 text-white rounded-lg shadow-md">Sign Up</Link>
+          <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="font-bold text-center p-3 text-slate-900 border border-slate-200 rounded-lg">Log In</Link>
+          <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="font-bold text-center p-3 bg-blue-600 text-white rounded-lg shadow-md">Sign Up</Link>
         </div>
       )}
     </header>
