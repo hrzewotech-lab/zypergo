@@ -25,13 +25,13 @@ function AppRouter() {
 
   const subdomain = useMemo(() => {
     const hostname = window.location.hostname;
-    // Check if the hostname starts with any of our subdomains
-    if (hostname.startsWith('admin.')) return 'admin';
-    if (hostname.startsWith('customer.')) return 'customer';
-    if (hostname.startsWith('raider.')) return 'raider';
-    if (hostname.startsWith('hamali.')) return 'hamali';
-    if (hostname.startsWith('partner.')) return 'partner';
-    if (hostname.startsWith('hub.')) return 'hub';
+    // Check if the hostname starts with any of our subdomains or Vercel hyphenated prefixes
+    if (hostname.startsWith('admin.') || hostname.startsWith('admin-')) return 'admin';
+    if (hostname.startsWith('customer.') || hostname.startsWith('customer-')) return 'customer';
+    if (hostname.startsWith('raider.') || hostname.startsWith('raider-')) return 'raider';
+    if (hostname.startsWith('hamali.') || hostname.startsWith('hamali-')) return 'hamali';
+    if (hostname.startsWith('partner.') || hostname.startsWith('partner-')) return 'partner';
+    if (hostname.startsWith('hub.') || hostname.startsWith('hub-')) return 'hub';
     return 'portal'; // Default for www, localhost without subdomain, or any other domain
   }, []);
 
