@@ -13,6 +13,9 @@ router.get('/dashboard-stats', authorize('SuperAdmin', 'OperationsAdmin', 'Finan
 // Bookings
 router.get('/bookings', authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'SupportExecutive', 'Auditor'), adminController.getAllBookings);
 router.put('/bookings/:id', authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager', 'SupportExecutive'), logAction('Booking'), adminController.updateBookingAdmin);
+router.put('/bookings/:id/assign-raider', authorize('SuperAdmin', 'OperationsAdmin', 'DispatchManager', 'HubManager'), logAction('Booking'), adminController.assignRaider);
+router.put('/bookings/:id/transit-log', authorize('SuperAdmin', 'OperationsAdmin', 'DispatchManager', 'HubManager'), logAction('Booking'), adminController.logTransit);
+router.get('/raiders/available', authorize('SuperAdmin', 'OperationsAdmin', 'DispatchManager', 'HubManager'), adminController.getAvailableRaiders);
 
 // Partners
 router.get('/partners', authorize('SuperAdmin', 'OperationsAdmin', 'PartnerManager', 'FinanceManager'), adminController.getPartners);
@@ -23,5 +26,9 @@ router.post('/users', authorize('SuperAdmin'), logAction('User'), adminControlle
 
 // Broadcast
 router.post('/broadcast', authorize('SuperAdmin', 'OperationsAdmin'), logAction('Broadcast'), adminController.sendBroadcast);
+
+// Raider Approvals
+router.get('/raiders', authorize('SuperAdmin', 'OperationsAdmin'), adminController.getRaiders);
+router.put('/raiders/:id/approve', authorize('SuperAdmin', 'OperationsAdmin'), adminController.approveRaider);
 
 module.exports = router;

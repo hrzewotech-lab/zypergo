@@ -81,6 +81,14 @@ const bookingSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now },
     status: { type: String, default: 'Transhipment Complete' }
   }],
+  intercityTransitLog: [{
+    carrierName: String,
+    vehicleNumber: String,
+    dispatchTime: Date,
+    arrivalTime: Date,
+    loggedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    timestamp: { type: Date, default: Date.now }
+  }],
   status: {
     type: String,
     enum: [

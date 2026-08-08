@@ -15,26 +15,39 @@ import SupportTickets from './admin/SupportTickets';
 import ServiceabilityEngine from './admin/ServiceabilityEngine';
 import NdrExceptions from './admin/NdrExceptions';
 import ReverseLogistics from './admin/ReverseLogistics';
-import Reports from './admin/Reports';
+import AnalyticsDashboard from '../pages/admin/analytics/AnalyticsDashboard';
 import LoginScreen from '../components/Auth/LoginScreen';
 import ScanningManifest from './admin/ScanningManifest';
+import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
 
 function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
   const navigate = useNavigate();
 
+  const handleClearAuth = () => {
+    localStorage.removeItem('zypergo_token');
+    localStorage.removeItem('zypergo_user');
+    setIsAuthenticated(false);
+  };
+
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     navigate('/', { replace: true });
   };
-  
-  if (!isAuthenticated) {
-    return <LoginScreen role="SuperAdmin" onLoginSuccess={handleLoginSuccess} />;
-  }
 
   return (
     <Routes>
-      <Route path="/" element={<AdminLayout />}>
+      <Route path="/login" element={
+        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+          <LoginScreen role="SuperAdmin" onLoginSuccess={handleLoginSuccess} />
+        </PublicRoute>
+      } />
+      
+      <Route path="/" element={
+        <ProtectedRoute isAuthenticated={isAuthenticated}>
+          <AdminLayout />
+        </ProtectedRoute>
+      }>
         <Route index element={<AdminDashboard />} />
         <Route path="bookings" element={<BookingManagement />} />
         <Route path="hubs" element={<HubManagement />} />
@@ -48,11 +61,12 @@ function AdminApp() {
         <Route path="ndr" element={<NdrExceptions />} />
         <Route path="returns" element={<ReverseLogistics />} />
         <Route path="support" element={<SupportTickets />} />
-        <Route path="reports" element={<Reports />} />
+        <Route path="reports" element={<AnalyticsDashboard />} />
         <Route path="marketing" element={<MarketingBroadcast />} />
         <Route path="settings" element={<PlatformConfig />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
     </Routes>
   );
 }

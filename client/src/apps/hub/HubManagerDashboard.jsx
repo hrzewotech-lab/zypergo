@@ -194,13 +194,12 @@ export default function HubManagerDashboard() {
   return (
     <div className="min-h-screen bg-slate-100 font-sans flex flex-col">
       {/* TOP HEADER */}
-      <header className="bg-[#0F172A] text-white px-4 md:px-6 h-14 flex items-center justify-between shrink-0 shadow-lg z-40">
+      <header className="bg-white text-slate-900 px-4 md:px-6 h-14 flex items-center justify-between shrink-0 shadow-sm border-b border-slate-200 z-40">
         <div className="flex items-center gap-3">
-          <button className="md:hidden text-slate-400 hover:text-white mr-1" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <button className="md:hidden text-slate-500 hover:text-slate-900 mr-1" onClick={() => setSidebarOpen(!sidebarOpen)}>
             <Menu size={22} />
           </button>
-          <div className="w-7 h-7 rounded bg-[#FFB703] text-slate-900 flex items-center justify-center font-black text-sm">Z</div>
-          <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-8" />
+          <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8" />
         </div>
 
         {/* Hub Selector (center) */}
@@ -210,7 +209,7 @@ export default function HubManagerDashboard() {
             <select
               value={selectedHub?._id || ''}
               onChange={e => setSelectedHub(hubs.find(h => h._id === e.target.value))}
-              className="bg-slate-800 text-white text-sm font-medium px-3 py-1 rounded-lg border border-slate-700 outline-none"
+              className="bg-slate-100 text-slate-800 text-sm font-bold px-3 py-1 rounded-lg border border-slate-200 outline-none focus:border-[#006D77]"
             >
               {hubs.map(h => <option key={h._id} value={h._id}>{h.name} ({h.hubType})</option>)}
             </select>
@@ -220,20 +219,20 @@ export default function HubManagerDashboard() {
         <div className="flex items-center gap-3">
           {unscannedAlerts.length > 0 && (
             <button onClick={() => setActivePage('scan')} className="relative">
-              <Bell size={20} className="text-slate-400 hover:text-white" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center">{unscannedAlerts.length}</span>
+              <Bell size={20} className="text-slate-500 hover:text-slate-900" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">{unscannedAlerts.length}</span>
             </button>
           )}
           <div className="hidden md:flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[#006D77] flex items-center justify-center text-xs font-bold">
+            <div className="w-7 h-7 rounded-full bg-[#006D77] flex items-center justify-center text-xs font-bold text-white">
               {user.name.substring(0, 2).toUpperCase()}
             </div>
             <div className="text-right">
-              <div className="text-xs font-bold text-white">{user.name}</div>
-              <div className="text-[10px] text-slate-400">{user.role}</div>
+              <div className="text-xs font-bold text-slate-900">{user.name}</div>
+              <div className="text-[10px] text-slate-500">{user.role}</div>
             </div>
           </div>
-          <button onClick={handleLogout} className="text-slate-400 hover:text-red-400 transition p-1.5 rounded-lg hover:bg-red-500/10">
+          <button onClick={handleLogout} className="text-slate-500 hover:text-red-600 transition p-1.5 rounded-lg hover:bg-red-50">
             <LogOut size={18} />
           </button>
         </div>
@@ -242,16 +241,16 @@ export default function HubManagerDashboard() {
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR */}
         <aside className={`
-          fixed md:relative inset-y-0 left-0 z-30 w-56 bg-[#0F172A] flex flex-col pt-14 md:pt-0 transform transition-transform duration-300
+          fixed md:relative inset-y-0 left-0 z-30 w-56 bg-white border-r border-slate-200 flex flex-col pt-14 md:pt-0 transform transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
           <div className="p-3 flex-1 overflow-y-auto">
             {/* Hub info card */}
             {selectedHub && (
-              <div className="bg-slate-800/60 rounded-xl p-3 mb-4 border border-slate-700">
+              <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-200">
                 <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">Active Hub</div>
-                <div className="text-white font-bold text-sm truncate">{selectedHub.name}</div>
-                <div className="text-xs text-[#006D77] font-medium">{selectedHub.hubType} Hub</div>
+                <div className="text-slate-900 font-bold text-sm truncate">{selectedHub.name}</div>
+                <div className="text-xs text-[#006D77] font-bold">{selectedHub.hubType} Hub</div>
               </div>
             )}
 
@@ -260,10 +259,10 @@ export default function HubManagerDashboard() {
                 <button
                   key={item.id}
                   onClick={() => { setActivePage(item.id); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     activePage === item.id
-                      ? 'bg-[#006D77] text-white shadow-lg shadow-[#006D77]/20'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      ? 'bg-[#006D77]/10 text-[#006D77]'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   <item.icon size={18} />
@@ -272,8 +271,8 @@ export default function HubManagerDashboard() {
               ))}
             </nav>
           </div>
-          <div className="p-3 border-t border-slate-800">
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition">
+          <div className="p-3 border-t border-slate-200">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:text-red-600 hover:bg-red-50 transition">
               <LogOut size={18} /> Sign Out
             </button>
           </div>

@@ -53,7 +53,7 @@ function PortalLayout({ children }) {
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-12" />
+              <img src="/images/logo.png" alt="ZyperGo Logo" className="h-12" />
             </Link>
             <p className="text-sm max-w-xs text-slate-400 leading-relaxed mb-4">
               Industrial reliability meets modern efficiency. Connect with us for all your logistics needs.

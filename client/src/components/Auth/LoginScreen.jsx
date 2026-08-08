@@ -93,9 +93,7 @@ export default function LoginScreen({ role, onLoginSuccess }) {
       <div className="bg-white max-w-md w-full rounded-3xl shadow-xl p-8 border border-slate-100">
         
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-[#FFB703] rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-sm">
-            <span className="text-3xl font-black text-[#0F172A]">Z</span>
-          </div>
+          <img src="/images/logo.png" alt="ZyperGo Logo" className="h-16 mx-auto mb-4" />
           <h1 className="text-2xl font-black text-slate-900">ZyperGo {role}</h1>
           <p className="text-slate-500 mt-2">Log in to your account</p>
         </div>

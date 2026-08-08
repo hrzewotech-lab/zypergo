@@ -46,27 +46,26 @@ export default function AdminLayout() {
   const menuItems = allMenuItems.filter(item => item.roles.includes(user.role) || user.role === 'SuperAdmin');
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans flex text-slate-800">
+    <div className="h-screen overflow-hidden bg-slate-100 font-sans flex text-slate-800">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 z-50 w-64 bg-[#0F172A] text-slate-300 transition-transform duration-300 ease-in-out flex flex-col shrink-0`}>
-        <div className="p-6 flex items-center justify-between border-b border-slate-800">
+      <div className={`fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 z-50 w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200 text-slate-700 transition-transform duration-300 ease-in-out flex flex-col shrink-0 shadow-xl md:shadow-none`}>
+        <div className="p-6 flex items-center justify-between border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-[#FFB703] text-slate-900 flex items-center justify-center font-black">Z</div>
-            <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-10" />
+            <img src="/images/logo.png" alt="ZyperGo Logo" className="h-10" />
           </div>
           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X size={24} />
           </button>
         </div>
 
-        <div className="px-6 py-4 border-b border-slate-800 mb-2">
+        <div className="px-6 py-4 border-b border-slate-200 mb-2 bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <span className="text-[#006D77] font-bold text-sm uppercase">{user.name.substring(0, 2)}</span>
+            <div className="w-10 h-10 bg-[#006D77] rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm uppercase">{user.name.substring(0, 2)}</span>
             </div>
             <div className="overflow-hidden">
-              <p className="font-semibold text-sm text-white truncate">{user.name}</p>
-              <p className="text-xs text-[#FFB703] font-medium truncate">{user.role}</p>
+              <p className="font-bold text-sm text-slate-900 truncate">{user.name}</p>
+              <p className="text-xs text-[#006D77] font-medium truncate">{user.role}</p>
             </div>
           </div>
         </div>
@@ -81,10 +80,10 @@ export default function AdminLayout() {
                   key={item.name} 
                   to={item.path} 
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-bold text-sm transition-all ${
                     isActive 
-                      ? 'bg-[#006D77]/20 text-[#00BCD4]' 
-                      : 'hover:bg-slate-800 hover:text-white'
+                      ? 'bg-[#006D77]/10 text-[#006D77] border-l-4 border-[#006D77]' 
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   {item.icon} {item.name}
@@ -93,9 +92,9 @@ export default function AdminLayout() {
             })}
           </nav>
         </div>
-        <div className="p-4 border-t border-slate-800 flex justify-between items-center">
-          <span className="text-xs text-slate-500">ZyperGo v2.0</span>
-          <button onClick={handleLogout} className="text-xs text-red-400 font-bold hover:text-red-300 transition-colors">
+        <div className="p-4 border-t border-slate-200 flex justify-between items-center">
+          <span className="text-xs text-slate-500 font-medium">ZyperGo v2.0</span>
+          <button onClick={handleLogout} className="text-xs text-red-600 font-bold hover:text-red-500 transition-colors">
             Logout
           </button>
         </div>
@@ -104,7 +103,7 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10 shrink-0">
+        <header className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between z-20 shrink-0 sticky top-0">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(true)} className="md:hidden text-slate-600">
               <Menu size={24} />

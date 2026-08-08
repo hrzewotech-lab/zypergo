@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Partner = require('../models/Partner');
 const User = require('../models/User');
+const NotificationService = require('../services/notificationService');
 
 // --- Dashboard KPIs ---
 exports.getDashboardStats = async (req, res) => {
@@ -82,9 +83,28 @@ exports.getDashboardStats = async (req, res) => {
 // --- Booking Management ---
 exports.getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
+    const { status, search, deliveryType, startDate, endDate } = req.query;
+    let filter = {};
+    if (status && status !== 'All') filter.status = status;
+    if (deliveryType) filter['metadata.deliveryType'] = deliveryType;
+    if (startDate && endDate) {
+      filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      filter.$or = [
+        { trackingId: regex },
+        { 'receiver.name': regex },
+        { 'receiver.phone': regex },
+        { 'pickupLocation.pincode': regex },
+        { 'dropLocation.pincode': regex }
+      ];
+    }
+    const bookings = await Booking.find(filter)
       .populate('metadata.sourceHub', 'name')
       .populate('metadata.assignedPartner', 'companyName')
+      .populate('sender', 'name phone')
+      .populate('assignedRaiders.raiderId', 'name phone')
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: bookings });
   } catch (error) {
@@ -110,6 +130,63 @@ exports.updateBookingAdmin = async (req, res) => {
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update booking' });
+  }
+};
+
+exports.assignRaider = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { raiderId } = req.body;
+    const booking = await Booking.findById(id);
+    if (!booking) return res.status(404).json({ success: false, error: 'Booking not found' });
+
+    booking.assignedRaiders.push({ raiderId, status: 'Active' });
+    booking.status = 'Rider Assigned';
+    booking.trackingHistory.push({
+      status: 'Rider Assigned',
+      description: 'Admin manually assigned a Raider.',
+      scannedBy: req.user?._id
+    });
+    
+    await booking.save();
+    res.status(200).json({ success: true, data: booking });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to assign raider' });
+  }
+};
+
+exports.logTransit = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { carrierName, vehicleNumber, dispatchTime, arrivalTime } = req.body;
+    const booking = await Booking.findById(id);
+    if (!booking) return res.status(404).json({ success: false, error: 'Booking not found' });
+
+    booking.intercityTransitLog.push({
+      carrierName, vehicleNumber, dispatchTime, arrivalTime, loggedBy: req.user?._id
+    });
+    
+    if (dispatchTime) {
+      booking.status = 'In Transit';
+      booking.trackingHistory.push({
+        status: 'In Transit',
+        description: `Dispatched via ${carrierName} (${vehicleNumber})`
+      });
+    }
+
+    await booking.save();
+    res.status(200).json({ success: true, data: booking });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to log transit details' });
+  }
+};
+
+exports.getAvailableRaiders = async (req, res) => {
+  try {
+    const raiders = await User.find({ role: 'Raider', 'raiderDetails.isOnline': true }).select('name phone raiderDetails');
+    res.status(200).json({ success: true, data: raiders });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch raiders' });
   }
 };
 
@@ -172,5 +249,45 @@ exports.createUser = async (req, res) => {
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ success: false, error: 'Failed to create user' });
+  }
+};
+
+exports.approveRaider = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user || user.role !== 'Raider') {
+      return res.status(404).json({ success: false, error: 'Raider not found' });
+    }
+
+    user.raiderDetails.approvalStatus = 'Approved';
+    
+    // Generate secure random 8 character password
+    const generatedPassword = Math.random().toString(36).slice(-8);
+    user.password = generatedPassword; // Pre-save hook will hash it
+
+    await user.save();
+
+    if (user.email) {
+       await NotificationService.sendEmail(
+         user.email,
+         'You are approved! Welcome to ZyperGo Raiders',
+         `<p>Hello ${user.name},</p><p>Your raider application has been <b>approved</b> by the admin.</p><p>You can now log in to the Raider App using your email address and your generated password:</p><p style="font-size: 24px; font-weight: bold; background: #f1f5f9; padding: 10px; display: inline-block;">${generatedPassword}</p><p>Please change this password after your first login.</p>`
+       );
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    console.error('Error approving raider:', error);
+    res.status(500).json({ success: false, error: 'Failed to approve raider' });
+  }
+};
+
+exports.getRaiders = async (req, res) => {
+  try {
+    const raiders = await User.find({ role: 'Raider' }).select('-password');
+    res.status(200).json({ success: true, data: raiders });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch raiders' });
   }
 };

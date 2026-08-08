@@ -13,7 +13,7 @@ const ticketSchema = new mongoose.Schema({
   },
   issueType: {
     type: String,
-    enum: ['Pickup Issue', 'Delivery Delay', 'Damaged Parcel', 'Lost Parcel', 'Payment Issue', 'Refund', 'Wrong Address', 'Return Request', 'Other'],
+    enum: ['Pickup Issue', 'Delivery Delay', 'Damaged Parcel', 'Lost Parcel', 'Payment Issue', 'Refund', 'Wrong Address', 'Return Request', 'Rider Behavior', 'Partner Delay', 'Other'],
     required: true
   },
   description: {
@@ -25,6 +25,27 @@ const ticketSchema = new mongoose.Schema({
     enum: ['Open', 'In Progress', 'Resolved', 'Closed'],
     default: 'Open'
   },
+  priority: {
+    type: String,
+    enum: ['Low', 'Medium', 'High', 'Critical'],
+    default: 'Medium'
+  },
+  slaTimer: {
+    type: Date
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  internalNotes: [{
+    note: String,
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    timestamp: { type: Date, default: Date.now }
+  }],
+  attachments: [{ type: String }],
   history: [{
     action: String,
     timestamp: { type: Date, default: Date.now },

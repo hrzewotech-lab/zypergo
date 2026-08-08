@@ -4,7 +4,7 @@ const NotificationService = require('../services/notificationService');
 
 exports.sendOtp = async (req, res) => {
   try {
-    const { email, phone, role, name, password } = req.body;
+    const { email, phone, role, name, password, raiderDetails } = req.body;
     
     // We can allow either email or phone for login, but for signup we want both
     if (!email && !phone) return res.status(400).json({ success: false, error: 'Email or phone number is required' });
@@ -30,6 +30,15 @@ exports.sendOtp = async (req, res) => {
     // If user already existed but they passed a new password (e.g. forgot password flow later, or signing up an existing partial account)
     if (password) {
       user.password = password;
+    }
+
+    if (raiderDetails && role === 'Raider') {
+      user.raiderDetails = {
+         ...raiderDetails,
+         approvalStatus: 'Pending',
+         isOnline: false,
+         isOnShift: false
+      };
     }
     
     await user.save();
@@ -149,5 +158,39 @@ exports.loginWithPassword = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Failed to login' });
+  }
+};
+
+exports.raiderApply = async (req, res) => {
+  try {
+    const { name, email, phone, raiderDetails } = req.body;
+    
+    if (!name || !email || !phone || !raiderDetails) {
+      return res.status(400).json({ success: false, error: 'All fields are required' });
+    }
+
+    let user = await User.findOne({ $or: [{ email }, { phone }], role: 'Raider' });
+    if (user) {
+      return res.status(400).json({ success: false, error: 'Raider account with this email/phone already exists' });
+    }
+
+    user = new User({
+      name,
+      email,
+      phone,
+      role: 'Raider',
+      raiderDetails: {
+        ...raiderDetails,
+        approvalStatus: 'Pending',
+        isOnline: false,
+        isOnShift: false
+      }
+    });
+
+    await user.save();
+    res.status(201).json({ success: true, message: 'Application submitted successfully. Waiting for admin approval.' });
+  } catch (error) {
+    console.error('Raider apply error:', error);
+    res.status(500).json({ success: false, error: 'Failed to submit application' });
   }
 };

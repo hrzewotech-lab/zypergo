@@ -7,6 +7,8 @@ router.post('/jobs/:id/accept', raiderController.acceptJob);
 router.post('/jobs/:id/update-status', raiderController.updateJobStatus);
 router.post('/jobs/:id/transhipment', raiderController.handleTranshipment);
 
-router.post('/shift', raiderController.toggleShift);
+router.post('/shift', raiderController.updateShift);
+router.post('/onboard', raiderController.onboardRaider);
+router.get('/me', raiderController.getMe);
 
 module.exports = router;

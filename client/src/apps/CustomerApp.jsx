@@ -8,6 +8,7 @@ import TrackingTimeline from './customer/TrackingTimeline';
 import AddressBook from './customer/AddressBook';
 import LoginScreen from '../components/Auth/LoginScreen';
 import SignupScreen from '../components/Auth/SignupScreen';
+import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
 import { Search, Bell, Settings } from 'lucide-react';
 
 function CustomerLayout() {
@@ -42,7 +43,9 @@ function CustomerLayout() {
         <div className="flex items-center justify-between px-6 py-3">
           {/* Left: Logo & Search */}
           <div className="flex items-center gap-6">
-            <Link to="/" className="text-xl font-bold text-[#006D77] tracking-wider uppercase">ZYPERGO</Link>
+            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-[#006D77] tracking-wider uppercase">
+              <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8" />
+            </Link>
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
@@ -102,24 +105,35 @@ export default function CustomerApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
   const navigate = useNavigate();
 
+  const handleClearAuth = () => {
+    localStorage.removeItem('zypergo_token');
+    localStorage.removeItem('zypergo_user');
+    setIsAuthenticated(false);
+  };
+
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     navigate('/', { replace: true });
   };
-  
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/login" element={<LoginScreen role="Customer" onLoginSuccess={handleLoginSuccess} />} />
-        <Route path="/signup" element={<SignupScreen role="Customer" onLoginSuccess={handleLoginSuccess} />} />
-        <Route path="*" element={<LoginScreen role="Customer" onLoginSuccess={handleLoginSuccess} />} />
-      </Routes>
-    );
-  }
 
   return (
     <Routes>
-      <Route path="/" element={<CustomerLayout />}>
+      <Route path="/login" element={
+        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+          <LoginScreen role="Customer" onLoginSuccess={handleLoginSuccess} />
+        </PublicRoute>
+      } />
+      <Route path="/signup" element={
+        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+          <SignupScreen role="Customer" onLoginSuccess={handleLoginSuccess} />
+        </PublicRoute>
+      } />
+
+      <Route path="/" element={
+        <ProtectedRoute isAuthenticated={isAuthenticated}>
+          <CustomerLayout />
+        </ProtectedRoute>
+      }>
         <Route index element={<CustomerDashboard />} />
         <Route path="shipments" element={<MyShipments />} />
         <Route path="track/:id?" element={<TrackingTimeline />} />
@@ -127,7 +141,8 @@ export default function CustomerApp() {
         <Route path="support" element={<SupportCenter />} />
         <Route path="booking" element={<BookingFlow />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
     </Routes>
   );
 }

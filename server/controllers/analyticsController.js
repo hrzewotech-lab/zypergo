@@ -102,3 +102,59 @@ exports.exportCSV = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to generate export' });
   }
 };
+
+// --- OPERATIONAL REPORTS ---
+exports.getOperationalReports = async (req, res) => {
+  try {
+    const dailyStats = await Booking.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          total: { $sum: 1 },
+          delivered: { $sum: { $cond: [{ $eq: ["$status", "Delivered"] }, 1, 0] } },
+          failed: { $sum: { $cond: [{ $eq: ["$status", "Failed"] }, 1, 0] } },
+          pendingPickups: { $sum: { $cond: [{ $eq: ["$status", "Created"] }, 1, 0] } }
+        }
+      },
+      { $sort: { _id: -1 } },
+      { $limit: 30 }
+    ]);
+
+    const delayedShipments = await Booking.find({
+      status: { $in: ['Created', 'In Transit'] },
+      updatedAt: { $lt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    }).limit(50).select('trackingId status updatedAt');
+
+    res.json({ success: true, data: { dailyStats, delayedShipments } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch Operational Reports' });
+  }
+};
+
+// --- BUSINESS ANALYTICS ---
+exports.getBusinessAnalytics = async (req, res) => {
+  try {
+    const topRoutes = await Booking.aggregate([
+      {
+        $group: {
+          _id: { origin: "$pickupLocation.city", destination: "$dropLocation.city" },
+          count: { $sum: 1 },
+          revenue: { $sum: "$pricing.total" }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const formattedRoutes = topRoutes.map(r => ({
+      name: `${r._id.origin || 'Unknown'} to ${r._id.destination || 'Unknown'}`,
+      bookings: r.count,
+      revenue: r.revenue
+    }));
+
+    res.json({ success: true, data: { topRoutes } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch Business Analytics' });
+  }
+};
+

@@ -54,18 +54,26 @@ exports.updateJobStatus = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    // OTP Verification Mock Logic
-    if (status === 'Picked Up' || status === 'Delivered' || status === 'Source Hub Received' || status === 'Destination Hub Received') {
-      if (!otp || otp.length !== 4) { // Mock validation
-        return res.status(400).json({ success: false, error: 'Invalid OTP. OTP is required for this action.' });
+    // Strict Validations per step
+    if (status === 'Picked Up') {
+      if (!otp || otp !== '1234') { 
+        return res.status(400).json({ success: false, error: 'Valid OTP is mandatory to confirm pickup.' });
       }
       if (!photoUrl) {
-        return res.status(400).json({ success: false, error: 'Photo upload is mandatory for this action.' });
+        return res.status(400).json({ success: false, error: 'Pickup Photo upload is mandatory.' });
       }
-      // For mock, ensure OTP matches
-      if (otp !== '1234') {
-        return res.status(400).json({ success: false, error: 'Invalid OTP' });
+      booking.photos.senderUrl = photoUrl;
+    }
+
+    if (status === 'Delivered') {
+      if (!photoUrl) {
+        return res.status(400).json({ success: false, error: 'Delivery Photo upload is mandatory.' });
       }
+      booking.proofOfDelivery = {
+        signatureUrl: photoUrl,
+        timestamp: new Date(),
+        gpsLocation: gpsLocation
+      };
     }
 
     booking.status = status;
@@ -158,5 +166,71 @@ exports.toggleShift = async (req, res) => {
   } catch (error) {
     console.error('Error toggling shift:', error);
     res.status(500).json({ success: false, error: 'Failed to update status' });
+  }
+};
+
+// --- Onboarding & Profile ---
+exports.onboardRaider = async (req, res) => {
+  try {
+    const { userId, vehicleType, vehicleRegistration, roleFlexibility, address, bankDetails, emergencyContact, documents } = req.body;
+    
+    // In a real app, use req.user._id
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+
+    user.raiderDetails = {
+      ...user.raiderDetails,
+      vehicleType,
+      vehicleRegistration,
+      roleFlexibility,
+      address,
+      bankDetails,
+      emergencyContact,
+      documents,
+      approvalStatus: 'Pending',
+      isOnline: false,
+      isOnShift: false
+    };
+
+    await user.save();
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    console.error('Error in onboarding:', error);
+    res.status(500).json({ success: false, error: 'Failed to process onboarding' });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    // Mock user fetching
+    const { userId } = req.query; 
+    const user = await User.findById(userId).select('-password');
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch profile' });
+  }
+};
+
+exports.updateShift = async (req, res) => {
+  try {
+    const { userId, isOnline, isOnShift, isOnBreak, hubCheckIn } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+
+    if (isOnline !== undefined) user.raiderDetails.isOnline = isOnline;
+    if (isOnShift !== undefined) user.raiderDetails.isOnShift = isOnShift;
+    if (isOnBreak !== undefined) user.raiderDetails.isOnBreak = isOnBreak;
+
+    await user.save();
+    
+    let message = 'Shift updated';
+    if (hubCheckIn) message = 'Checked in at Hub successfully';
+    
+    res.status(200).json({ success: true, data: user, message });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update shift' });
   }
 };

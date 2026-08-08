@@ -8,6 +8,8 @@ const ANALYTICS_ROLES = ['SuperAdmin', 'OperationsAdmin', 'FinanceManager', 'Aud
 
 router.get('/kpis', authorize(...ANALYTICS_ROLES), ac.getDashboardKPIs);
 router.get('/charts/weekly', authorize(...ANALYTICS_ROLES), ac.getWeeklyChartData);
+router.get('/operational', authorize(...ANALYTICS_ROLES), ac.getOperationalReports);
+router.get('/business', authorize(...ANALYTICS_ROLES), ac.getBusinessAnalytics);
 router.get('/export/:type', authorize(...ANALYTICS_ROLES), ac.exportCSV);
 
 module.exports = router;

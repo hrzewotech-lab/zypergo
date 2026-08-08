@@ -77,7 +77,7 @@ export default function LoginPage() {
             <span className="text-slate-700 font-bold tracking-widest uppercase text-sm">Select Portal</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
-            <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-12 mx-auto mb-4" />
+            <img src="/images/logo.png" alt="ZyperGo Logo" className="h-12 mx-auto mb-4" />
           </h1>
           <p className="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto font-medium">
             Choose your role below to access your dedicated workspace.

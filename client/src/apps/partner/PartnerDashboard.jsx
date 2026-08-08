@@ -70,9 +70,8 @@ export default function PartnerDashboard() {
     <div className="min-h-screen bg-slate-50 font-sans">
       <header className="bg-[#1e1e1e] text-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#FFB703] text-[#1e1e1e] flex items-center justify-center font-black">Z</div>
           <div>
-            <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-8" />
+            <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8" />
             <p className="text-[10px] text-slate-400 font-mono">VRL Logistics (HYD Branch)</p>
           </div>
         </div>

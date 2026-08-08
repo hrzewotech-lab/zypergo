@@ -18,7 +18,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-12">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/src/assets/logo.jpeg" alt="ZyperGo Logo" className="h-10" />
+            <img src="/images/logo.png" alt="ZyperGo Logo" className="h-10" />
           </Link>
           <nav className="hidden md:flex gap-8 text-sm font-semibold text-slate-600">
             {['Home', 'About', 'Features', 'Contact'].map(item => (

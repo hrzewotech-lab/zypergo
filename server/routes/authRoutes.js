@@ -5,5 +5,6 @@ const authController = require('../controllers/authController');
 router.post('/send-otp', authController.sendOtp);
 router.post('/verify-otp', authController.verifyOtp);
 router.post('/login-password', authController.loginWithPassword);
+router.post('/raider-apply', authController.raiderApply);
 
 module.exports = router;

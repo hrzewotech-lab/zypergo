@@ -35,12 +35,12 @@ export default function HamaliDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <header className="bg-[#1e1e1e] text-white p-4 shadow-md flex justify-between items-center">
+      <header className="bg-white text-slate-900 p-4 shadow-sm border-b border-slate-200 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#FFB703] text-[#1e1e1e] flex items-center justify-center font-black">Z</div>
+          <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8" />
           <div>
-            <h1 className="font-bold tracking-wide">ZyperGo <span className="text-[#00BCD4]">Hub</span></h1>
-            <p className="text-[10px] text-slate-400 font-mono">Hamali Operations</p>
+            <h1 className="font-bold tracking-wide">ZyperGo <span className="text-[#006D77]">Hub</span></h1>
+            <p className="text-[10px] text-slate-500 font-mono">Hamali Operations</p>
           </div>
         </div>
       </header>
