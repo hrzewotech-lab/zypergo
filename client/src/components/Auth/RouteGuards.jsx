@@ -8,14 +8,9 @@ export function ProtectedRoute({ isAuthenticated, children }) {
   return children ? children : <Outlet />;
 }
 
-export function PublicRoute({ isAuthenticated, onClearAuth, children }) {
-  useEffect(() => {
-    // If a user navigates to a public auth route while logged in,
-    // we assume they want to log out / switch accounts.
-    if (isAuthenticated && onClearAuth) {
-      onClearAuth();
-    }
-  }, [isAuthenticated, onClearAuth]);
-
+export function PublicRoute({ isAuthenticated, children }) {
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
   return children ? children : <Outlet />;
 }
