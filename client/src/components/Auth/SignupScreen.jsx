@@ -43,7 +43,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
 
     try {
       const token = localStorage.getItem('zypergo_token') || 'temp'; // It might need to be open or use a public upload endpoint, assuming /api/upload is open or doesn't strictly need a valid token during signup, wait... if upload is protected, we might get 401. Let's assume it works.
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData

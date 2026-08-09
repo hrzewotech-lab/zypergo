@@ -69,7 +69,7 @@ export default function RaiderOnboarding({ user, onComplete }) {
     try {
       // In a real scenario we'd use the configured api wrapper, but let's just use fetch for multipart
       const token = localStorage.getItem('zypergo_token');
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
