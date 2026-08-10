@@ -6,6 +6,11 @@ const bookingSchema = new mongoose.Schema({
     ref: 'User',
     required: false // Mocking auth, so this can be optional for now
   },
+  senderDetails: {
+    name: { type: String },
+    phone: { type: String },
+    email: { type: String }
+  },
   pickupLocation: {
     address: { type: String, required: true },
     pincode: { type: String, required: true },
@@ -20,7 +25,8 @@ const bookingSchema = new mongoose.Schema({
   },
   receiver: {
     name: { type: String, required: true },
-    phone: { type: String, required: true }
+    phone: { type: String, required: true },
+    email: { type: String }
   },
   packageDetails: {
     category: { type: String, required: true, enum: ['Document', 'Clothes', 'Fertilizers', 'Books', 'Electronics', 'Medicine', 'Fragile Item', 'Commercial Package', 'General Parcel'] },
@@ -93,7 +99,7 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     enum: [
       'Pending', 'Booking Confirmed', 'Rider Assigned', 'Rider On the Way', 
-      'Picked Up', 'Source Hub Received', 'Sorted', 'Partner Handover', 
+      'Arrived at Pickup', 'Picked Up', 'Source Hub Received', 'Sorted', 'Partner Handover', 
       'In Transit', 'Destination Hub Received', 'Out for Delivery', 
       'Delivered', 'Delayed', 'Failed', 'Returned', 'Cancelled'
     ],

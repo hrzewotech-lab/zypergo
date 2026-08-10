@@ -35,6 +35,9 @@ app.use('/api/support', supportRoutes);
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
+
 const raiderRoutes = require('./routes/raiderRoutes');
 app.use('/api/raider', raiderRoutes);
 

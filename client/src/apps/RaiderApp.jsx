@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import RaiderDashboard from './raider/RaiderDashboard';
+import RaiderProfile from './raider/RaiderProfile';
+import RaiderSettings from './raider/RaiderSettings';
 import LoginScreen from '../components/Auth/LoginScreen';
 import SignupScreen from '../components/Auth/SignupScreen';
 import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
@@ -27,7 +29,8 @@ export default function RaiderApp() {
           const userStr = localStorage.getItem('zypergo_user');
           if (userStr) {
              const u = JSON.parse(userStr);
-             const res = await api.get(`/raider/me?userId=${u._id}`);
+             const userId = u.id || u._id;
+             const res = await api.get(`/raider/me?userId=${userId}`);
              if (res.data.success) {
                 setUser(res.data.data);
                 localStorage.setItem('zypergo_user', JSON.stringify(res.data.data));
@@ -68,7 +71,7 @@ export default function RaiderApp() {
       <Route path="/" element={
         <ProtectedRoute isAuthenticated={isAuthenticated}>
           {approvalStatus === 'Approved' ? (
-            <RaiderDashboard user={user} />
+            <RaiderDashboard user={user} onLogout={handleClearAuth} />
           ) : (
             <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
               <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
@@ -83,6 +86,16 @@ export default function RaiderApp() {
               </div>
             </div>
           )}
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute isAuthenticated={isAuthenticated}>
+          <RaiderProfile user={user} />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute isAuthenticated={isAuthenticated}>
+          <RaiderSettings user={user} onLogout={handleClearAuth} />
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />

@@ -1,4 +1,6 @@
 const Booking = require('../models/Booking');
+const RoutingRule = require('../models/RoutingRule');
+const VehicleConfig = require('../models/VehicleConfig');
 
 // Calculate distance based on pincode difference (Mock implementation)
 const calculateMockDistance = (pin1, pin2) => {
@@ -15,26 +17,59 @@ exports.createBooking = async (req, res) => {
     const pickupPin = bookingData.pickupLocation.pincode;
     const dropPin = bookingData.dropLocation.pincode;
     
-    // Admin Allow List check (Mock: reject 000000)
-    if (pickupPin === '000000' || dropPin === '000000') {
-      return res.status(400).json({ success: false, error: 'Service is not available in these postcodes.' });
+    // Check Allow List and Routing Overrides
+    const routingRule = await RoutingRule.findOne({ originPincode: pickupPin, destPincode: dropPin });
+    
+    // If no rule exists or is explicitly not allowed
+    if (!routingRule || !routingRule.isAllowed) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Service is not available between postcodes ${pickupPin} and ${dropPin}.` 
+      });
     }
 
     const distance = calculateMockDistance(pickupPin, dropPin);
 
     // Delivery Type Routing
     let deliveryType = 'Intercity Hub-and-Spoke';
-    if (distance <= 10) deliveryType = 'Local Direct';
-    else if (distance <= 65) deliveryType = 'Local Transshipment';
+    
+    // Apply Admin Override if present
+    if (routingRule.overrideDeliveryType) {
+      deliveryType = routingRule.overrideDeliveryType;
+    } else {
+      // Default Distance Rules
+      if (distance <= 10) deliveryType = 'Local Direct';
+      else if (distance <= 65) deliveryType = 'Local Transshipment';
+    }
     
     const isIntracity = deliveryType !== 'Intercity Hub-and-Spoke';
     
-    // Vehicle Auto-Suggestion based on weight
+    // Vehicle Auto-Suggestion based on Configs
     const actualWeight = bookingData.packageDetails.weight || 0;
+    const volWeight = bookingData.packageDetails.dimensions ? 
+      (bookingData.packageDetails.dimensions.length * bookingData.packageDetails.dimensions.width * bookingData.packageDetails.dimensions.height) / 5000 : 0;
+    
+    // Fallback defaults
     let vehicleType = 'Heavy Vehicle';
-    if (actualWeight < 20) vehicleType = 'Bike';
-    else if (actualWeight < 500) vehicleType = 'Auto/Three-Wheeler';
-    else if (actualWeight < 2000) vehicleType = 'Mini Truck';
+    
+    // Fetch configs sorted by maxWeight ascending to find the smallest suitable vehicle
+    const vehicleConfigs = await VehicleConfig.find({ isActive: true }).sort({ maxWeight: 1 });
+    
+    if (vehicleConfigs.length > 0) {
+      // Find the first vehicle that can handle BOTH actual and volumetric weight (or just use actual)
+      const suitableVehicle = vehicleConfigs.find(v => v.maxWeight >= Math.max(actualWeight, volWeight));
+      if (suitableVehicle) {
+        vehicleType = suitableVehicle.vehicleType;
+      } else {
+        // If it exceeds all, pick the largest (which is the last one in the sorted list)
+        vehicleType = vehicleConfigs[vehicleConfigs.length - 1].vehicleType;
+      }
+    } else {
+      // Hardcoded fallback if DB is empty
+      if (actualWeight < 20) vehicleType = 'Bike';
+      else if (actualWeight < 500) vehicleType = 'Auto/Three-Wheeler';
+      else if (actualWeight < 2000) vehicleType = 'Mini Truck';
+    }
 
     bookingData.metadata = { 
       intracity: isIntracity,
@@ -96,6 +131,11 @@ exports.createBooking = async (req, res) => {
     const booking = new Booking(bookingData);
     await booking.save();
 
+    // Mock Notifications
+    console.log(`[SMS] To Sender (${bookingData.senderDetails?.phone || 'Guest'}): Booking ${trackingId} confirmed.`);
+    console.log(`[PUSH] Booking confirmed. Track here: /track?id=${trackingId}`);
+    console.log(`[SMS] To Receiver (${bookingData.receiver?.phone}): Expect a package! Tracking ID: ${trackingId}`);
+
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
@@ -126,7 +166,16 @@ exports.getMyBookings = async (req, res) => {
 
 exports.getBookingDetails = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const id = req.params.id;
+    let booking;
+    
+    // Check if it's a tracking ID (ZYP...) or an ObjectId
+    if (id.startsWith('ZYP')) {
+      booking = await Booking.findOne({ trackingId: id });
+    } else {
+      booking = await Booking.findById(id);
+    }
+    
     if (!booking) {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
@@ -138,5 +187,52 @@ exports.getBookingDetails = async (req, res) => {
   } catch (error) {
     console.error('Error fetching booking details:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch booking details' });
+  }
+};
+
+exports.cancelBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+    
+    if (!booking) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    if (booking.status === 'Cancelled') {
+      return res.status(400).json({ success: false, error: 'Booking is already cancelled' });
+    }
+
+    // Cancellation logic based on status
+    let penalty = 0;
+    if (booking.status === 'Pending' || booking.status === 'Booking Confirmed') {
+      // Free cancellation
+      penalty = 0;
+    } else if (booking.status === 'Rider Assigned' || booking.status === 'Rider On the Way') {
+      // 20% penalty if a rider is already assigned
+      penalty = booking.pricing?.total ? booking.pricing.total * 0.20 : 0;
+    } else {
+      // No cancellation permitted once picked up
+      return res.status(400).json({ success: false, error: 'Cancellation not permitted at this stage.' });
+    }
+
+    booking.status = 'Cancelled';
+    booking.trackingHistory.push({
+      status: 'Cancelled',
+      location: 'System',
+      description: penalty > 0 ? `Cancelled with penalty of ₹${penalty}` : 'Cancelled by customer'
+    });
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: penalty > 0 ? `Booking cancelled. A cancellation fee of ₹${penalty} applies.` : 'Booking cancelled successfully.',
+      data: booking
+    });
+
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    res.status(500).json({ success: false, error: 'Failed to cancel booking' });
   }
 };

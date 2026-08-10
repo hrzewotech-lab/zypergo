@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Calculator, ArrowRight, IndianRupee } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function RateCalculator() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  
   const [formData, setFormData] = useState({
-    pickupPin: '',
-    dropPin: '',
-    weight: '1',
+    pickupPin: queryParams.get('pickup') || '',
+    dropPin: queryParams.get('drop') || '',
+    weight: queryParams.get('weight') || '1',
     category: 'General'
   });
   const [estimate, setEstimate] = useState(null);

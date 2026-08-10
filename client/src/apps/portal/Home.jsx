@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Truck, Zap, Check, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Features3D from '../../components/public/Features3D';
 import VehicleScrollTrack from '../../components/public/VehicleScrollTrack';
@@ -21,6 +21,18 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [trackingId, setTrackingId] = React.useState('');
+
+  const handleTrackSubmit = (e) => {
+    e.preventDefault();
+    if (trackingId.trim()) {
+      navigate(`/track/${trackingId.trim()}`);
+    } else {
+      navigate('/track');
+    }
+  };
+
   return (
     <div className="flex flex-col w-full bg-[#f8f9fa] font-sans overflow-hidden">
       
@@ -48,19 +60,21 @@ export default function Home() {
               High-performance tracking, unyielding reliability, and transparent pricing. Built for businesses that move fast.
             </motion.p>
             
-            <motion.div variants={fadeUp} className="mt-10 flex bg-white rounded-lg shadow-xl overflow-hidden max-w-lg border border-slate-100 focus-within:ring-4 focus-within:ring-[#006D77]/10 focus-within:border-[#006D77] transition-all">
+            <motion.form onSubmit={handleTrackSubmit} variants={fadeUp} className="mt-10 flex bg-white rounded-lg shadow-xl overflow-hidden max-w-lg border border-slate-100 focus-within:ring-4 focus-within:ring-[#006D77]/10 focus-within:border-[#006D77] transition-all">
               <div className="flex items-center pl-5 pr-3 text-slate-400">
                 <Search size={20} strokeWidth={2.5} />
               </div>
               <input 
                 type="text" 
+                value={trackingId}
+                onChange={(e) => setTrackingId(e.target.value)}
                 placeholder="Enter Tracking ID (e.g. ZYP-84920)" 
-                className="flex-1 py-4 px-2 outline-none text-slate-700 placeholder-slate-400 text-sm font-bold"
+                className="flex-1 py-4 px-2 outline-none text-slate-700 placeholder-slate-400 text-sm font-bold uppercase"
               />
-              <button className="bg-[#006D77] hover:bg-[#00585f] text-white px-8 font-extrabold text-sm transition-colors">
+              <button type="submit" className="bg-[#006D77] hover:bg-[#00585f] text-white px-8 font-extrabold text-sm transition-colors">
                 Track Shipment
               </button>
-            </motion.div>
+            </motion.form>
           </motion.div>
         </div>
       </section>

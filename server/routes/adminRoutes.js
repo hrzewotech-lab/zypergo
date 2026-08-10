@@ -8,14 +8,14 @@ const { logAction } = require('../middleware/auditMiddleware');
 router.use(protect);
 
 // Dashboard - Broad access
-router.get('/dashboard-stats', authorize('SuperAdmin', 'OperationsAdmin', 'FinanceManager', 'HubManager', 'DispatchManager'), adminController.getDashboardStats);
+router.get('/dashboard-stats', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'FinanceManager', 'HubManager', 'DispatchManager'), adminController.getDashboardStats);
 
 // Bookings
-router.get('/bookings', authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'SupportExecutive', 'Auditor'), adminController.getAllBookings);
-router.put('/bookings/:id', authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager', 'SupportExecutive'), logAction('Booking'), adminController.updateBookingAdmin);
-router.put('/bookings/:id/assign-raider', authorize('SuperAdmin', 'OperationsAdmin', 'DispatchManager', 'HubManager'), logAction('Booking'), adminController.assignRaider);
-router.put('/bookings/:id/transit-log', authorize('SuperAdmin', 'OperationsAdmin', 'DispatchManager', 'HubManager'), logAction('Booking'), adminController.logTransit);
-router.get('/raiders/available', authorize('SuperAdmin', 'OperationsAdmin', 'DispatchManager', 'HubManager'), adminController.getAvailableRaiders);
+router.get('/bookings', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'SupportExecutive', 'Auditor', 'Raider'), adminController.getAllBookings);
+router.put('/bookings/:id', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'SupportExecutive', 'Raider'), logAction('Booking'), adminController.updateBookingAdmin);
+router.put('/bookings/:id/assign-raider', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'DispatchManager', 'HubManager', 'Raider'), logAction('Booking'), adminController.assignRaider);
+router.put('/bookings/:id/transit-log', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'DispatchManager', 'HubManager', 'Raider'), logAction('Booking'), adminController.logTransit);
+router.get('/raiders/available', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'DispatchManager', 'HubManager'), adminController.getAvailableRaiders);
 
 // Partners
 router.get('/partners', authorize('SuperAdmin', 'OperationsAdmin', 'PartnerManager', 'FinanceManager'), adminController.getPartners);
@@ -28,7 +28,7 @@ router.post('/users', authorize('SuperAdmin'), logAction('User'), adminControlle
 router.post('/broadcast', authorize('SuperAdmin', 'OperationsAdmin'), logAction('Broadcast'), adminController.sendBroadcast);
 
 // Raider Approvals
-router.get('/raiders', authorize('SuperAdmin', 'OperationsAdmin'), adminController.getRaiders);
-router.put('/raiders/:id/approve', authorize('SuperAdmin', 'OperationsAdmin'), adminController.approveRaider);
+router.get('/raiders', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff'), adminController.getRaiders);
+router.put('/raiders/:id/approve', authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff'), adminController.approveRaider);
 
 module.exports = router;

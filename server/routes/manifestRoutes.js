@@ -9,7 +9,7 @@ router.use(protect);
 // Create manifest
 router.post(
   '/',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager'),
   logAction('Manifest'),
   manifestController.createManifest
 );
@@ -17,28 +17,28 @@ router.post(
 // Get all manifests (with filters)
 router.get(
   '/',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'),
   manifestController.getAllManifests
 );
 
 // Get single manifest (detailed)
 router.get(
   '/:id',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'),
   manifestController.getManifestById
 );
 
 // Get manifest PDF data
 router.get(
   '/:id/pdf',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager'),
   manifestController.getManifestPdfData
 );
 
 // Seal manifest
 router.put(
   '/:id/seal',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager'),
   logAction('Manifest'),
   manifestController.sealManifest
 );
@@ -46,7 +46,7 @@ router.put(
 // Dispatch manifest
 router.put(
   '/:id/dispatch',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager'),
   logAction('Manifest'),
   manifestController.dispatchManifest
 );

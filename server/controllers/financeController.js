@@ -1,6 +1,7 @@
 const Transaction = require('../models/Transaction');
 const Settlement = require('../models/Settlement');
 const Booking = require('../models/Booking');
+const User = require('../models/User');
 
 // --- CUSTOMER TRANSACTIONS ---
 exports.getTransactions = async (req, res) => {
@@ -82,6 +83,11 @@ exports.logDeposit = async (req, res) => {
       mismatchAlert,
       notes,
       processedBy: req.user?.id
+    });
+
+    // Zero out the pending deposit
+    await User.findByIdAndUpdate(riderId, {
+      $inc: { 'raiderDetails.earnings.pendingDeposit': -amount }
     });
 
     res.status(201).json({ success: true, data: settlement });

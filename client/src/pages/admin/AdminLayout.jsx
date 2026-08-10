@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Map, Users, Menu, X, Home, Package, Truck, Network, FileText, Settings, DollarSign, LifeBuoy, Bell, Search, Megaphone, Scan, ShieldBan, RotateCcw, AlertCircle, Banknote } from 'lucide-react';
+import { Map, Users, Menu, X, Home, Package, Truck, Network, FileText, Settings, DollarSign, LifeBuoy, Bell, Search, Megaphone, Scan, ShieldBan, RotateCcw, AlertCircle, Banknote, ChevronDown, User as UserIcon } from 'lucide-react';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const location = useLocation();
   const [user, setUser] = useState({ name: 'Admin', role: 'SuperAdmin' });
+
+  // Handle clicking outside of dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('zypergo_user');
@@ -25,20 +38,20 @@ export default function AdminLayout() {
   };
 
   const allMenuItems = [
-    { name: 'Control Tower', path: '/', icon: <Home size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager', 'FinanceManager'] },
-    { name: 'Bookings', path: '/bookings', icon: <Package size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'SupportExecutive', 'Auditor'] },
+    { name: 'Control Tower', path: '/', icon: <Home size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'] },
+    { name: 'Bookings', path: '/bookings', icon: <Package size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'SupportExecutive', 'Auditor'] },
     { name: 'Hub Management', path: '/hubs', icon: <Network size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager'] },
-    { name: 'Scanning & Manifests', path: '/scanning', icon: <Scan size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'] },
-    { name: 'Dispatch & Routing', path: '/dispatch', icon: <Truck size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'DispatchManager'] },
-    { name: 'Rider Management', path: '/rider-management', icon: <Users size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'] },
-    { name: 'Live Map', path: '/live-map', icon: <Map size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'] },
+    { name: 'Scanning & Manifests', path: '/scanning', icon: <Scan size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor'] },
+    { name: 'Dispatch & Routing', path: '/dispatch', icon: <Truck size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'DispatchManager'] },
+    { name: 'Rider Management', path: '/rider-management', icon: <Users size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager'] },
+    { name: 'Live Map', path: '/live-map', icon: <Map size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager'] },
     { name: 'Finance & Pricing', path: '/finance', icon: <DollarSign size={18} />, roles: ['SuperAdmin', 'FinanceManager', 'Auditor'] },
     { name: 'Ledgers & Settlements', path: '/settlements', icon: <Banknote size={18} />, roles: ['SuperAdmin', 'FinanceManager', 'HubManager', 'Auditor'] },
     { name: 'Serviceability Engine', path: '/serviceability', icon: <ShieldBan size={18} />, roles: ['SuperAdmin', 'OperationsAdmin'] },
     { name: 'NDR & Exceptions', path: '/ndr', icon: <AlertCircle size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'SupportExecutive', 'HubManager'] },
     { name: 'Reverse Logistics', path: '/returns', icon: <RotateCcw size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'] },
     { name: 'Support Tickets', path: '/support', icon: <LifeBuoy size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'SupportExecutive'] },
-    { name: 'Reports', path: '/reports', icon: <FileText size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'FinanceManager', 'HubManager', 'Auditor'] },
+    { name: 'Reports', path: '/reports', icon: <FileText size={18} />, roles: ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'FinanceManager', 'HubManager', 'Auditor'] },
     { name: 'Marketing', path: '/marketing', icon: <Megaphone size={18} />, roles: ['SuperAdmin', 'PartnerManager'] },
     { name: 'Settings', path: '/settings', icon: <Settings size={18} />, roles: ['SuperAdmin'] }
   ];
@@ -103,32 +116,66 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between z-20 shrink-0 sticky top-0">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="md:hidden text-slate-600">
+        <header className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-slate-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between z-20 shrink-0 sticky top-0">
+          <div className="flex items-center gap-3 md:gap-4 flex-1">
+            <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1 text-slate-600 hover:text-slate-900 transition-colors">
               <Menu size={24} />
             </button>
-            <div className="relative hidden md:block">
+            <div className="relative flex-1 max-w-xl">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                 type="text" 
-                placeholder="Search AWBs or Users..." 
-                className="pl-9 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#006D77] outline-none w-64 lg:w-96"
+                placeholder="Search AWBs, Hubs, or Users..." 
+                className="w-full pl-9 pr-4 py-2 bg-slate-100 border border-transparent rounded-lg text-sm focus:bg-white focus:border-[#006D77] focus:ring-2 focus:ring-[#006D77]/20 outline-none transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="bg-[#006D77] text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-[#00585f] transition hidden md:block shadow-sm">
-              + New Booking
-            </button>
-            <button className="text-slate-500 hover:text-slate-900 relative p-2 bg-slate-100 rounded-full">
+          <div className="flex items-center gap-3 md:gap-5 ml-4">
+            <button className="text-slate-500 hover:text-slate-900 relative p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
               <Bell size={18} />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-slate-100 rounded-full"></span>
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
             </button>
-            <button onClick={handleLogout} className="hidden md:flex items-center gap-2 text-sm font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-100">
-              Logout
-            </button>
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2 p-1 pl-2 pr-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full transition-colors"
+              >
+                <div className="w-8 h-8 bg-[#006D77] text-white rounded-full flex items-center justify-center font-bold text-xs uppercase shadow-inner">
+                  {user.name.substring(0, 2)}
+                </div>
+                <ChevronDown size={14} className={`text-slate-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                    <p className="text-xs font-medium text-[#006D77] truncate">{user.role}</p>
+                  </div>
+                  
+                  <div className="py-1">
+                    <Link to="/settings" onClick={() => setProfileDropdownOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#006D77] transition-colors">
+                      <UserIcon size={16} /> My Profile
+                    </Link>
+                    <Link to="/settings" onClick={() => setProfileDropdownOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#006D77] transition-colors">
+                      <Settings size={16} /> Account Settings
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-1 mt-1">
+                    <button 
+                      onClick={handleLogout} 
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 font-bold hover:bg-red-50 transition-colors"
+                    >
+                      Logout Session
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

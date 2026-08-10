@@ -4,7 +4,7 @@ const ac = require('../controllers/analyticsController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.use(protect);
-const ANALYTICS_ROLES = ['SuperAdmin', 'OperationsAdmin', 'FinanceManager', 'Auditor'];
+const ANALYTICS_ROLES = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'FinanceManager', 'Auditor'];
 
 router.get('/kpis', authorize(...ANALYTICS_ROLES), ac.getDashboardKPIs);
 router.get('/charts/weekly', authorize(...ANALYTICS_ROLES), ac.getWeeklyChartData);

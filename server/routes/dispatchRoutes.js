@@ -6,7 +6,7 @@ const { logAction } = require('../middleware/auditMiddleware');
 
 router.use(protect);
 
-const DISPATCH_ROLES = ['SuperAdmin', 'OperationsAdmin', 'DispatchManager'];
+const DISPATCH_ROLES = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'DispatchManager'];
 const VIEW_ROLES = [...DISPATCH_ROLES, 'HubManager', 'Auditor'];
 
 // Pending queues

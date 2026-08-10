@@ -10,7 +10,8 @@ exports.sendOtp = async (req, res) => {
     if (!email && !phone) return res.status(400).json({ success: false, error: 'Email or phone number is required' });
 
     // Use email or phone to find the user
-    let user = await User.findOne({ $or: [{ email }, { phone }], role });
+    const emailRegex = email ? { $regex: new RegExp(`^${email}$`, 'i') } : null;
+    let user = await User.findOne({ $or: [{ email: emailRegex }, { phone }], role });
     
     if (!user) {
       if (name && email && phone) {
@@ -45,10 +46,17 @@ exports.sendOtp = async (req, res) => {
 
     // Send via email if email exists
     if (user.email) {
+      const htmlBody = NotificationService.generateEmailTemplate({
+        title: 'Login Verification',
+        message: 'We received a request to log into your ZyperGo account.',
+        otpCode: generatedOtp,
+        footerNote: 'This code will expire in 10 minutes. If you did not request this, please secure your account.'
+      });
+
       await NotificationService.sendEmail(
         user.email,
-        'Your ZyperGo Verification Code',
-        `<p>Hello ${user.name},</p><p>Your login code is: <b style="font-size:24px;">${generatedOtp}</b></p><p>This code expires in 10 minutes.</p>`
+        'Your ZyperGo Login OTP',
+        htmlBody
       );
     } else {
       // Fallback to SMS if no email (e.g. older accounts)
@@ -66,10 +74,21 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, phone, role, otp } = req.body;
 
-    // Support multiple roles for Hub Portal login
+    // Support multiple roles for Hub Portal login and Admin Portal
+    const adminRoles = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'];
     const hubRoles = ['HubManager', 'HubOperator'];
-    const roleQuery = hubRoles.includes(role) ? { role: { $in: hubRoles } } : { role };
-    const user = await User.findOne({ $or: [{ email }, { phone }], ...roleQuery });
+    
+    let roleQuery = {};
+    if (role === 'SuperAdmin' || role === 'Admin') {
+      roleQuery = { role: { $in: adminRoles } };
+    } else if (hubRoles.includes(role)) {
+      roleQuery = { role: { $in: hubRoles } };
+    } else {
+      roleQuery = { role };
+    }
+    
+    const emailRegex = email ? { $regex: new RegExp(`^${email}$`, 'i') } : null;
+    const user = await User.findOne({ $or: [{ email: emailRegex }, { phone }], ...roleQuery });
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
@@ -117,12 +136,25 @@ exports.loginWithPassword = async (req, res) => {
 
     const isEmail = identifier.includes('@');
     const query = { role };
-    if (isEmail) query.email = identifier;
+    if (isEmail) query.email = { $regex: new RegExp(`^${identifier}$`, 'i') };
     else query.phone = identifier.replace(/\D/g, '');
 
-    // Support multiple roles for Hub Portal login
+    // Support multiple roles for Hub Portal login and Admin Portal
+    const adminRoles = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'];
     const hubRoles = ['HubManager', 'HubOperator'];
-    const roleQuery = hubRoles.includes(role) ? { role: { $in: hubRoles } } : { role };
+    
+    let roleQuery = {};
+    if (role === 'SuperAdmin' || role === 'Admin') {
+      roleQuery = { role: { $in: adminRoles } };
+      delete query.role; // Remove strict role check
+    } else if (hubRoles.includes(role)) {
+      roleQuery = { role: { $in: hubRoles } };
+      delete query.role;
+    } else {
+      roleQuery = { role };
+      delete query.role;
+    }
+    
     const user = await User.findOne({ ...query, ...roleQuery });
     
     if (!user) {

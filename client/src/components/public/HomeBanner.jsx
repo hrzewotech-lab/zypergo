@@ -1,10 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import MotionParticles from './MotionParticles';
 
 export default function HomeBanner() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('book');
+  
+  // Form states
+  const [bookingForm, setBookingForm] = useState({ pickupPin: '', dropPin: '', weight: '' });
+  const [trackingId, setTrackingId] = useState('');
   const containerRef = useRef(null);
   
   const { scrollY } = useScroll();
@@ -36,6 +42,24 @@ export default function HomeBanner() {
   const handleMouseLeave = () => {
     x.set(0);
     y.set(0);
+  };
+
+  const handleGetQuote = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (bookingForm.pickupPin) params.append('pickup', bookingForm.pickupPin);
+    if (bookingForm.dropPin) params.append('drop', bookingForm.dropPin);
+    if (bookingForm.weight) params.append('weight', bookingForm.weight);
+    navigate(`/calculate?${params.toString()}`);
+  };
+
+  const handleTrack = (e) => {
+    e.preventDefault();
+    if (trackingId) {
+      navigate(`/track/${trackingId}`);
+    } else {
+      navigate('/track');
+    }
   };
 
   return (
@@ -134,7 +158,8 @@ export default function HomeBanner() {
             {/* Widget Content */}
             <div className="p-8" style={{ transform: 'translateZ(40px)' }}>
               {activeTab === 'book' && (
-                <motion.div 
+                <motion.form 
+                  onSubmit={handleGetQuote}
                   initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.95 }}
                   animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
                   className="space-y-6"
@@ -144,40 +169,41 @@ export default function HomeBanner() {
                       <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Pickup Pincode</label>
                       <div className="relative group">
                         <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors" />
-                        <input type="text" placeholder="e.g. 500081" className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-sm font-medium transition-all" />
+                        <input type="text" value={bookingForm.pickupPin} onChange={e => setBookingForm({...bookingForm, pickupPin: e.target.value})} placeholder="e.g. 500081" className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-sm font-medium transition-all" />
                       </div>
                     </div>
                     <div className="flex-1">
                       <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Drop Pincode</label>
                       <div className="relative group">
                         <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors" />
-                        <input type="text" placeholder="e.g. 560001" className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-sm font-medium transition-all" />
+                        <input type="text" value={bookingForm.dropPin} onChange={e => setBookingForm({...bookingForm, dropPin: e.target.value})} placeholder="e.g. 560001" className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-sm font-medium transition-all" />
                       </div>
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Approximate Weight (kg)</label>
-                    <input type="text" placeholder="0.5" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-sm font-medium transition-all" />
+                    <input type="number" min="0.1" step="0.1" value={bookingForm.weight} onChange={e => setBookingForm({...bookingForm, weight: e.target.value})} placeholder="0.5" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-sm font-medium transition-all" />
                   </div>
-                  <button className="w-full bg-gradient-to-r from-[#006D77] to-blue-600 text-white font-bold py-4 rounded-xl mt-4 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(0,109,119,0.3)] hover:shadow-[0_10px_40px_rgba(0,109,119,0.5)] transition-all hover:-translate-y-1">
+                  <button type="submit" className="w-full bg-gradient-to-r from-[#006D77] to-blue-600 text-white font-bold py-4 rounded-xl mt-4 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(0,109,119,0.3)] hover:shadow-[0_10px_40px_rgba(0,109,119,0.5)] transition-all hover:-translate-y-1">
                     <ArrowRight size={18} /> Get Instant Quote
                   </button>
-                </motion.div>
+                </motion.form>
               )}
               {activeTab === 'track' && (
-                <motion.div 
+                <motion.form 
+                  onSubmit={handleTrack}
                   initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.95 }}
                   animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
                   className="space-y-6"
                 >
                    <div>
                     <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Tracking ID / AWB</label>
-                    <input type="text" placeholder="e.g. ZYP12345678" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-lg font-mono font-bold uppercase transition-all" />
+                    <input type="text" value={trackingId} onChange={e => setTrackingId(e.target.value)} placeholder="e.g. ZYP12345678" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006D77] focus:bg-white text-slate-800 placeholder-slate-400 outline-none text-lg font-mono font-bold uppercase transition-all" />
                   </div>
-                  <button className="w-full bg-[#0f172a] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                  <button type="submit" className="w-full bg-[#0f172a] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
                     Track Parcel <ArrowRight size={18} />
                   </button>
-                </motion.div>
+                </motion.form>
               )}
             </div>
           </motion.div>

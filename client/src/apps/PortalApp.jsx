@@ -49,54 +49,56 @@ function PortalLayout({ children }) {
       <WhatsAppCTA />
 
       {/* Footer */}
-      <footer className="bg-[#2C2F33] text-slate-400 py-16 mt-auto">
+      <footer className="bg-slate-50 text-slate-600 py-16 mt-auto border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1">
-            <Link to="/" className="inline-block mb-4">
-              <img src="/images/logo.png" alt="ZyperGo Logo" className="h-12" />
+          <div className="col-span-1 pr-4">
+            <Link to="/" className="inline-block mb-6">
+              <img src="/images/logo.png" alt="ZyperGo Logo" className="h-10 opacity-90 hover:opacity-100 transition-opacity" />
             </Link>
-            <p className="text-sm max-w-xs text-slate-400 leading-relaxed mb-4">
-              Industrial reliability meets modern efficiency. Connect with us for all your logistics needs.
+            <p className="text-sm text-slate-500 leading-relaxed mb-6">
+              Industrial reliability meets modern efficiency. Connect with us for all your local and intercity logistics needs.
             </p>
           </div>
           <div>
-            <h3 className="text-white font-bold mb-6 text-sm uppercase">Services</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link to="/track" className="hover:text-white transition">Track Shipment</Link></li>
-              <li><Link to="/calculate" className="hover:text-white transition">Rate Calculator</Link></li>
-              <li><Link to="/intracity-delivery" className="hover:text-white transition">Intracity Delivery</Link></li>
-              <li><Link to="/intercity-delivery" className="hover:text-white transition">Intercity Delivery</Link></li>
+            <h3 className="text-slate-900 font-black mb-6 text-sm uppercase tracking-widest">Services</h3>
+            <ul className="space-y-4 text-sm font-medium">
+              <li><Link to="/track" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Track Shipment</Link></li>
+              <li><Link to="/calculate" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Rate Calculator</Link></li>
+              <li><Link to="/intracity-delivery" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Intracity Delivery</Link></li>
+              <li><Link to="/intercity-delivery" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Intercity Delivery</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-white font-bold mb-6 text-sm uppercase">Company</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link to="/about" className="hover:text-white transition">About Us</Link></li>
-              <li><Link to="/how-it-works" className="hover:text-white transition">How It Works</Link></li>
-              <li><Link to="/cities" className="hover:text-white transition">Serviceable Cities</Link></li>
-              <li><Link to="/blog" className="hover:text-white transition">Blog & Updates</Link></li>
-              <li><Link to="/faq" className="hover:text-white transition">FAQ</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
+            <h3 className="text-slate-900 font-black mb-6 text-sm uppercase tracking-widest">Company</h3>
+            <ul className="space-y-4 text-sm font-medium">
+              <li><Link to="/about" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>About Us</Link></li>
+              <li><Link to="/how-it-works" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>How It Works</Link></li>
+              <li><Link to="/cities" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Serviceable Cities</Link></li>
+              <li><Link to="/blog" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Blog & Updates</Link></li>
+              <li><Link to="/faq" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>FAQ</Link></li>
+              <li><Link to="/contact" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Contact</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-white font-bold mb-6 text-sm uppercase">Partner</h3>
-            <ul className="space-y-3 text-sm mb-6">
-              <li><Link to="/partner" className="hover:text-white transition">Partner With Us</Link></li>
-              <li><Link to="/rider" className="hover:text-white transition">Become a Rider</Link></li>
-              <li><Link to="/business" className="hover:text-white transition">Business Enquiry</Link></li>
+            <h3 className="text-slate-900 font-black mb-6 text-sm uppercase tracking-widest">Partner</h3>
+            <ul className="space-y-4 text-sm font-medium mb-8">
+              <li><Link to="/partner" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Partner With Us</Link></li>
+              <li><Link to="/rider" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Become a Rider</Link></li>
+              <li><Link to="/business" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Business Enquiry</Link></li>
             </ul>
-            <h3 className="text-white font-bold mb-6 text-sm uppercase">Legal</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link to="/terms" className="hover:text-white transition">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
-              <li><Link to="/refund" className="hover:text-white transition">Refund Policy</Link></li>
-              <li><Link to="/prohibited-items" className="hover:text-white transition">Prohibited Items</Link></li>
+            <h3 className="text-slate-900 font-black mb-6 text-sm uppercase tracking-widest">Legal</h3>
+            <ul className="space-y-4 text-sm font-medium">
+              <li><Link to="/terms" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Terms of Service</Link></li>
+              <li><Link to="/privacy" className="hover:text-[#fb5c00] transition-colors flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-slate-700 text-sm text-center">
-          &copy; {new Date().getFullYear()} ZyperGo. All rights reserved.
+        <div className="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center text-sm">
+          <p>&copy; {new Date().getFullYear()} ZyperGo Logistics. All rights reserved.</p>
+          <div className="mt-4 md:mt-0 flex gap-6">
+            <Link to="/refund" className="hover:text-[#fb5c00] transition-colors">Refund Policy</Link>
+            <Link to="/prohibited-items" className="hover:text-[#fb5c00] transition-colors">Prohibited Items</Link>
+          </div>
         </div>
       </footer>
     </div>

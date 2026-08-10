@@ -8,5 +8,6 @@ const bookingController = require('../controllers/bookingController');
 router.post('/', bookingController.createBooking);
 router.get('/my-shipments', bookingController.getMyBookings);
 router.get('/:id', bookingController.getBookingDetails);
+router.post('/:id/cancel', bookingController.cancelBooking);
 
 module.exports = router;

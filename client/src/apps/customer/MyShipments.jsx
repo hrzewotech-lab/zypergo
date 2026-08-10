@@ -1,17 +1,51 @@
-import React, { useState } from 'react';
-import { Truck, CheckCircle2, XCircle, Package, Search, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Truck, CheckCircle2, XCircle, Package, Search, ChevronRight, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../../api';
 
 export default function MyShipments() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [shipments, setShipments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const shipments = [
-    { id: 'ZYP-8924-A', date: 'Oct 24, 2023', origin: 'Shanghai, CN', destination: 'Los Angeles, US', status: 'In Transit', icon: Truck, statusColor: 'bg-[#a7f3d0] text-[#047857]' },
-    { id: 'ZYP-7102-C', date: 'Oct 15, 2023', origin: 'Rotterdam, NL', destination: 'New York, US', status: 'Completed', icon: CheckCircle2, statusColor: 'bg-slate-200 text-slate-700' },
-    { id: 'ZYP-9912-X', date: 'Oct 02, 2023', origin: 'Berlin, DE', destination: 'London, UK', status: 'Cancelled', icon: XCircle, statusColor: 'bg-red-100 text-red-700' },
-    { id: 'ZYP-8933-B', date: 'Oct 26, 2023', origin: 'Tokyo, JP', destination: 'Seattle, US', status: 'Processing', icon: Package, statusColor: 'bg-sky-100 text-sky-700' }
-  ];
+  useEffect(() => {
+    const fetchShipments = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get('/bookings/my-shipments');
+        if (res.data && res.data.success) {
+          setShipments(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch shipments', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShipments();
+  }, []);
+
+  const getStatusIcon = (status) => {
+    if (!status) return Truck;
+    if (status.includes('Cancelled')) return XCircle;
+    if (status.includes('Delivered')) return CheckCircle2;
+    if (status.includes('Pending') || status.includes('Confirmed')) return Package;
+    return Truck;
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return 'bg-slate-100 text-slate-700';
+    if (status.includes('Cancelled')) return 'bg-red-100 text-red-700';
+    if (status.includes('Delivered')) return 'bg-green-100 text-green-700';
+    if (status.includes('Pending') || status.includes('Confirmed')) return 'bg-amber-100 text-amber-700';
+    return 'bg-teal-100 text-teal-700';
+  };
+
+  // Filter shipments based on search term
+  const filteredShipments = shipments.filter(s => 
+    s.trackingId?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="max-w-7xl mx-auto py-4">
@@ -61,41 +95,64 @@ export default function MyShipments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {shipments.map((shipment, i) => (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3 font-medium text-slate-900">
-                      <shipment.icon size={18} className="text-[#00767C]" />
-                      {shipment.id}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600">{shipment.date}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <span>{shipment.origin}</span>
-                      <ChevronRight size={14} className="text-slate-300" />
-                      <span className="font-medium text-slate-900">{shipment.destination}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${shipment.statusColor}`}>
-                      {shipment.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button onClick={() => navigate(`/track/${shipment.id}`)} className="border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 px-4 py-1.5 rounded text-xs font-bold transition-colors">
-                      View Details
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                    <Loader2 className="animate-spin mx-auto mb-2 text-[#00767C]" size={24} />
+                    Loading shipments...
                   </td>
                 </tr>
-              ))}
+              ) : filteredShipments.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500 font-medium">
+                    No shipments found.
+                  </td>
+                </tr>
+              ) : (
+                filteredShipments.map((shipment) => {
+                  const StatusIcon = getStatusIcon(shipment.status);
+                  const statusColor = getStatusColor(shipment.status);
+                  const date = new Date(shipment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  const originStr = shipment.pickupLocation?.city || shipment.pickupLocation?.pincode || 'Origin';
+                  const destStr = shipment.dropLocation?.city || shipment.dropLocation?.pincode || 'Destination';
+
+                  return (
+                    <tr key={shipment._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3 font-medium text-slate-900">
+                          <StatusIcon size={18} className="text-[#00767C]" />
+                          {shipment.trackingId}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">{date}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <span>{originStr}</span>
+                          <ChevronRight size={14} className="text-slate-300" />
+                          <span className="font-medium text-slate-900">{destStr}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}`}>
+                          {shipment.status || 'Unknown'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => navigate(`/track/${shipment.trackingId}`)} className="border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 px-4 py-1.5 rounded text-xs font-bold transition-colors">
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Footer Pagination */}
         <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <div>Showing 1 to 4 of 24 entries</div>
+          <div>Showing 1 to {filteredShipments.length} of {shipments.length} entries</div>
           <div className="flex items-center gap-1">
             <button className="px-3 py-1 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-medium">Prev</button>
             <button className="px-3 py-1 border border-slate-300 rounded bg-slate-50 text-slate-700 font-medium">1</button>

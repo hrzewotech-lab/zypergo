@@ -43,58 +43,19 @@ exports.createHub = async (req, res) => {
 
       await newManager.save();
 
-      // Fire-and-forget email — does NOT block hub creation response
+      // Fire-and-forget email
+      const htmlBody = NotificationService.generateEmailTemplate({
+        title: `Welcome, ${newManager.name}!`,
+        message: `Your Hub Manager account has been created. You can now log in to the ZyperGo Hub Portal to manage your hub operations.<br><br><b>Login Portal:</b> <a href="http://hub.localhost:5173">hub.localhost:5173</a><br><b>Phone Number:</b> ${newManager.phone}<br><b>Password:</b> ${generatedPassword}`,
+        buttonText: 'Login to Hub Portal',
+        buttonUrl: 'http://hub.localhost:5173',
+        footerNote: 'Please change your password after first login. If you did not request this access, contact your administrator.'
+      });
+
       NotificationService.sendEmail(
         contactDetails.email,
         'Welcome to ZyperGo \u2014 Your Hub Manager Access',
-        `<!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"></head>
-          <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;">
-              <tr><td align="center">
-                <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-                  <tr><td style="background:linear-gradient(135deg,#006D77,#00a99d);padding:36px 40px;text-align:center;">
-                    <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;">ZyperGo</h1>
-                    <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Logistics Intelligence Platform</p>
-                  </td></tr>
-                  <tr><td style="padding:40px;">
-                    <h2 style="margin:0 0 8px;color:#0f172a;font-size:20px;font-weight:700;">Welcome, ${newManager.name}!</h2>
-                    <p style="margin:0 0 24px;color:#64748b;font-size:15px;line-height:1.6;">Your Hub Manager account has been created. You can now log in to the ZyperGo Hub Portal to manage your hub operations.</p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:28px;">
-                      <tr><td style="padding:24px;">
-                        <p style="margin:0 0 16px;color:#006D77;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;">Your Login Credentials</p>
-                        <table width="100%" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Login Portal</span></td>
-                            <td align="right" style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><a href="http://hub.localhost:5173" style="color:#006D77;font-size:13px;font-weight:600;text-decoration:none;">hub.localhost:5173</a></td>
-                          </tr>
-                          <tr>
-                            <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Phone Number</span></td>
-                            <td align="right" style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#0f172a;font-size:13px;font-weight:700;font-family:monospace;">${newManager.phone}</span></td>
-                          </tr>
-                          <tr>
-                            <td style="padding:8px 0;"><span style="color:#64748b;font-size:13px;">Password</span></td>
-                            <td align="right" style="padding:8px 0;"><span style="background:#006D77;color:#fff;font-size:15px;font-weight:800;font-family:monospace;padding:4px 12px;border-radius:6px;letter-spacing:1px;">${generatedPassword}</span></td>
-                          </tr>
-                        </table>
-                      </td></tr>
-                    </table>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-                      <tr><td align="center">
-                        <a href="http://hub.localhost:5173" style="background:linear-gradient(135deg,#006D77,#00a99d);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;display:inline-block;">Login to Hub Portal &rarr;</a>
-                      </td></tr>
-                    </table>
-                    <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.6;">Please change your password after first login. If you did not request this access, contact your administrator.</p>
-                  </td></tr>
-                  <tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-                    <p style="margin:0;color:#94a3b8;font-size:12px;">&copy; ${new Date().getFullYear()} ZyperGo Logistics. All rights reserved.</p>
-                  </td></tr>
-                </table>
-              </td></tr>
-            </table>
-          </body>
-          </html>`
+        htmlBody
       ).then(() => {
         console.log(`[Hub Provisioning] Email sent to ${contactDetails.email}`);
       }).catch(err => {

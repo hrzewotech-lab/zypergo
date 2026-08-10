@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
+const ExceptionNDR = require('../models/ExceptionNDR');
 const NotificationService = require('../services/notificationService');
 
 exports.getAvailableJobs = async (req, res) => {
@@ -47,17 +48,40 @@ exports.acceptJob = async (req, res) => {
 exports.updateJobStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, otp, photoUrl, reason, cashCollected, gpsLocation } = req.body;
+    const { status, otp, photoUrl, reason, cashCollected, gpsLocation, parcelCondition, userId } = req.body;
 
-    const booking = await Booking.findById(id);
+    const booking = await Booking.findById(id).populate('sender');
     if (!booking) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
+    // Generate and notify OTP when Raider Arrives at Pickup
+    if (status === 'Arrived at Pickup') {
+      const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      if (!booking.proofOfDelivery) booking.proofOfDelivery = {};
+      booking.proofOfDelivery.otp = generatedOtp;
+      
+      const customerPhone = booking.sender?.phone || booking.senderDetails?.phone || '9999999999';
+      const customerEmail = booking.sender?.email || booking.senderDetails?.email;
+      NotificationService.notifyPickupOTP(customerPhone, customerEmail, generatedOtp, booking.trackingId);
+    }
+
+    // Generate and notify OTP when Raider is Out for Delivery
+    if (status === 'Out for Delivery') {
+      const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      if (!booking.proofOfDelivery) booking.proofOfDelivery = {};
+      booking.proofOfDelivery.otp = generatedOtp;
+      
+      const receiverPhone = booking.receiver?.phone || '8888888888';
+      const receiverEmail = booking.receiver?.email; // Now populated from the form
+      NotificationService.notifyOutForDelivery(booking, receiverPhone, receiverEmail, generatedOtp);
+    }
+
     // Strict Validations per step
     if (status === 'Picked Up') {
-      if (!otp || otp !== '1234') { 
-        return res.status(400).json({ success: false, error: 'Valid OTP is mandatory to confirm pickup.' });
+      const expectedOtp = booking.proofOfDelivery?.otp || '1234';
+      if (!otp || otp !== expectedOtp) { 
+        return res.status(400).json({ success: false, error: `Valid OTP is mandatory (use ${expectedOtp} for testing).` });
       }
       if (!photoUrl) {
         return res.status(400).json({ success: false, error: 'Pickup Photo upload is mandatory.' });
@@ -66,6 +90,10 @@ exports.updateJobStatus = async (req, res) => {
     }
 
     if (status === 'Delivered') {
+      const expectedOtp = booking.proofOfDelivery?.otp || '1234';
+      if (!otp || otp !== expectedOtp) {
+        return res.status(400).json({ success: false, error: `Valid OTP is mandatory (use ${expectedOtp} for testing).` });
+      }
       if (!photoUrl) {
         return res.status(400).json({ success: false, error: 'Delivery Photo upload is mandatory.' });
       }
@@ -81,13 +109,41 @@ exports.updateJobStatus = async (req, res) => {
     let description = reason || `Package marked as ${status}`;
     if (cashCollected) {
         description += ` | Cash Collected: ₹${cashCollected}`;
+        
+        // Add to Rider's pending deposit
+        await User.findByIdAndUpdate(userId, {
+            $inc: {
+                'raiderDetails.earnings.pendingDeposit': Number(cashCollected),
+                'raiderDetails.earnings.cashCollected': Number(cashCollected)
+            }
+        });
     }
 
     booking.trackingHistory.push({
       status,
       description,
-      location: gpsLocation ? `${gpsLocation.lat}, ${gpsLocation.lng}` : undefined
+      location: gpsLocation ? `${gpsLocation.lat}, ${gpsLocation.lng}` : undefined,
+      parcelCondition: parcelCondition || 'Good'
     });
+
+    if (status === 'Failed' || status === 'Cancelled') {
+      const isPickup = booking.status === 'Rider On the Way' || booking.status === 'Rider Assigned';
+      const type = isPickup ? 'Pickup Exception' : 'Delivery NDR';
+      
+      const ndr = new ExceptionNDR({
+        booking: booking._id,
+        type: type,
+        reason: reason || 'Task Failed',
+        status: 'Open',
+        evidence: {
+          photoUrl: photoUrl,
+          gps: gpsLocation,
+          notes: `Raised by Rider via App`
+        },
+        raisedBy: userId
+      });
+      await ndr.save();
+    }
 
     if (status === 'Delivered' || status === 'Source Hub Received') {
       booking.proofOfDelivery = {
@@ -104,13 +160,14 @@ exports.updateJobStatus = async (req, res) => {
     const receiverPhone = booking.receiver?.phone || '8888888888';
 
     if (status === 'Picked Up') NotificationService.notifyPickedUp(booking, customerPhone, receiverPhone);
-    if (status === 'Out for Delivery') NotificationService.notifyOutForDelivery(booking, receiverPhone, '1234');
+    if (status === 'In Transit') NotificationService.notifyInTransit(booking, receiverPhone);
     if (status === 'Delivered') NotificationService.notifyDelivered(booking, customerPhone, receiverPhone);
+    if (status === 'Failed' || status === 'Cancelled') NotificationService.notifyException(booking, '7777777777');
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
     console.error('Error updating job status:', error);
-    res.status(500).json({ success: false, error: 'Failed to update job status' });
+    res.status(500).json({ success: false, error: 'Failed to update job status', details: error.message, stack: error.stack });
   }
 };
 

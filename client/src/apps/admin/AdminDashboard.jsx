@@ -112,24 +112,24 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="font-bold text-slate-900 text-lg mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <button className="bg-[#006D77] hover:bg-[#00585f] text-white p-4 rounded-xl text-sm font-bold shadow-sm transition flex flex-col items-center justify-center gap-2 text-center h-24">
+            <Link to="/bookings" className="bg-[#006D77] hover:bg-[#00585f] text-white p-4 rounded-xl text-sm font-bold shadow-sm transition flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
               <Package size={20} /> Manual Booking
-            </button>
-            <button className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24">
+            </Link>
+            <Link to="/rider-management" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
               <Users size={20} /> Assign Rider
-            </button>
-            <button className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24">
+            </Link>
+            <Link to="/hubs" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
               <Network size={20} /> Assign Partner
-            </button>
-            <button className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24">
+            </Link>
+            <Link to="/scanning" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
               <Truck size={20} /> Create Manifest
-            </button>
-            <button className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24">
+            </Link>
+            <Link to="/finance" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
               <IndianRupee size={20} /> Process Refund
-            </button>
-            <button className="bg-red-50 hover:bg-red-100 text-red-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-red-100 flex flex-col items-center justify-center gap-2 text-center h-24">
+            </Link>
+            <Link to="/support" className="bg-red-50 hover:bg-red-100 text-red-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-red-100 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
               <AlertCircle size={20} /> Raise Escalation
-            </button>
+            </Link>
           </div>
         </div>
 

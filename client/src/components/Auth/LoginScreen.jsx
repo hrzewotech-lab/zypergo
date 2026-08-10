@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Phone, KeyRound, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Phone, KeyRound, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import api from '../../api';
 
 export default function LoginScreen({ role, onLoginSuccess }) {
@@ -10,6 +10,7 @@ export default function LoginScreen({ role, onLoginSuccess }) {
   const [step, setStep] = useState('phone'); // 'phone' or 'otp'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const isEmail = identifier.includes('@');
 
@@ -129,15 +130,22 @@ export default function LoginScreen({ role, onLoginSuccess }) {
               {loginMethod === 'password' && (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Password</label>
-                  <div className="flex items-center relative">
-                    <KeyRound className="absolute left-4 text-slate-400" size={20} />
+                  <div className="flex items-center relative group">
+                    <KeyRound className="absolute left-4 text-slate-400 group-focus-within:text-[#006D77] transition-colors" size={20} />
                     <input 
-                      type="password" 
+                      type={showPassword ? "text" : "password"} 
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-12 pr-4 py-4 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-lg transition-colors"
+                      className="w-full pl-12 pr-12 py-4 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-lg transition-colors bg-white"
                     />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
                 </div>
               )}

@@ -62,13 +62,84 @@ class NotificationService {
     }
   }
 
+  static generateEmailTemplate({ title, message, otpCode = null, buttonText = null, buttonUrl = null, footerNote = null }) {
+    let otpSection = '';
+    if (otpCode) {
+      otpSection = `
+        <div style="border: 2px dashed #fb5c00; background-color: #fffaf7; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
+          <p style="font-size: 12px; color: #64748b; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 10px; margin-top: 0; text-transform: uppercase;">YOUR 6-DIGIT VERIFICATION CODE</p>
+          <div style="font-size: 40px; font-weight: 900; letter-spacing: 8px; color: #0f172a; margin: 0;">${otpCode}</div>
+          <p style="font-size: 13px; color: #64748b; margin-top: 15px; margin-bottom: 0;">Enter this code on the application to proceed.</p>
+        </div>
+      `;
+    }
+
+    let buttonSection = '';
+    if (buttonText && buttonUrl) {
+      buttonSection = `
+        <div style="text-align: center; margin: 35px 0;">
+          <a href="${buttonUrl}" style="background-color: #fb5c00; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">${buttonText}</a>
+        </div>
+      `;
+    }
+
+    let footerHtml = footerNote 
+      ? `<p style="font-size: 13px; color: #64748b; margin-bottom: 25px; line-height: 1.6;">${footerNote}</p>` 
+      : '';
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0; }
+          .header { padding: 30px 40px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; }
+          .logo { font-size: 26px; font-weight: 900; color: #fb5c00; letter-spacing: -0.5px; margin: 0; }
+          .content { padding: 40px; }
+          .title { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 20px; text-align: center; }
+          .message { font-size: 15px; color: #475569; line-height: 1.6; margin: 0; text-align: center; }
+          .footer { background-color: #f8fafc; padding: 20px 40px; text-align: center; border-top: 1px solid #e2e8f0; }
+          .footer-text { font-size: 12px; color: #94a3b8; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 class="logo">ZyperGo Logistics</h1>
+          </div>
+          <div class="content">
+            <h2 class="title">${title}</h2>
+            <div class="message">${message}</div>
+            ${otpSection}
+            ${buttonSection}
+            ${footerHtml}
+          </div>
+          <div class="footer">
+            <p class="footer-text">ZyperGo Logistics &copy; ${new Date().getFullYear()} | <a href="mailto:support@zypergo.com" style="color: #fb5c00; text-decoration: none;">support@zypergo.com</a></p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   // --- High Level Event Handlers ---
 
   static notifyBookingConfirmed(booking, customerPhone, customerEmail) {
     this.sendSMS(customerPhone, `Your ZyperGo booking (${booking.trackingId}) is confirmed! Track here: http://localhost:5173/track/${booking.trackingId}`);
     this.sendWhatsApp(customerPhone, `Hi, your ZyperGo booking (${booking.trackingId}) is confirmed! Track your shipment live: http://localhost:5173/track/${booking.trackingId}`);
     if (customerEmail) {
-      this.sendEmail(customerEmail, 'Booking Confirmed - ZyperGo', `Your booking ${booking.trackingId} is confirmed.`);
+      const htmlBody = this.generateEmailTemplate({
+        title: 'Booking Confirmed',
+        message: 'Your ZyperGo booking has been confirmed and is scheduled for pickup.',
+        buttonText: 'Track Shipment',
+        buttonUrl: `http://localhost:5173/track/${booking.trackingId}`,
+        footerNote: `Tracking ID: <strong>${booking.trackingId}</strong>`
+      });
+      this.sendEmail(customerEmail, 'Booking Confirmed - ZyperGo', htmlBody);
     }
   }
 
@@ -77,8 +148,17 @@ class NotificationService {
     this.sendPushNotification('customer_fcm_mock', 'Raider Assigned', 'A raider is assigned for your pickup.');
   }
 
-  static notifyPickupOTP(customerPhone, otp) {
+  static notifyPickupOTP(customerPhone, customerEmail, otp, trackingId) {
     this.sendSMS(customerPhone, `Your pickup OTP for ZyperGo shipment is ${otp}. Do not share this with anyone except the Raider.`, 'Critical');
+    if (customerEmail) {
+      const htmlBody = this.generateEmailTemplate({
+        title: 'Pickup Verification Code',
+        message: 'A Raider has arrived to pick up your shipment. Please share this secure code with them.',
+        otpCode: otp,
+        footerNote: `Tracking ID: <strong>${trackingId}</strong>`
+      });
+      this.sendEmail(customerEmail, 'Your Pickup OTP - ZyperGo', htmlBody);
+    }
   }
 
   static notifyPickedUp(booking, customerPhone, receiverPhone) {
@@ -91,9 +171,18 @@ class NotificationService {
     this.sendSMS(receiverPhone, `Your ZyperGo shipment (${booking.trackingId}) is now in transit.`);
   }
 
-  static notifyOutForDelivery(booking, receiverPhone, otp) {
+  static notifyOutForDelivery(booking, receiverPhone, receiverEmail, otp) {
     this.sendSMS(receiverPhone, `Your ZyperGo shipment (${booking.trackingId}) is out for delivery! Your delivery OTP is ${otp}.`, 'Critical');
     this.sendWhatsApp(receiverPhone, `Your shipment is out for delivery today. Delivery OTP: ${otp}. Please share this with the rider.`);
+    if (receiverEmail) {
+      const htmlBody = this.generateEmailTemplate({
+        title: 'Delivery Verification Code',
+        message: 'Your shipment is out for delivery. Please share this secure code with the Raider upon arrival.',
+        otpCode: otp,
+        footerNote: `Tracking ID: <strong>${booking.trackingId}</strong>`
+      });
+      this.sendEmail(receiverEmail, 'Your Delivery OTP - ZyperGo', htmlBody);
+    }
   }
 
   static notifyDelivered(booking, customerPhone, receiverPhone) {

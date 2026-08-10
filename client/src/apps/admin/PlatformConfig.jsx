@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Save, Settings, ShieldAlert, Truck, MapPin } from 'lucide-react';
+import { Save, Settings, ShieldAlert, Truck, MapPin, UserPlus } from 'lucide-react';
+import api from '../../api';
 
 export default function PlatformConfig() {
   const [config, setConfig] = useState({
@@ -15,6 +16,11 @@ export default function PlatformConfig() {
   });
 
   const [saving, setSaving] = useState(false);
+  
+  // Staff Creation State
+  const [staffForm, setStaffForm] = useState({ name: '', email: '', phone: '', password: '', role: 'OperationsStaff' });
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffMsg, setStaffMsg] = useState({ type: '', text: '' });
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -24,6 +30,23 @@ export default function PlatformConfig() {
       setSaving(false);
       alert('Platform configurations saved successfully.');
     }, 800);
+  };
+
+  const handleCreateStaff = async (e) => {
+    e.preventDefault();
+    setStaffLoading(true);
+    setStaffMsg({ type: '', text: '' });
+    try {
+      const res = await api.post('/admin/users', staffForm);
+      if (res.data && res.data.success) {
+        setStaffMsg({ type: 'success', text: `Staff account created! They can now log in using the Admin App.` });
+        setStaffForm({ name: '', email: '', phone: '', password: '', role: 'OperationsStaff' });
+      }
+    } catch (err) {
+      setStaffMsg({ type: 'error', text: err.response?.data?.error || 'Failed to create staff' });
+    } finally {
+      setStaffLoading(false);
+    }
   };
 
   return (
@@ -118,6 +141,56 @@ export default function PlatformConfig() {
             <button className="bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded shadow-sm hover:bg-slate-50">
               Upload Postcode Allowlist (CSV)
             </button>
+          </div>
+        </div>
+        
+        {/* Staff Creation */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden md:col-span-2">
+          <div className="bg-slate-50 border-b border-slate-200 p-4 font-bold text-slate-700 flex items-center gap-2">
+            <UserPlus size={18} className="text-[#006D77]"/> Create Staff Account
+          </div>
+          <div className="p-6">
+            <p className="text-sm text-slate-500 mb-4">Create access accounts for your Operations Staff or other admins. They will use the Admin App login screen with these credentials.</p>
+            
+            {staffMsg.text && (
+              <div className={`p-3 rounded mb-4 text-sm font-bold ${staffMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                {staffMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateStaff} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+                <input required type="text" value={staffForm.name} onChange={e=>setStaffForm({...staffForm, name: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-[#006D77] outline-none"/>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Role</label>
+                <select value={staffForm.role} onChange={e=>setStaffForm({...staffForm, role: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-[#006D77] outline-none">
+                  <option value="OperationsStaff">Operations Staff</option>
+                  <option value="OperationsAdmin">Operations Admin</option>
+                  <option value="HubManager">Hub Manager</option>
+                  <option value="DispatchManager">Dispatch Manager</option>
+                  <option value="FinanceManager">Finance Manager</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
+                <input required type="email" value={staffForm.email} onChange={e=>setStaffForm({...staffForm, email: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-[#006D77] outline-none"/>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number (For OTP)</label>
+                <input required type="text" value={staffForm.phone} onChange={e=>setStaffForm({...staffForm, phone: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-[#006D77] outline-none"/>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Temporary Password</label>
+                <input required type="password" value={staffForm.password} onChange={e=>setStaffForm({...staffForm, password: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-[#006D77] outline-none"/>
+              </div>
+              <div className="md:col-span-2 mt-2">
+                <button type="submit" disabled={staffLoading} className="bg-[#0f172a] text-white px-6 py-2 rounded font-bold shadow hover:bg-slate-800 disabled:opacity-50">
+                  {staffLoading ? 'Creating...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 

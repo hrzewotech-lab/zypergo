@@ -9,7 +9,7 @@ router.use(protect);
 // Main scan endpoint — Hub operators, managers, dispatch
 router.post(
   '/',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager'),
   logAction('Scan'),
   scanController.processscan
 );
@@ -17,21 +17,21 @@ router.post(
 // Scan history for a specific parcel
 router.get(
   '/history/:trackingId',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor', 'SupportExecutive'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'Auditor', 'SupportExecutive'),
   scanController.getScanHistory
 );
 
 // Unscanned alerts — parcels stuck at a checkpoint
 router.get(
   '/alerts/unscanned',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'DispatchManager'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager'),
   scanController.getUnscannedAlerts
 );
 
 // All scan events with filters
 router.get(
   '/',
-  authorize('SuperAdmin', 'OperationsAdmin', 'HubManager', 'Auditor'),
+  authorize('SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'Auditor'),
   scanController.getAllScans
 );
 

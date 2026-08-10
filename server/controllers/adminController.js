@@ -28,7 +28,7 @@ exports.getDashboardStats = async (req, res) => {
           cashCollection: {
             $sum: {
               $cond: [
-                { $and: [{ $eq: ['$payment.mode', 'Cash'] }, { $eq: ['$status', 'Delivered'] }] },
+                { $eq: ['$payment.mode', 'Cash'] },
                 '$pricing.total',
                 0
               ]
@@ -269,10 +269,19 @@ exports.approveRaider = async (req, res) => {
     await user.save();
 
     if (user.email) {
+       const htmlBody = NotificationService.generateEmailTemplate({
+         title: 'You are Approved! 🎉',
+         message: `Hello ${user.name},<br><br>Your raider application has been <b>approved</b> by the admin team! You can now log in to the Raider App using your email address and the generated password below.`,
+         otpCode: generatedPassword,
+         buttonText: 'Login to Raider App',
+         buttonUrl: 'http://raider.localhost:5173',
+         footerNote: 'Please change this password immediately after your first login.'
+       });
+
        await NotificationService.sendEmail(
          user.email,
          'You are approved! Welcome to ZyperGo Raiders',
-         `<p>Hello ${user.name},</p><p>Your raider application has been <b>approved</b> by the admin.</p><p>You can now log in to the Raider App using your email address and your generated password:</p><p style="font-size: 24px; font-weight: bold; background: #f1f5f9; padding: 10px; display: inline-block;">${generatedPassword}</p><p>Please change this password after your first login.</p>`
+         htmlBody
        );
     }
 
