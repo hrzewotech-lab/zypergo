@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const NotificationService = require('../services/notificationService');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
 exports.sendOtp = async (req, res) => {
   try {
@@ -224,5 +226,96 @@ exports.raiderApply = async (req, res) => {
   } catch (error) {
     console.error('Raider apply error:', error);
     res.status(500).json({ success: false, error: 'Failed to submit application' });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User with this email does not exist' });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    
+    // Hash token and save to db
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
+    
+    await user.save();
+
+    // Construct reset URL based on origin (the frontend application)
+    // We expect the frontend to pass the origin or we can use headers
+    const origin = req.headers.origin || 'http://localhost:5173';
+    const resetUrl = `${origin}/reset-password?token=${resetToken}`;
+
+    const htmlBody = NotificationService.generateEmailTemplate({
+      title: 'Password Reset Request',
+      message: 'You are receiving this email because you (or someone else) have requested the reset of a password. Please click on the button below to complete the process.',
+      buttonText: 'Reset Password',
+      buttonUrl: resetUrl,
+      footerNote: 'This link will expire in 30 minutes. If you did not request this, please ignore this email and your password will remain unchanged.'
+    });
+
+    try {
+      await NotificationService.sendEmail(
+        user.email,
+        'ZyperGo - Password Reset Request',
+        htmlBody
+      );
+      res.status(200).json({ success: true, message: 'Password reset link sent to your email' });
+    } catch (emailError) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      
+      console.error('Email send error:', emailError);
+      return res.status(500).json({ success: false, error: 'Email could not be sent' });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, error: 'Failed to process password reset request' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ success: false, error: 'Token and new password are required' });
+    }
+
+    // Get hashed token
+    const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired password reset token' });
+    }
+
+    // Set new password (the pre-save hook will hash it)
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password has been updated successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reset password' });
   }
 };

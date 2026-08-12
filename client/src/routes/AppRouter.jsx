@@ -7,9 +7,13 @@ import RaiderApp from '../apps/RaiderApp';
 import HamaliApp from '../apps/HamaliApp';
 import PartnerApp from '../apps/PartnerApp';
 import HubApp from '../apps/HubApp';
+import ResetPasswordScreen from '../components/Auth/ResetPasswordScreen';
+import { useLocation } from 'react-router-dom';
 
 function AppRouter() {
   const [authChecked, setAuthChecked] = useState(false);
+  const location = useLocation();
+
 
   useEffect(() => {
     // Check if there is a token passed from the portal login
@@ -36,6 +40,10 @@ function AppRouter() {
   }, []);
 
   if (!authChecked) return null;
+
+  if (location.pathname === '/reset-password') {
+    return <ResetPasswordScreen />;
+  }
 
   if (subdomain === 'admin') {
     return <AdminApp />;

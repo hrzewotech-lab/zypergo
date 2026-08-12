@@ -47,12 +47,18 @@ export default function RaiderDashboard({ user, onLogout }) {
   useEffect(() => {
     fetchJobs();
     
+    // Poll for new jobs every 10 seconds
+    const interval = setInterval(() => {
+      fetchJobs();
+    }, 10000);
+
     // Offline Listener
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
+      clearInterval(interval);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
@@ -86,7 +92,8 @@ export default function RaiderDashboard({ user, onLogout }) {
         setActiveJob(res.data.data);
       }
     } catch (err) {
-      alert('Failed to accept job');
+      alert(err.response?.data?.error || 'Failed to accept job');
+      fetchJobs(); // Force refresh to remove the job from available list if it was taken by someone else
     } finally {
       setLoading(false);
     }

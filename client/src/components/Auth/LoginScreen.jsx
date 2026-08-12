@@ -7,8 +7,9 @@ export default function LoginScreen({ role, onLoginSuccess }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState('phone'); // 'phone' or 'otp'
+  const [step, setStep] = useState('phone'); // 'phone', 'otp', or 'forgot_password'
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -89,14 +90,39 @@ export default function LoginScreen({ role, onLoginSuccess }) {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!identifier || identifier.length < 5 || !isEmail) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    try {
+      await api.post('/auth/forgot-password', { email: identifier });
+      setError(''); // Clear error
+      alert('Password reset link sent to your email');
+      setStep('phone');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to send password reset link');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
       <div className="bg-white max-w-md w-full rounded-3xl shadow-xl p-8 border border-slate-100">
         
         <div className="text-center mb-8">
           <img src="/images/logo.png" alt="ZyperGo Logo" className="h-16 mx-auto mb-4" />
-          <h1 className="text-2xl font-black text-slate-900">ZyperGo {role}</h1>
-          <p className="text-slate-500 mt-2">Log in to your account</p>
+          <h1 className="text-2xl font-black text-slate-900">
+            {step === 'forgot_password' ? 'Reset Password' : `ZyperGo ${role}`}
+          </h1>
+          <p className="text-slate-500 mt-2">
+            {step === 'forgot_password' ? 'Enter your email to reset your password' : 'Log in to your account'}
+          </p>
         </div>
 
         {error && (
@@ -147,6 +173,9 @@ export default function LoginScreen({ role, onLoginSuccess }) {
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  <div className="flex justify-end mt-2">
+                    <button type="button" onClick={() => setStep('forgot_password')} className="text-sm font-bold text-[#006D77] hover:underline">Forgot Password?</button>
+                  </div>
                 </div>
               )}
 
@@ -156,7 +185,7 @@ export default function LoginScreen({ role, onLoginSuccess }) {
               <p className="text-xs text-center text-slate-400 mt-4">By logging in, you agree to our Terms of Service.</p>
             </form>
           </>
-        ) : (
+        ) : step === 'otp' ? (
           <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in fade-in slide-in-from-right-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Enter 4-Digit OTP</label>
@@ -183,6 +212,28 @@ export default function LoginScreen({ role, onLoginSuccess }) {
                 ? 'Seed Admin: Use 9999999999 and OTP 1234'
                 : 'Mock Mode: Use 1234 to bypass.'}
             </p>
+          </form>
+        ) : (
+          <form onSubmit={handleForgotPassword} className="space-y-6 animate-in fade-in slide-in-from-right-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Email Address</label>
+              <div className="flex items-center relative">
+                <Phone className="absolute left-4 text-slate-400" size={20} />
+                <input 
+                  type="email" 
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="name@email.com"
+                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-lg transition-colors"
+                />
+              </div>
+            </div>
+            <button type="submit" disabled={loading || identifier.length < 5} className="w-full bg-[#006D77] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#00585f] disabled:opacity-50 flex items-center justify-center gap-2">
+              {loading ? 'Sending...' : 'Send Reset Link'} <ArrowRight size={18}/>
+            </button>
+            <div className="text-center mt-4">
+              <button type="button" onClick={() => setStep('phone')} className="text-sm font-bold text-slate-500 hover:text-[#006D77]">Back to Login</button>
+            </div>
           </form>
         )}
 

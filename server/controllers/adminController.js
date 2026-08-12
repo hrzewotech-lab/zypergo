@@ -137,18 +137,27 @@ exports.assignRaider = async (req, res) => {
   try {
     const { id } = req.params;
     const { raiderId } = req.body;
-    const booking = await Booking.findById(id);
-    if (!booking) return res.status(404).json({ success: false, error: 'Booking not found' });
+    const booking = await Booking.findOneAndUpdate(
+      { 
+        _id: id, 
+        status: { $in: ['Pending', 'Booking Confirmed'] } 
+      },
+      {
+        status: 'Rider Assigned',
+        $push: {
+          assignedRaiders: { raiderId, status: 'Active' },
+          trackingHistory: {
+            status: 'Rider Assigned',
+            description: 'A Raider has been assigned.',
+            scannedBy: req.user?._id
+          }
+        }
+      },
+      { new: true }
+    );
 
-    booking.assignedRaiders.push({ raiderId, status: 'Active' });
-    booking.status = 'Rider Assigned';
-    booking.trackingHistory.push({
-      status: 'Rider Assigned',
-      description: 'Admin manually assigned a Raider.',
-      scannedBy: req.user?._id
-    });
-    
-    await booking.save();
+    if (!booking) return res.status(400).json({ success: false, error: 'Booking not available or already assigned' });
+
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to assign raider' });
