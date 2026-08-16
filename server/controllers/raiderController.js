@@ -174,39 +174,76 @@ exports.updateJobStatus = async (req, res) => {
 exports.handleTranshipment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { targetRaiderId } = req.body; // In a real app, validate this ID exists
+    const { currentRaiderId } = req.body; 
 
     const booking = await Booking.findById(id);
     if (!booking) return res.status(404).json({ success: false, error: 'Job not found' });
 
-    // Mark current raider as Handed Over, add new raider to array
-    if (booking.assignedRaiders && booking.assignedRaiders.length > 0) {
-      booking.assignedRaiders[booking.assignedRaiders.length - 1].status = 'Handed Over';
-    }
+    // Generate Handover OTP
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    if (!booking.proofOfDelivery) booking.proofOfDelivery = {};
+    booking.proofOfDelivery.otp = generatedOtp;
 
-    // Since targetRaiderId is mock, we just use a generic ID for the new raider
-    booking.assignedRaiders.push({
-      raiderId: targetRaiderId,
-      status: 'Active'
-    });
-
-    booking.transhipmentLogs.push({
-      toRaider: targetRaiderId,
-      timestamp: new Date(),
-      status: 'Transhipment Complete'
-    });
-
-    booking.status = 'Transhipment Pending'; // The new raider needs to accept/pick it up
-
+    booking.status = 'Relay Handoff Pending';
+    
     booking.trackingHistory.push({
-      status: 'Transhipment',
-      description: 'Package has been handed over to a new Raider for the next leg of the journey.'
+      status: 'Relay Handoff Pending',
+      description: 'Current Raider has initiated a handover. Waiting for another Raider to accept.'
     });
 
     await booking.save();
+    // Return OTP to the initiating raider so they can display it
+    res.status(200).json({ success: true, data: booking, handoverOtp: generatedOtp });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to initiate transhipment' });
+  }
+};
+
+exports.acceptHandover = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { otp, newRaiderId } = req.body;
+    
+    const booking = await Booking.findById(id);
+    if (!booking) return res.status(404).json({ success: false, error: 'Job not found' });
+    
+    if (booking.status !== 'Relay Handoff Pending' && booking.status !== 'Transhipment Pending') {
+      return res.status(400).json({ success: false, error: 'Job is not pending a handover' });
+    }
+    
+    const expectedOtp = booking.proofOfDelivery?.otp || '1234';
+    if (!otp || otp !== expectedOtp) {
+      return res.status(400).json({ success: false, error: `Invalid Handover OTP (use ${expectedOtp} for testing).` });
+    }
+    
+    // Mark previous as handed over, add new raider
+    if (booking.assignedRaiders && booking.assignedRaiders.length > 0) {
+      booking.assignedRaiders[booking.assignedRaiders.length - 1].status = 'Handed Over';
+      
+      booking.transhipmentLogs.push({
+        fromRaider: booking.assignedRaiders[booking.assignedRaiders.length - 1].raiderId,
+        toRaider: newRaiderId,
+        timestamp: new Date(),
+        status: 'Transhipment Complete'
+      });
+    }
+    
+    booking.assignedRaiders.push({
+      raiderId: newRaiderId,
+      status: 'Active'
+    });
+    
+    booking.status = 'In Transit'; 
+    
+    booking.trackingHistory.push({
+      status: 'In Transit',
+      description: 'Package handed over successfully to a new Raider.'
+    });
+    
+    await booking.save();
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to process transhipment' });
+    res.status(500).json({ success: false, error: 'Failed to accept handover' });
   }
 };
 

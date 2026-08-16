@@ -91,7 +91,16 @@ app.use('/api/upload', uploadRoutes);
 
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
-  const server = app.listen(PORT, () => {
+  
+  // Create HTTP Server
+  const http = require('http');
+  const server = http.createServer(app);
+  
+  // Initialize Socket.io
+  const socketService = require('./socket');
+  socketService.init(server);
+
+  server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 

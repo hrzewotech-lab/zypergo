@@ -79,8 +79,10 @@ exports.calculatePrice = async (req, res) => {
                      (!rule.conditions.maxWeight || chargeableWeight <= rule.conditions.maxWeight);
       const cMatch = (!rule.conditions.originCity || rule.conditions.originCity === originCity) &&
                      (!rule.conditions.destCity || rule.conditions.destCity === destCity);
+      const pMatch = (!rule.conditions.originPincode || rule.conditions.originPincode === originPincode) &&
+                     (!rule.conditions.destPincode || rule.conditions.destPincode === destPincode);
       
-      if (wMatch && cMatch) {
+      if (wMatch && cMatch && pMatch) {
         baseRule = rule;
         appliedRules.push(rule.ruleName);
         break; // take first match (can be improved to sort by specificity)
@@ -90,16 +92,20 @@ exports.calculatePrice = async (req, res) => {
     if (!baseRule) {
       // Fallback defaults if no rule matches
       baseRule = {
-        rates: { basePrice: 50, perKgRate: 10, perKmRate: 0, handlingFee: 0, gstPercentage: 18, insurancePercentage: 0 }
+        rates: { basePrice: 50, perKgRate: 10, perKmRate: 0, handlingCost: 0, minimumCharge: 50, gstPercentage: 18, insurancePercentage: 0, discountPercentage: 0, partnerCost: 20, riderCost: 15, marginPercentage: 20 }
       };
       appliedRules.push('Default Fallback Rule');
     }
 
-    // 4. Calculate Base Cost
-    let priceBase = baseRule.rates.basePrice;
-    let priceWeight = chargeableWeight * baseRule.rates.perKgRate;
-    let priceDistance = distanceKm * baseRule.rates.perKmRate;
-    let subtotal = priceBase + priceWeight + priceDistance + baseRule.rates.handlingFee;
+    // 4. Calculate Base Costs & Customer Price
+    let calculatedBase = baseRule.rates.basePrice + (chargeableWeight * baseRule.rates.perKgRate) + (distanceKm * baseRule.rates.perKmRate);
+    let priceBase = Math.max(calculatedBase, baseRule.rates.minimumCharge || 0);
+    
+    let internalPartnerCost = baseRule.rates.partnerCost + (chargeableWeight * (baseRule.rates.partnerCost > 0 ? 2 : 0)); // mock scaling of partner cost
+    let internalRiderCost = baseRule.rates.riderCost;
+    let totalHandlingCost = baseRule.rates.handlingCost;
+
+    let subtotal = priceBase + totalHandlingCost;
 
     // 5. Apply Surcharges
     const surchargeCandidates = activeRules.filter(r => r.isSurcharge);
@@ -109,35 +115,35 @@ exports.calculatePrice = async (req, res) => {
       let apply = false;
       
       // Speed Surcharge (e.g. Express)
-      if (rule.speed === speed && speed !== 'Any' && speed !== 'Standard') {
-        apply = true;
-      }
+      if (rule.speed === speed && speed !== 'Any' && speed !== 'Standard') apply = true;
       
       // Category Surcharge (e.g. Fragile)
-      if (rule.conditions.category === category) {
-        apply = true;
-      }
+      if (rule.conditions.category === category) apply = true;
 
       if (apply) {
         appliedRules.push(rule.ruleName);
-        subtotal += rule.rates.basePrice; // add fixed surcharge
-        subtotal += (chargeableWeight * rule.rates.perKgRate); // add weight based surcharge
-        totalSurcharges += (rule.rates.basePrice + (chargeableWeight * rule.rates.perKgRate));
+        let surchargeAmount = rule.rates.basePrice + (chargeableWeight * rule.rates.perKgRate);
+        subtotal += surchargeAmount;
+        totalSurcharges += surchargeAmount;
+        
+        internalPartnerCost += rule.rates.partnerCost || 0;
+        internalRiderCost += rule.rates.riderCost || 0;
+        totalHandlingCost += rule.rates.handlingCost || 0;
       }
     }
 
-    // 6. Insurance
+    // 6. Insurance & Discounts
     const insuranceCost = (parcelValue * (baseRule.rates.insurancePercentage / 100));
-    subtotal += insuranceCost;
+    const discountAmount = subtotal * (baseRule.rates.discountPercentage / 100);
+    const taxableAmount = subtotal - discountAmount + insuranceCost;
 
     // 7. Margin / Internal Cost vs Selling Price
-    // Example: Internal cost is estimated as 70% of the customer selling price before tax.
-    const internalCost = Math.round(subtotal * 0.7);
-    const profitMargin = subtotal - internalCost;
+    const internalCost = internalPartnerCost + internalRiderCost + totalHandlingCost;
+    const profitMargin = (subtotal - discountAmount) - internalCost;
 
     // 8. Tax (GST)
-    const gstAmount = subtotal * (baseRule.rates.gstPercentage / 100);
-    const totalCustomerPrice = subtotal + gstAmount;
+    const gstAmount = taxableAmount * (baseRule.rates.gstPercentage / 100);
+    const totalCustomerPrice = taxableAmount + gstAmount;
 
     res.status(200).json({
       success: true,
@@ -147,20 +153,22 @@ exports.calculatePrice = async (req, res) => {
         actualWeight,
         volumetricWeight: parseFloat(volWeight.toFixed(2)),
         breakdown: {
-          baseCost: priceBase,
-          weightCost: parseFloat(priceWeight.toFixed(2)),
-          distanceCost: parseFloat(priceDistance.toFixed(2)),
-          handlingFee: baseRule.rates.handlingFee,
+          baseCost: parseFloat(priceBase.toFixed(2)),
+          handlingFee: parseFloat(totalHandlingCost.toFixed(2)),
           surcharges: parseFloat(totalSurcharges.toFixed(2)),
           insurance: parseFloat(insuranceCost.toFixed(2)),
-          subtotal: parseFloat(subtotal.toFixed(2)),
+          discount: parseFloat(discountAmount.toFixed(2)),
+          subtotal: parseFloat(taxableAmount.toFixed(2)),
           gst: parseFloat(gstAmount.toFixed(2)),
           totalCustomerPrice: Math.round(totalCustomerPrice),
         },
         profitability: {
-          estimatedInternalCost: internalCost,
+          partnerCost: parseFloat(internalPartnerCost.toFixed(2)),
+          riderCost: parseFloat(internalRiderCost.toFixed(2)),
+          totalInternalCost: parseFloat(internalCost.toFixed(2)),
           grossMargin: parseFloat(profitMargin.toFixed(2)),
-          marginPercentage: parseFloat(((profitMargin / subtotal) * 100).toFixed(1)) || 0
+          marginPercentage: parseFloat(((profitMargin / (subtotal - discountAmount)) * 100).toFixed(1)) || 0,
+          expectedMarginPercentage: baseRule.rates.marginPercentage
         },
         appliedRules
       }

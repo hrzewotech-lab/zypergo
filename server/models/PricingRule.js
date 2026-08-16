@@ -31,10 +31,20 @@ const pricingRuleSchema = new mongoose.Schema({
 
   // The actual pricing values applied
   rates: {
-    basePrice: { type: Number, default: 0 },
-    perKgRate: { type: Number, default: 0 },
-    perKmRate: { type: Number, default: 0 },
-    handlingFee: { type: Number, default: 0 },
+    // Internal costs
+    partnerCost: { type: Number, default: 0 },
+    riderCost: { type: Number, default: 0 },
+    handlingCost: { type: Number, default: 0 },
+    
+    // Customer pricing
+    basePrice: { type: Number, default: 0 }, // Selling Price Base
+    perKgRate: { type: Number, default: 0 }, // Selling Price per KG
+    perKmRate: { type: Number, default: 0 }, // Selling Price per KM
+    minimumCharge: { type: Number, default: 0 },
+    
+    // Margins & Discounts
+    marginPercentage: { type: Number, default: 0 },
+    discountPercentage: { type: Number, default: 0 },
     gstPercentage: { type: Number, default: 18 },
     insurancePercentage: { type: Number, default: 0 } // e.g., 2% of parcel value
   },

@@ -9,6 +9,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
   const [loading, setLoading] = useState(false);
   const [transhipmentMode, setTranshipmentMode] = useState(false);
   const [scannedRaiderId, setScannedRaiderId] = useState('');
+  const [generatedHandoverOtp, setGeneratedHandoverOtp] = useState('');
   
   // NDR (Exception Handling) State
   const [showExceptionModal, setShowExceptionModal] = useState(false);
@@ -70,12 +71,14 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
   const handleTranshipment = async () => {
     setLoading(true);
     try {
-      const res = await api.post(`/raider/jobs/${activeJob._id}/transhipment`, { targetRaiderId: scannedRaiderId || 'mock-raider-id-123' });
+      const userStr = localStorage.getItem('zypergo_user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      
+      const res = await api.post(`/raider/jobs/${activeJob._id}/transhipment`, { currentRaiderId: user?._id });
       if (res.data.success) {
-        alert('Transhipment Handover Successful!');
-        onCompleteJob(); // Removes it from this raider's active list
+        setGeneratedHandoverOtp(res.data.handoverOtp);
       } else {
-        alert('Failed to handover package.');
+        alert('Failed to initiate handover.');
       }
     } catch (err) {
       alert('Network error');
@@ -87,25 +90,26 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
   const isIntercity = activeJob.metadata?.deliveryType === 'Intercity Hub-and-Spoke';
 
   return (
-    <div className="h-full bg-slate-100 font-sans flex flex-col relative">
+    <div className="h-full bg-transparent font-sans flex flex-col relative rounded-[2rem]">
       {/* Fixed Header */}
-      <header className="bg-white p-4 shadow-sm z-10">
+      <header className="bg-white/40 backdrop-blur-md border-b border-white/60 p-5 z-10 sticky top-0 rounded-t-[2rem]">
         <div className="flex justify-between items-center mb-2">
-          <span className="bg-[#FFB703] text-slate-900 text-xs font-black px-2 py-1 rounded tracking-widest uppercase">
+          <span className="bg-gradient-to-r from-[#FFB703] to-amber-500 text-white shadow-sm text-[10px] font-black px-2.5 py-1 rounded-lg tracking-widest uppercase">
             Active Job
           </span>
-          <span className="text-[#fb5c00] font-bold">₹{activeJob.pricing?.total}</span>
+          <span className="text-2xl text-[#fb5c00] font-black tracking-tight">₹{activeJob.pricing?.total}</span>
         </div>
-        <p className="text-xs text-slate-500 font-mono">ID: {activeJob.trackingId}</p>
+        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">ID: <span className="font-mono text-slate-700">{activeJob.trackingId}</span></p>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 p-4 overflow-y-auto">
-        <div className="max-w-2xl mx-auto space-y-4 pb-32">
+        <div className="max-w-2xl mx-auto space-y-6 pb-32">
 
           {/* Job Details Card (Always visible) */}
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-slate-200">
-            <h3 className="font-bold text-slate-900 border-b pb-2 mb-3">Job Details</h3>
+          <div className="bg-white/60 backdrop-blur-xl rounded-[2rem] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] p-5 border border-white/60 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#fb5c00]/5 to-transparent rounded-bl-full -z-10"></div>
+            <h3 className="font-black text-slate-900 border-b border-white/60 pb-3 mb-4 text-lg">Job Details</h3>
             <div className="space-y-4 text-sm">
               <div className="flex gap-3">
                 <div className="w-6 flex flex-col items-center">
@@ -134,38 +138,39 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
               </div>
             </div>
             
-            <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100 grid grid-cols-2 gap-4">
+            <div className="mt-5 p-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/60 grid grid-cols-2 gap-4 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 uppercase">Category</p>
-                <p className="font-bold text-slate-800">{activeJob.packageDetails?.category}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Category</p>
+                <p className="font-black text-slate-800 text-base">{activeJob.packageDetails?.category}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase">Weight</p>
-                <p className="font-bold text-slate-800">{activeJob.packageDetails?.weight} kg</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Weight</p>
+                <p className="font-black text-slate-800 text-base">{activeJob.packageDetails?.weight} kg</p>
               </div>
             </div>
           </div>
 
           {/* Dynamic Task Action Card */}
-          <div className="bg-white rounded-xl shadow-lg border-2 border-[#fb5c00]/20 p-6">
-            
+          <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-white/60 p-6 md:p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#fb5c00]/10 to-transparent rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
+
             {taskStep === 1 && (
-              <div className="text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Navigation size={32} />
+              <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-blue-100">
+                  <Navigation size={36} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Navigate to Pickup</h2>
-                <p className="text-slate-500 text-sm mb-6">Head to the sender's location.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Navigate to Pickup</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Head to the sender's location.</p>
                 <button 
                   onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(activeJob.pickupLocation?.address || '')}`, '_blank')}
-                  className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg flex justify-center items-center gap-2 mb-4 shadow-md"
+                  className="w-full bg-white text-slate-700 hover:text-blue-600 border border-slate-200 font-black py-4 rounded-2xl text-base flex justify-center items-center gap-2 mb-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 >
                   <Navigation size={20}/> Open Google Maps
                 </button>
                 <button 
                   onClick={() => updateStatus('Arrived at Pickup')} 
                   disabled={loading}
-                  className="w-full bg-[#0F172A] text-white font-bold py-4 rounded-xl text-lg flex justify-center items-center gap-2 shadow-md"
+                  className="w-full bg-gradient-to-r from-[#0F172A] to-slate-800 text-white font-black py-4.5 rounded-2xl text-lg flex justify-center items-center gap-2 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(15,23,42,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
                   Mark 'Arrived at Pickup' <ArrowRight size={20}/>
                 </button>
@@ -173,32 +178,32 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
             )}
 
             {taskStep === 2 && (
-              <div className="text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 bg-[#FFB703]/20 text-[#FFB703] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Key size={32} />
+              <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-amber-100">
+                  <Key size={36} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Pickup Verification</h2>
-                <p className="text-slate-500 text-sm mb-6">Ask the sender for the 4-digit OTP.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Pickup Verification</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Ask the sender for the 4-digit OTP.</p>
                 
                 <input 
                   type="number" 
                   value={otp} 
                   onChange={(e) => setOtp(e.target.value)} 
-                  placeholder="Enter OTP" 
-                  className="w-full text-center text-2xl tracking-widest font-bold py-4 px-4 border-2 border-slate-300 rounded-xl focus:border-[#fb5c00] outline-none mb-4"
+                  placeholder="----" 
+                  className="w-full text-center text-4xl tracking-[1em] font-black py-6 px-4 bg-white/60 backdrop-blur-sm border border-white/60 shadow-inner rounded-2xl focus:border-[#fb5c00] focus:ring-4 focus:ring-[#fb5c00]/10 focus:bg-white outline-none mb-6 transition-all"
                 />
                 
                 <button 
                   onClick={() => setTaskStep(3)} 
                   disabled={otp.length !== 4}
-                  className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg disabled:opacity-50 mb-3"
+                  className="w-full bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(251,92,0,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(251,92,0,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
                 >
                   Verify OTP
                 </button>
 
                 <button 
                   onClick={() => setShowExceptionModal(true)} 
-                  className="text-red-500 font-bold text-sm hover:underline"
+                  className="text-red-500 font-bold text-sm hover:text-red-600 transition-colors bg-red-50 px-4 py-2 rounded-lg"
                 >
                   Report Issue (Pickup Failed)
                 </button>
@@ -206,35 +211,35 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
             )}
 
             {taskStep === 3 && (
-              <div className="text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ScanBarcode size={32} />
+              <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-white text-slate-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-slate-100">
+                  <ScanBarcode size={36} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Package Intake</h2>
-                <p className="text-slate-500 text-sm mb-6">Scan the barcode and take a photo of the package.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Package Intake</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Scan the barcode and take a photo of the package.</p>
                 
                 <button 
                   onClick={() => setBarcodeScanned(true)}
-                  className={`w-full border-2 ${barcodeScanned ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-dashed border-slate-300 bg-slate-50 hover:border-[#fb5c00] text-slate-600'} rounded-xl p-6 mb-4 transition flex flex-col items-center justify-center font-bold`}
+                  className={`w-full ${barcodeScanned ? 'border border-emerald-500 bg-emerald-50 text-emerald-700 shadow-inner' : 'border border-white/60 bg-white/60 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white text-slate-600'} rounded-2xl p-5 mb-4 transition-all flex items-center justify-center gap-3 font-bold`}
                 >
-                   {barcodeScanned ? <CheckCircle size={24} className="mb-2" /> : <ScanBarcode size={24} className="mb-2" />}
+                   {barcodeScanned ? <CheckCircle size={24} /> : <ScanBarcode size={24} />}
                    {barcodeScanned ? 'Barcode Scanned ✓' : 'Scan Package Barcode'}
                 </button>
 
                 <button 
                   onClick={() => setPhotoCaptured(true)}
-                  className={`w-full border-2 ${photoCaptured ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-dashed border-slate-300 bg-slate-50 hover:border-[#fb5c00] text-slate-600'} rounded-xl p-6 mb-4 transition flex flex-col items-center justify-center font-bold`}
+                  className={`w-full ${photoCaptured ? 'border border-emerald-500 bg-emerald-50 text-emerald-700 shadow-inner' : 'border border-white/60 bg-white/60 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white text-slate-600'} rounded-2xl p-5 mb-6 transition-all flex items-center justify-center gap-3 font-bold`}
                 >
-                   {photoCaptured ? <CheckCircle size={24} className="mb-2" /> : <Camera size={24} className="mb-2" />}
+                   {photoCaptured ? <CheckCircle size={24} /> : <Camera size={24} />}
                    {photoCaptured ? 'Proof Photo Captured ✓' : 'Capture Proof Photo'}
                 </button>
                 
-                <div className="mb-6 text-left">
-                  <p className="text-sm font-bold text-slate-700 mb-2">Package Condition Verification</p>
+                <div className="mb-8 text-left bg-white/50 backdrop-blur-sm border border-white/60 p-4 rounded-2xl shadow-sm">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Package Condition Verification</p>
                   <select 
                     value={parcelCondition}
                     onChange={(e) => setParcelCondition(e.target.value)}
-                    className="w-full p-3 border border-slate-300 rounded-xl focus:outline-none focus:border-[#fb5c00] font-bold text-slate-700 bg-white"
+                    className="w-full p-4 border border-white/60 bg-white/80 rounded-xl focus:outline-none focus:border-[#fb5c00] focus:ring-4 focus:ring-[#fb5c00]/10 font-bold text-slate-700 shadow-inner transition-all appearance-none"
                   >
                     <option value="Good">Good (Intact)</option>
                     <option value="Damaged">Damaged / Torn</option>
@@ -243,11 +248,13 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 </div>
 
                 {activeJob.payment?.payer === 'Sender' && (
-                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm font-bold text-green-800 mb-2">Collect Payment: ₹{activeJob.pricing?.total}</p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-white border border-r-0 border-slate-300 rounded-l-lg flex items-center justify-center text-slate-500"><Banknote size={16}/></div>
-                      <input type="number" placeholder="Enter amount collected" value={cash} onChange={(e) => setCash(e.target.value)} className="w-full h-10 px-3 border border-slate-300 rounded-r-lg focus:ring-2 focus:ring-[#fb5c00] outline-none text-sm font-bold" />
+                  <div className="mb-8 p-5 bg-gradient-to-br from-emerald-50 to-green-50/30 border border-emerald-100 rounded-2xl shadow-inner relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full -z-10"></div>
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-2">Collect Payment</p>
+                    <p className="text-3xl font-black text-emerald-600 mb-4 tracking-tight">₹{activeJob.pricing?.total}</p>
+                    <div className="flex items-center shadow-sm rounded-xl overflow-hidden">
+                      <div className="w-12 h-12 bg-white flex items-center justify-center text-slate-400 border border-r-0 border-white/60"><Banknote size={20}/></div>
+                      <input type="number" placeholder="Amount collected" value={cash} onChange={(e) => setCash(e.target.value)} className="w-full h-12 px-3 bg-white/80 border border-white/60 focus:ring-2 focus:ring-emerald-500 outline-none text-base font-black text-slate-800" />
                     </div>
                   </div>
                 )}
@@ -255,7 +262,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <button 
                   onClick={() => updateStatus('Picked Up')} 
                   disabled={loading}
-                  className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg"
+                  className="w-full bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(251,92,0,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(251,92,0,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
                   Confirm Pickup & Start Trip
                 </button>
@@ -263,22 +270,22 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
             )}
 
             {taskStep === 4 && (
-              <div className="text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package size={32} />
+              <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-fuchsia-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-purple-100">
+                  <Package size={36} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Navigate to Drop</h2>
-                <p className="text-slate-500 text-sm mb-6">Head to the {isIntercity ? 'Source Hub' : 'Delivery Address'}.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Navigate to Drop</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Head to the {isIntercity ? 'Source Hub' : 'Delivery Address'}.</p>
                 
-                <div className="bg-slate-100 p-4 rounded-lg mb-6 shadow-inner">
-                  <p className="text-sm font-bold text-slate-700 mb-2">Payment Collection Info:</p>
-                  <p className="text-2xl font-black text-[#fb5c00]">₹{activeJob.pricing?.total}</p>
-                  <p className="text-xs text-slate-500 uppercase font-bold mt-1">Status: {activeJob.payment?.status}</p>
+                <div className="bg-white/60 backdrop-blur-sm border border-white/60 p-5 rounded-2xl mb-8 shadow-sm">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Payment Collection Info</p>
+                  <p className="text-3xl font-black text-[#fb5c00] tracking-tight">₹{activeJob.pricing?.total}</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-2 bg-slate-100 inline-block px-3 py-1 rounded-lg">Status: {activeJob.payment?.status}</p>
                 </div>
 
                 <button 
                   onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(isIntercity ? 'ZyperGo Central Hub' : activeJob.dropLocation?.address || '')}`, '_blank')}
-                  className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg flex justify-center items-center gap-2 mb-4 shadow-md"
+                  className="w-full bg-white text-slate-700 hover:text-blue-600 border border-slate-200 font-black py-4 rounded-2xl text-base flex justify-center items-center gap-2 mb-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 >
                   <Navigation size={20}/> Open Google Maps
                 </button>
@@ -286,7 +293,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <button 
                   onClick={() => updateStatus('Out for Delivery')} 
                   disabled={loading}
-                  className="w-full bg-[#0F172A] text-white font-bold py-4 rounded-xl text-lg flex justify-center items-center gap-2 mb-4 shadow-md"
+                  className="w-full bg-gradient-to-r from-[#0F172A] to-slate-800 text-white font-black py-4.5 rounded-2xl text-lg flex justify-center items-center gap-2 mb-6 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(15,23,42,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
                   Mark 'Arrived at Drop' <ArrowRight size={20}/>
                 </button>
@@ -294,7 +301,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <button 
                   onClick={() => { setTaskStep(7); setTranshipmentMode(true); }}
                   disabled={loading}
-                  className="w-full bg-white border-2 border-slate-300 text-slate-700 font-bold py-3 rounded-xl text-sm flex justify-center items-center gap-2 hover:bg-slate-50"
+                  className="w-full bg-transparent border border-slate-300 text-slate-600 font-bold py-3.5 rounded-2xl text-sm flex justify-center items-center gap-2 hover:bg-slate-50 transition-colors"
                 >
                   Initiate Transhipment Handover
                 </button>
@@ -302,32 +309,32 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
             )}
 
             {taskStep === 5 && (
-              <div className="text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 bg-[#FFB703]/20 text-[#FFB703] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Key size={32} />
+              <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-amber-100">
+                  <Key size={36} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Delivery Verification</h2>
-                <p className="text-slate-500 text-sm mb-6">Ask the {isIntercity ? 'Hub Staff' : 'Receiver'} for the 4-digit OTP.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Delivery Verification</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Ask the {isIntercity ? 'Hub Staff' : 'Receiver'} for the 4-digit OTP.</p>
                 
                 <input 
                   type="number" 
                   value={otp} 
                   onChange={(e) => setOtp(e.target.value)} 
-                  placeholder="Enter OTP" 
-                  className="w-full text-center text-2xl tracking-widest font-bold py-4 px-4 border-2 border-slate-300 rounded-xl focus:border-[#fb5c00] outline-none mb-4"
+                  placeholder="----" 
+                  className="w-full text-center text-4xl tracking-[1em] font-black py-6 px-4 bg-white/60 backdrop-blur-sm border border-white/60 shadow-inner rounded-2xl focus:border-[#fb5c00] focus:ring-4 focus:ring-[#fb5c00]/10 focus:bg-white outline-none mb-6 transition-all"
                 />
                 
                 <button 
                   onClick={() => setTaskStep(6)} 
                   disabled={otp.length !== 4}
-                  className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg disabled:opacity-50 mb-3"
+                  className="w-full bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(251,92,0,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(251,92,0,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
                 >
                   Verify OTP
                 </button>
 
                 <button 
                   onClick={() => setShowExceptionModal(true)} 
-                  className="text-red-500 font-bold text-sm hover:underline"
+                  className="text-red-500 font-bold text-sm hover:text-red-600 transition-colors bg-red-50 px-4 py-2 rounded-lg"
                 >
                   Report Issue (Delivery Failed)
                 </button>
@@ -335,27 +342,29 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
             )}
 
             {taskStep === 6 && (
-              <div className="text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Camera size={32} />
+              <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-white text-slate-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-slate-100">
+                  <Camera size={36} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Capture Signature & Photo</h2>
-                <p className="text-slate-500 text-sm mb-6">Take a clear photo of the delivered package and capture receiver signature as Proof of Delivery. GPS location will be captured automatically.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Capture Signature & Photo</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Take a clear photo of the delivered package and capture receiver signature. GPS location is captured automatically.</p>
                 
                 <button 
                   onClick={() => setPhotoCaptured(true)}
-                  className={`w-full border-2 ${photoCaptured ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-dashed border-slate-300 bg-slate-50 hover:border-[#fb5c00] text-slate-600'} rounded-xl p-6 mb-6 transition flex flex-col items-center justify-center font-bold`}
+                  className={`w-full ${photoCaptured ? 'border border-emerald-500 bg-emerald-50 text-emerald-700 shadow-inner' : 'border border-white/60 bg-white/60 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white text-slate-600'} rounded-2xl p-6 mb-8 transition-all flex items-center justify-center gap-3 font-bold`}
                 >
-                   {photoCaptured ? <CheckCircle size={24} className="mb-2" /> : <Upload size={24} className="mb-2" />}
+                   {photoCaptured ? <CheckCircle size={24} /> : <Upload size={24} />}
                    {photoCaptured ? 'Proof Uploaded ✓' : 'Capture Proof Photo / Signature'}
                 </button>
 
                 {activeJob.payment?.payer === 'Receiver' && (
-                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm font-bold text-green-800 mb-2">Collect Payment: ₹{activeJob.pricing?.total}</p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-white border border-r-0 border-slate-300 rounded-l-lg flex items-center justify-center text-slate-500"><Banknote size={16}/></div>
-                      <input type="number" placeholder="Enter amount collected" value={cash} onChange={(e) => setCash(e.target.value)} className="w-full h-10 px-3 border border-slate-300 rounded-r-lg focus:ring-2 focus:ring-[#fb5c00] outline-none text-sm font-bold" />
+                  <div className="mb-8 p-5 bg-gradient-to-br from-emerald-50 to-green-50/30 border border-emerald-100 rounded-2xl shadow-inner relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full -z-10"></div>
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-2">Collect Payment</p>
+                    <p className="text-3xl font-black text-emerald-600 mb-4 tracking-tight">₹{activeJob.pricing?.total}</p>
+                    <div className="flex items-center shadow-sm rounded-xl overflow-hidden">
+                      <div className="w-12 h-12 bg-white flex items-center justify-center text-slate-400 border border-r-0 border-white/60"><Banknote size={20}/></div>
+                      <input type="number" placeholder="Amount collected" value={cash} onChange={(e) => setCash(e.target.value)} className="w-full h-12 px-3 bg-white/80 border border-white/60 focus:ring-2 focus:ring-emerald-500 outline-none text-base font-black text-slate-800" />
                     </div>
                   </div>
                 )}
@@ -363,7 +372,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <button 
                   onClick={() => updateStatus(isIntercity ? 'Source Hub Received' : 'Delivered', true)} 
                   disabled={loading}
-                  className="w-full bg-green-600 text-white font-bold py-4 rounded-xl text-lg flex justify-center items-center gap-2 hover:bg-green-700"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black py-4.5 rounded-2xl text-lg flex justify-center items-center gap-2 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
                   Complete Job <CheckCircle size={20}/>
                 </button>
@@ -376,27 +385,38 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                   <MapPin size={32} />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 mb-2">Transhipment Handover</h2>
-                <p className="text-slate-500 text-sm mb-6">Enter the Target Raider's ID to transfer custody of this package.</p>
                 
-                <input 
-                  type="text" 
-                  value={scannedRaiderId} 
-                  onChange={(e) => setScannedRaiderId(e.target.value)} 
-                  placeholder="Raider ID / Scan QR" 
-                  className="w-full text-center text-lg font-bold py-4 px-4 border-2 border-slate-300 rounded-xl focus:border-[#fb5c00] outline-none mb-4 uppercase"
-                />
+                {generatedHandoverOtp ? (
+                  <div className="mb-6">
+                    <p className="text-slate-500 text-sm mb-4">Show this OTP to the new Raider to securely transfer custody.</p>
+                    <div className="text-5xl font-black text-[#fb5c00] tracking-[0.5em] text-center bg-orange-50 border border-orange-200 py-6 rounded-2xl shadow-inner mb-6">
+                      {generatedHandoverOtp}
+                    </div>
+                    <button 
+                      onClick={() => onCompleteJob()} 
+                      className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl text-lg mb-4 hover:bg-slate-800 transition-colors"
+                    >
+                      Close and wait for Acceptance
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <p className="text-slate-500 text-sm mb-6">Initiate a secure handover to another Raider.</p>
+                    <button 
+                      onClick={handleTranshipment} 
+                      disabled={loading}
+                      className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg mb-4"
+                    >
+                      Generate Handover OTP
+                    </button>
+                  </div>
+                )}
                 
-                <button 
-                  onClick={handleTranshipment} 
-                  disabled={loading || !scannedRaiderId}
-                  className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg mb-4"
-                >
-                  Transfer Package Custody
-                </button>
-                
-                <button onClick={() => { setTaskStep(4); setTranshipmentMode(false); }} className="text-slate-500 font-bold text-sm hover:underline">
-                  Cancel Transhipment
-                </button>
+                {!generatedHandoverOtp && (
+                  <button onClick={() => { setTaskStep(4); setTranshipmentMode(false); }} className="text-slate-500 font-bold text-sm hover:underline">
+                    Cancel Transhipment
+                  </button>
+                )}
               </div>
             )}
 
@@ -407,36 +427,36 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
 
       {/* Exception (NDR) Modal */}
       {showExceptionModal && (
-        <div className="absolute inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-2xl p-6 sm:p-8 w-full max-w-md animate-in zoom-in-95 duration-200">
+            <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight flex items-center gap-2">
               <XCircle className="text-red-500" /> Report Issue
             </h3>
-            <p className="text-sm text-slate-500 mb-6">Please select the reason why this task cannot be completed. This will be logged for operations.</p>
+            <p className="text-sm text-slate-500 mb-6 font-medium">Please select the reason why this task cannot be completed. This will be logged for operations.</p>
             
             <div className="space-y-3 mb-6">
               {['Customer Unavailable', 'Parcel Not Ready / Unpacked', 'Prohibited Item Detected', 'Wrong Address Provided', 'Payment Not Ready', 'Customer Cancelled'].map(reason => (
                 <button 
                   key={reason}
                   onClick={() => setExceptionReason(reason)}
-                  className={`w-full text-left p-4 rounded-xl border ${exceptionReason === reason ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-slate-700'} font-bold text-sm transition`}
+                  className={`w-full text-left p-4 rounded-2xl border ${exceptionReason === reason ? 'border-red-500 bg-red-50 text-red-700 shadow-inner' : 'border-white/60 bg-white/60 shadow-sm text-slate-700 hover:bg-white'} font-bold text-sm transition-all`}
                 >
                   {reason}
                 </button>
               ))}
             </div>
 
-            <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 mb-6 bg-slate-50 cursor-pointer flex items-center gap-3">
+            <div className="border border-white/60 shadow-sm rounded-2xl p-4 mb-8 bg-white/60 backdrop-blur-sm cursor-pointer flex items-center gap-3 hover:bg-white transition-colors">
                 <Camera size={20} className="text-slate-400" />
                 <span className="font-bold text-slate-600 text-sm">Upload Proof (Mandatory)</span>
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={() => setShowExceptionModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl">Cancel</button>
+            <div className="flex gap-4">
+              <button onClick={() => setShowExceptionModal(false)} className="flex-1 py-4 bg-white/60 border border-white/60 shadow-sm text-slate-700 font-black rounded-2xl hover:bg-white transition-colors">Cancel</button>
               <button 
                 onClick={() => updateStatus('Failed', true)} 
                 disabled={!exceptionReason || loading}
-                className="flex-[2] py-3 bg-red-600 text-white font-bold rounded-xl disabled:opacity-50"
+                className="flex-[2] py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-black rounded-2xl shadow-[0_8px_20px_-6px_rgba(239,68,68,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(239,68,68,0.6)] disabled:opacity-50 transition-all hover:-translate-y-1"
               >
                 Submit & Mark Failed
               </button>

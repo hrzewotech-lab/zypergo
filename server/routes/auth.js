@@ -304,4 +304,21 @@ router.post(
   }
 );
 
+const { protect } = require('../middleware/authMiddleware');
+
+router.get('/me', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, error: 'Account suspended' });
+    }
+    res.json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 module.exports = router;

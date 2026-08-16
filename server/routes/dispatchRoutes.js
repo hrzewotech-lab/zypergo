@@ -23,6 +23,10 @@ router.post('/auto-assign/lastmile', authorize(...DISPATCH_ROLES), logAction('Di
 // Manual override
 router.post('/manual-assign', authorize(...DISPATCH_ROLES), logAction('Dispatch'), dc.manualAssign);
 
+// Real-time Booking Assignment
+router.post('/broadcast', authorize(...DISPATCH_ROLES), dc.broadcastToNearby);
+router.post('/accept', authorize('Raider'), dc.acceptBooking);
+
 // Partner routing
 router.post('/recommend-partners', authorize(...VIEW_ROLES), dc.recommendPartners);
 router.post('/assign-partner', authorize(...DISPATCH_ROLES), logAction('Dispatch'), dc.assignPartner);

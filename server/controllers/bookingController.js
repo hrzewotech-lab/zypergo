@@ -20,8 +20,8 @@ exports.createBooking = async (req, res) => {
     // Check Allow List and Routing Overrides
     const routingRule = await RoutingRule.findOne({ originPincode: pickupPin, destPincode: dropPin });
     
-    // If no rule exists or is explicitly not allowed
-    if (!routingRule || !routingRule.isAllowed) {
+    // Default to open unless explicitly blocked
+    if (routingRule && !routingRule.isAllowed) {
       return res.status(400).json({ 
         success: false, 
         error: `Service is not available between postcodes ${pickupPin} and ${dropPin}.` 
@@ -136,6 +136,24 @@ exports.createBooking = async (req, res) => {
     console.log(`[PUSH] Booking confirmed. Track here: /track?id=${trackingId}`);
     console.log(`[SMS] To Receiver (${bookingData.receiver?.phone}): Expect a package! Tracking ID: ${trackingId}`);
 
+    // Automatically Broadcast to nearby riders
+    try {
+      const socketService = require('../socket');
+      const io = socketService.getIO();
+      // For simplicity in this demo, just emit to all in the available_riders room.
+      // In production, we'd do the distance calculation here or in a background job.
+      io.to('available_riders').emit('new_booking_available', {
+        bookingId: booking._id,
+        pickupLocation: booking.pickupLocation,
+        dropLocation: booking.dropLocation,
+        packageDetails: booking.packageDetails,
+        pricing: booking.pricing
+      });
+      console.log(`[Socket] Broadcasted new booking ${trackingId} to available riders.`);
+    } catch (e) {
+      console.log('[Socket] Not initialized or failed to broadcast.');
+    }
+
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
@@ -169,8 +187,8 @@ exports.getBookingDetails = async (req, res) => {
     const id = req.params.id;
     let booking;
     
-    // Check if it's a tracking ID (ZYP...) or an ObjectId
-    if (id.startsWith('ZYP')) {
+    // Check if it's a tracking ID (ZYP... or ZGO...) or an ObjectId
+    if (id.startsWith('ZYP') || id.startsWith('ZGO')) {
       booking = await Booking.findOne({ trackingId: id });
     } else {
       booking = await Booking.findById(id);

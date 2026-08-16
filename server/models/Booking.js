@@ -80,6 +80,10 @@ const bookingSchema = new mongoose.Schema({
     assignedAt: { type: Date, default: Date.now },
     status: { type: String, enum: ['Active', 'Handed Over'], default: 'Active' }
   }],
+  currentRider: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   transhipmentLogs: [{
     fromRaider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     toRaider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -101,7 +105,7 @@ const bookingSchema = new mongoose.Schema({
       'Pending', 'Booking Confirmed', 'Rider Assigned', 'Rider On the Way', 
       'Arrived at Pickup', 'Picked Up', 'Source Hub Received', 'Sorted', 'Partner Handover', 
       'In Transit', 'Destination Hub Received', 'Out for Delivery', 
-      'Delivered', 'Delayed', 'Failed', 'Returned', 'Cancelled'
+      'Delivered', 'Delayed', 'Failed', 'Returned', 'Cancelled', 'Relay Handoff Pending'
     ],
     default: 'Pending'
   },

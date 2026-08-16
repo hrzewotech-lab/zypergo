@@ -12,13 +12,12 @@ import CustomerSettings from './customer/CustomerSettings';
 import LoginScreen from '../components/Auth/LoginScreen';
 import SignupScreen from '../components/Auth/SignupScreen';
 import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
-import { Search, Bell, Menu, X, ChevronDown, User as UserIcon, Settings } from 'lucide-react';
+import { Search, Bell, ChevronDown, User as UserIcon, Settings, Home, Package, MapPin, PlusCircle } from 'lucide-react';
 
 function CustomerLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState({ name: 'Customer User', role: 'Customer' });
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -56,21 +55,22 @@ function CustomerLayout() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col font-sans">
       {/* Top Navigation */}
-      <header className="bg-white border-b border-slate-200 shrink-0 sticky top-0 z-50">
-        <div className="flex items-center justify-between px-6 py-3">
-          {/* Left: Logo & Search */}
-          <div className="flex items-center gap-6">
+      <header className="bg-white border-b border-slate-200 shrink-0 sticky top-0 z-50 h-14 md:h-16 flex items-center">
+        <div className="w-full flex items-center justify-between px-4 md:px-6 relative">
+          {/* Left/Center: Logo */}
+          <div className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 flex items-center">
             <Link to="/" className="flex items-center gap-2 text-xl font-bold text-[#fb5c00] tracking-wider uppercase">
               <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8" />
             </Link>
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search shipments..." 
-                className="pl-9 pr-4 py-2 bg-slate-100 border-none rounded-md text-sm focus:ring-2 focus:ring-[#fb5c00] outline-none w-72 transition-all"
-              />
-            </div>
+          </div>
+          {/* Search */}
+          <div className="hidden md:flex items-center ml-8 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Search shipments..." 
+              className="pl-9 pr-4 py-2 bg-slate-100 border-none rounded-md text-sm focus:ring-2 focus:ring-[#fb5c00] outline-none w-72 transition-all"
+            />
           </div>
           
           {/* Middle: Navigation Links */}
@@ -92,10 +92,16 @@ function CustomerLayout() {
           </nav>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-auto">
             <button onClick={() => navigate('/booking')} className="hidden md:block bg-[#fb5c00] text-white px-4 py-2 rounded font-medium text-sm hover:bg-[#e05200] transition-colors shadow-sm">
               New Booking
             </button>
+            
+            {/* Settings (Mobile Top Right) */}
+            <button onClick={() => navigate('/settings')} className="md:hidden text-slate-500 hover:text-slate-900 transition-colors p-2">
+              <Settings size={20} />
+            </button>
+
             <button className="hidden md:block text-slate-500 hover:text-slate-900 transition-colors p-1 relative">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
@@ -140,40 +146,42 @@ function CustomerLayout() {
               )}
             </div>
             
-            {/* Mobile Menu Toggle */}
-            <button className="lg:hidden text-slate-900" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 p-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
-            {navItems.map(item => {
-               const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-               return (
-                 <Link 
-                   key={item.path} 
-                   to={item.path} 
-                   className={`font-semibold p-2 rounded-lg ${isActive ? 'text-[#fb5c00] bg-orange-50' : 'text-slate-700 hover:bg-slate-50'}`} 
-                   onClick={() => setMobileMenuOpen(false)}
-                 >
-                   {item.label}
-                 </Link>
-               );
-            })}
-            <div className="h-px w-full bg-slate-100 my-2"></div>
-            <button onClick={() => { navigate('/booking'); setMobileMenuOpen(false); }} className="w-full font-bold text-center p-3 bg-[#fb5c00] text-white rounded-lg shadow-md hover:bg-[#e05200] transition-colors">New Booking</button>
-            <button onClick={handleLogout} className="w-full font-bold text-center p-3 text-slate-900 border border-slate-200 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors">Log Out</button>
-          </div>
-        )}
       </header>
       
       {/* Main Content Area */}
-      <main className="flex-1 w-full mx-auto p-6 md:p-8 overflow-y-auto">
+      <main className="flex-1 w-full mx-auto p-4 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">
         <Outlet />
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-end px-2 pb-2 pt-2 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] h-16">
+        <Link to="/" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname === '/' ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
+          <Home size={22} className={location.pathname === '/' ? 'fill-[#fb5c00]/20' : ''} />
+          <span className="text-[10px] font-bold">Home</span>
+        </Link>
+        <Link to="/shipments" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/shipments') ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
+          <Package size={22} className={location.pathname.startsWith('/shipments') ? 'fill-[#fb5c00]/20' : ''} />
+          <span className="text-[10px] font-bold">Shipments</span>
+        </Link>
+        
+        {/* Floating Action Button for Booking */}
+        <div className="w-1/5 flex justify-center relative h-full">
+          <Link to="/booking" className="absolute -top-6 w-14 h-14 bg-[#fb5c00] rounded-full text-white flex items-center justify-center shadow-lg shadow-[#fb5c00]/30 border-[4px] border-white active:scale-95 transition-all">
+            <PlusCircle size={28} />
+          </Link>
+        </div>
+
+        <Link to="/track" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/track') ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
+          <MapPin size={22} className={location.pathname.startsWith('/track') ? 'fill-[#fb5c00]/20' : ''} />
+          <span className="text-[10px] font-bold">Track</span>
+        </Link>
+        <Link to="/profile" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/profile') ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
+          <UserIcon size={22} className={location.pathname.startsWith('/profile') ? 'fill-[#fb5c00]/20' : ''} />
+          <span className="text-[10px] font-bold">Profile</span>
+        </Link>
+      </nav>
     </div>
   );
 }

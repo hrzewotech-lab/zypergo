@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { User, Mail, Phone, KeyRound, ArrowRight, ShieldCheck, Truck, FileText, CheckCircle2, Camera, Loader2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { User, UserPlus, Mail, Phone, KeyRound, ArrowRight, ShieldCheck, Truck, FileText, CheckCircle2, Camera, Loader2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api';
 
 export default function SignupScreen({ role, onLoginSuccess }) {
+  const navigate = useNavigate();
   // Common details
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -151,16 +152,35 @@ export default function SignupScreen({ role, onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans py-12">
-      <div className="bg-white max-w-lg w-full rounded-3xl shadow-xl p-8 border border-slate-100">
+    <div className="min-h-[100dvh] bg-white sm:bg-slate-50 flex items-start sm:items-center justify-center sm:p-4 font-sans">
+      <div className="bg-white max-w-lg w-full sm:rounded-3xl sm:shadow-xl p-6 sm:p-8 sm:border sm:border-slate-100 flex flex-col min-h-[100dvh] sm:min-h-0">
         
-        <div className="text-center mb-6">
+        <div className="text-center mb-5 pt-8 sm:pt-0">
           <img src="/images/logo.png" alt="ZyperGo Logo" className="h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-black text-slate-900">ZyperGo {role}</h1>
           <p className="text-slate-500 mt-1">
             {role === 'Raider' ? 'Partner with us and start earning' : 'Create your account'}
           </p>
         </div>
+
+        {/* Toggle Login/Register */}
+        {step === 'details' && (
+          <div className="flex bg-slate-50 p-1 rounded-2xl mb-5">
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all text-slate-500 hover:text-slate-700`}
+            >
+              <User size={18} /> Login
+            </button>
+            <button
+              type="button"
+              className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all bg-[#006D77] text-white shadow-md`}
+            >
+              <UserPlus size={18} /> Register
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-bold text-center mb-6 border border-red-200">
@@ -190,25 +210,25 @@ export default function SignupScreen({ role, onLoginSuccess }) {
           <form onSubmit={handleDetailsNext} className="space-y-4 animate-in fade-in slide-in-from-right-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-sm transition-colors bg-[#f8f9fa]" />
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors duration-300" size={18} />
+                <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none font-bold text-slate-700 transition-all duration-300" />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-sm transition-colors bg-[#f8f9fa]" />
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors duration-300" size={18} />
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none font-bold text-slate-700 transition-all duration-300" />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Mobile Number</label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="98765 43210" className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-sm transition-colors bg-[#f8f9fa]" />
+              <div className="relative group">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors duration-300" size={18} />
+                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="98765 43210" className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none font-bold text-slate-700 transition-all duration-300" />
               </div>
             </div>
 
@@ -217,8 +237,8 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Password</label>
                   <div className="relative group">
-                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors" size={18} />
-                    <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-12 pr-12 py-3 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-sm transition-colors bg-white" />
+                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors duration-300" size={18} />
+                    <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-12 pr-12 py-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none font-bold text-slate-700 transition-all duration-300" />
                     <button 
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -231,8 +251,8 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Confirm</label>
                   <div className="relative group">
-                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors" size={18} />
-                    <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className="w-full pl-12 pr-12 py-3 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-bold text-sm transition-colors bg-white" />
+                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#006D77] transition-colors duration-300" size={18} />
+                    <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className="w-full pl-12 pr-12 py-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none font-bold text-slate-700 transition-all duration-300" />
                     <button 
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -245,7 +265,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="w-full bg-[#0F172A] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2 mt-4">
+            <button type="submit" disabled={loading} className="w-full bg-[#006D77] text-white font-bold py-3 rounded-2xl shadow-lg shadow-[#006D77]/20 hover:bg-[#00585f] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 mt-6">
               {role === 'Raider' ? 'Next Step' : (loading ? 'Processing...' : 'Create Account')} <ArrowRight size={18}/>
             </button>
           </form>
@@ -258,7 +278,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Vehicle Type</label>
-                <select className="w-full p-3 border-2 border-slate-200 rounded-xl text-sm bg-white focus:border-[#006D77] outline-none" value={raiderData.vehicleType} onChange={e => setRaiderData({...raiderData, vehicleType: e.target.value})}>
+                <select className="w-full p-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none text-sm transition-all duration-300" value={raiderData.vehicleType} onChange={e => setRaiderData({...raiderData, vehicleType: e.target.value})}>
                   <option>Bike</option>
                   <option>Auto</option>
                   <option>Mini Truck</option>
@@ -267,7 +287,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Registration No.</label>
-                <input required type="text" placeholder="MH 12 AB 1234" className="w-full p-3 border-2 border-slate-200 rounded-xl text-sm focus:border-[#006D77] outline-none" value={raiderData.vehicleRegistration} onChange={e => setRaiderData({...raiderData, vehicleRegistration: e.target.value})} />
+                <input required type="text" placeholder="MH 12 AB 1234" className="w-full p-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none text-sm transition-all duration-300" value={raiderData.vehicleRegistration} onChange={e => setRaiderData({...raiderData, vehicleRegistration: e.target.value})} />
               </div>
             </div>
 
@@ -279,7 +299,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                     type="button"
                     key={roleOption} 
                     onClick={() => setRaiderData({...raiderData, roleFlexibility: roleOption})}
-                    className={`py-3 px-2 rounded-xl text-xs font-bold border-2 transition ${raiderData.roleFlexibility === roleOption ? 'border-[#006D77] bg-[#006D77]/5 text-[#006D77]' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`py-3 px-2 rounded-2xl text-xs font-bold transition-all duration-300 border ${raiderData.roleFlexibility === roleOption ? 'border-[#006D77] bg-[#006D77]/10 text-[#006D77] shadow-sm' : 'border-slate-200 bg-white/70 backdrop-blur-md text-slate-500 hover:border-slate-300 hover:shadow-md'}`}
                   >
                     {roleOption}
                   </button>
@@ -289,12 +309,12 @@ export default function SignupScreen({ role, onLoginSuccess }) {
 
             <div className="pt-2">
                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Home Address</label>
-               <textarea required rows="2" className="w-full p-3 border-2 border-slate-200 rounded-xl outline-none focus:border-[#006D77] text-sm resize-none" placeholder="Enter full address" value={raiderData.address} onChange={e => setRaiderData({...raiderData, address: e.target.value})}></textarea>
+               <textarea required rows="2" className="w-full p-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none text-sm resize-none transition-all duration-300" placeholder="Enter full address" value={raiderData.address} onChange={e => setRaiderData({...raiderData, address: e.target.value})}></textarea>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setStep('details')} className="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200">Back</button>
-              <button type="submit" className="w-2/3 bg-[#0F172A] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-800 flex items-center justify-center gap-2">Next <ArrowRight size={18}/></button>
+            <div className="flex gap-3 pt-2 mt-6">
+              <button type="button" onClick={() => setStep('details')} className="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-2xl hover:bg-slate-200 active:scale-[0.98] transition-all">Back</button>
+              <button type="submit" className="w-2/3 bg-[#006D77] text-white font-bold py-3 rounded-2xl shadow-lg shadow-[#006D77]/20 hover:bg-[#00585f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-lg">Next <ArrowRight size={20}/></button>
             </div>
           </form>
         )}
@@ -304,51 +324,71 @@ export default function SignupScreen({ role, onLoginSuccess }) {
             <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2"><FileText size={20} className="text-[#006D77]"/> Verification Docs</h3>
             
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border-2 border-slate-200 rounded-xl bg-slate-50">
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">Driving License</p>
-                  <p className="text-[10px] text-slate-500">Upload clear front & back</p>
+              <div className="relative overflow-hidden flex items-center justify-between p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,109,119,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,109,119,0.15)] hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#006D77]/5 to-[#006D77]/15 flex items-center justify-center text-[#006D77] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-inner">
+                    <FileText size={22} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-sm">Driving License</p>
+                    <p className="text-xs text-slate-500">Front & Back</p>
+                  </div>
                 </div>
                 <input type="file" ref={licenseInputRef} className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'drivingLicenseUrl')} />
-                <button type="button" onClick={() => licenseInputRef.current.click()} disabled={uploadingDoc === 'drivingLicenseUrl'} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${raiderData.documents.drivingLicenseUrl ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}`}>
-                  {uploadingDoc === 'drivingLicenseUrl' ? <Loader2 size={14} className="animate-spin"/> : raiderData.documents.drivingLicenseUrl ? <CheckCircle2 size={14}/> : <Camera size={14}/>}
-                  {raiderData.documents.drivingLicenseUrl ? 'Uploaded' : 'Upload'}
+                <button type="button" onClick={() => licenseInputRef.current.click()} disabled={uploadingDoc === 'drivingLicenseUrl'} className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300 active:scale-95 ${raiderData.documents.drivingLicenseUrl ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white border border-slate-200 shadow-sm text-slate-600 hover:border-[#006D77]/30 hover:bg-[#006D77]/5 hover:text-[#006D77]'}`}>
+                  {uploadingDoc === 'drivingLicenseUrl' ? <Loader2 size={16} className="animate-spin"/> : raiderData.documents.drivingLicenseUrl ? <CheckCircle2 size={16}/> : <Camera size={16}/>}
+                  <span className="hidden sm:inline">{raiderData.documents.drivingLicenseUrl ? 'Uploaded' : 'Upload'}</span>
                 </button>
               </div>
               
-              <div className="flex items-center justify-between p-3 border-2 border-slate-200 rounded-xl bg-slate-50">
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">Vehicle RC</p>
-                  <p className="text-[10px] text-slate-500">Registration Certificate</p>
+              <div className="relative overflow-hidden flex items-center justify-between p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,109,119,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,109,119,0.15)] hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#006D77]/5 to-[#006D77]/15 flex items-center justify-center text-[#006D77] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-inner">
+                    <FileText size={22} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-sm">Vehicle RC</p>
+                    <p className="text-xs text-slate-500">Registration</p>
+                  </div>
                 </div>
                 <input type="file" ref={rcInputRef} className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'rcUrl')} />
-                <button type="button" onClick={() => rcInputRef.current.click()} disabled={uploadingDoc === 'rcUrl'} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${raiderData.documents.rcUrl ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}`}>
-                  {uploadingDoc === 'rcUrl' ? <Loader2 size={14} className="animate-spin"/> : raiderData.documents.rcUrl ? <CheckCircle2 size={14}/> : <Camera size={14}/>}
-                  {raiderData.documents.rcUrl ? 'Uploaded' : 'Upload'}
+                <button type="button" onClick={() => rcInputRef.current.click()} disabled={uploadingDoc === 'rcUrl'} className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300 active:scale-95 ${raiderData.documents.rcUrl ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white border border-slate-200 shadow-sm text-slate-600 hover:border-[#006D77]/30 hover:bg-[#006D77]/5 hover:text-[#006D77]'}`}>
+                  {uploadingDoc === 'rcUrl' ? <Loader2 size={16} className="animate-spin"/> : raiderData.documents.rcUrl ? <CheckCircle2 size={16}/> : <Camera size={16}/>}
+                  <span className="hidden sm:inline">{raiderData.documents.rcUrl ? 'Uploaded' : 'Upload'}</span>
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 border-2 border-slate-200 rounded-xl bg-slate-50">
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">ID Proof</p>
-                  <p className="text-[10px] text-slate-500">Aadhaar/PAN Card</p>
+              <div className="relative overflow-hidden flex items-center justify-between p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,109,119,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,109,119,0.15)] hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#006D77]/5 to-[#006D77]/15 flex items-center justify-center text-[#006D77] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-inner">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-sm">ID Proof</p>
+                    <p className="text-xs text-slate-500">Aadhaar/PAN</p>
+                  </div>
                 </div>
                 <input type="file" id="idProofUpload" className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'idProofUrl')} />
-                <button type="button" onClick={() => document.getElementById('idProofUpload').click()} disabled={uploadingDoc === 'idProofUrl'} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${raiderData.documents.idProofUrl ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}`}>
-                  {uploadingDoc === 'idProofUrl' ? <Loader2 size={14} className="animate-spin"/> : raiderData.documents.idProofUrl ? <CheckCircle2 size={14}/> : <Camera size={14}/>}
-                  {raiderData.documents.idProofUrl ? 'Uploaded' : 'Upload'}
+                <button type="button" onClick={() => document.getElementById('idProofUpload').click()} disabled={uploadingDoc === 'idProofUrl'} className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300 active:scale-95 ${raiderData.documents.idProofUrl ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white border border-slate-200 shadow-sm text-slate-600 hover:border-[#006D77]/30 hover:bg-[#006D77]/5 hover:text-[#006D77]'}`}>
+                  {uploadingDoc === 'idProofUrl' ? <Loader2 size={16} className="animate-spin"/> : raiderData.documents.idProofUrl ? <CheckCircle2 size={16}/> : <Camera size={16}/>}
+                  <span className="hidden sm:inline">{raiderData.documents.idProofUrl ? 'Uploaded' : 'Upload'}</span>
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 border-2 border-slate-200 rounded-xl bg-slate-50">
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">Profile Image</p>
-                  <p className="text-[10px] text-slate-500">Clear selfie for identification</p>
+              <div className="relative overflow-hidden flex items-center justify-between p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,109,119,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,109,119,0.15)] hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#006D77]/5 to-[#006D77]/15 flex items-center justify-center text-[#006D77] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shadow-inner">
+                    <User size={22} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-sm">Profile Image</p>
+                    <p className="text-xs text-slate-500">Clear selfie</p>
+                  </div>
                 </div>
                 <input type="file" id="profileImageUpload" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'profileImageUrl')} />
-                <button type="button" onClick={() => document.getElementById('profileImageUpload').click()} disabled={uploadingDoc === 'profileImageUrl'} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${raiderData.documents.profileImageUrl ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}`}>
-                  {uploadingDoc === 'profileImageUrl' ? <Loader2 size={14} className="animate-spin"/> : raiderData.documents.profileImageUrl ? <CheckCircle2 size={14}/> : <Camera size={14}/>}
-                  {raiderData.documents.profileImageUrl ? 'Uploaded' : 'Upload'}
+                <button type="button" onClick={() => document.getElementById('profileImageUpload').click()} disabled={uploadingDoc === 'profileImageUrl'} className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300 active:scale-95 ${raiderData.documents.profileImageUrl ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white border border-slate-200 shadow-sm text-slate-600 hover:border-[#006D77]/30 hover:bg-[#006D77]/5 hover:text-[#006D77]'}`}>
+                  {uploadingDoc === 'profileImageUrl' ? <Loader2 size={16} className="animate-spin"/> : raiderData.documents.profileImageUrl ? <CheckCircle2 size={16}/> : <Camera size={16}/>}
+                  <span className="hidden sm:inline">{raiderData.documents.profileImageUrl ? 'Uploaded' : 'Upload'}</span>
                 </button>
               </div>
             </div>
@@ -356,15 +396,15 @@ export default function SignupScreen({ role, onLoginSuccess }) {
             <div className="pt-2">
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bank Details</label>
               <div className="grid grid-cols-2 gap-3">
-                <input required type="text" placeholder="Account Number" className="w-full p-3 border-2 border-slate-200 rounded-xl text-sm focus:border-[#006D77] outline-none" value={raiderData.bankDetails.accountNumber} onChange={e => setRaiderData({...raiderData, bankDetails: {...raiderData.bankDetails, accountNumber: e.target.value}})} />
-                <input required type="text" placeholder="IFSC Code" className="w-full p-3 border-2 border-slate-200 rounded-xl text-sm focus:border-[#006D77] outline-none" value={raiderData.bankDetails.ifscCode} onChange={e => setRaiderData({...raiderData, bankDetails: {...raiderData.bankDetails, ifscCode: e.target.value}})} />
+                <input required type="text" placeholder="Account Number" className="w-full p-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none text-sm transition-all duration-300" value={raiderData.bankDetails.accountNumber} onChange={e => setRaiderData({...raiderData, bankDetails: {...raiderData.bankDetails, accountNumber: e.target.value}})} />
+                <input required type="text" placeholder="IFSC Code" className="w-full p-3 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none text-sm transition-all duration-300" value={raiderData.bankDetails.ifscCode} onChange={e => setRaiderData({...raiderData, bankDetails: {...raiderData.bankDetails, ifscCode: e.target.value}})} />
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <button type="button" onClick={() => setStep('vehicle')} className="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200">Back</button>
-              <button type="submit" disabled={loading || !raiderData.documents.drivingLicenseUrl || !raiderData.documents.rcUrl || !raiderData.documents.idProofUrl || !raiderData.documents.profileImageUrl} className="w-2/3 bg-[#0F172A] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading ? 'Submitting...' : 'Submit Application'} <ArrowRight size={18}/>
+            <div className="flex gap-3 pt-4 mt-6">
+              <button type="button" onClick={() => setStep('vehicle')} className="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-2xl hover:bg-slate-200 active:scale-[0.98] transition-all">Back</button>
+              <button type="submit" disabled={loading || !raiderData.documents.drivingLicenseUrl || !raiderData.documents.rcUrl || !raiderData.documents.idProofUrl || !raiderData.documents.profileImageUrl} className="w-2/3 bg-[#006D77] text-white font-bold py-3 rounded-2xl shadow-lg shadow-[#006D77]/20 hover:bg-[#00585f] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 text-lg">
+                {loading ? 'Submitting...' : 'Submit Application'} <ArrowRight size={20}/>
               </button>
             </div>
           </form>
@@ -384,7 +424,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                 Check your email <span className="text-[#006D77]">{email}</span> for your generated password once you are approved!
               </p>
             </div>
-            <Link to="/login" className="inline-block bg-[#006D77] text-white font-bold py-3 px-8 rounded-xl mt-6 hover:bg-[#00585f] transition">
+            <Link to="/login" className="inline-block bg-[#006D77] text-white font-bold py-3 px-8 rounded-2xl mt-6 shadow-lg shadow-[#006D77]/20 hover:bg-[#00585f] active:scale-[0.98] transition-all text-lg">
               Return to Login
             </Link>
           </div>
@@ -402,26 +442,20 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   placeholder="1234"
-                  className="w-full text-center py-4 border-2 border-slate-200 rounded-xl focus:border-[#006D77] outline-none font-mono font-bold text-2xl tracking-widest transition-colors"
+                  className="w-full text-center py-4 bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm hover:shadow-md focus:bg-white focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 outline-none font-mono font-bold text-2xl tracking-widest transition-all duration-300"
                 />
               </div>
               <p className="text-xs text-right text-[#006D77] font-bold mt-2 cursor-pointer hover:underline" onClick={() => setStep('details')}>
                 Change number?
               </p>
             </div>
-            <button type="submit" disabled={loading || otp.length !== 4} className="w-full bg-[#006D77] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#00585f] disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? 'Verifying...' : 'Verify & Continue'} <ShieldCheck size={18}/>
+            <button type="submit" disabled={loading || otp.length !== 4} className="w-full bg-[#006D77] text-white font-bold py-3 rounded-2xl shadow-lg shadow-[#006D77]/20 hover:bg-[#00585f] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 text-lg">
+              {loading ? 'Verifying...' : 'Verify & Continue'} <ShieldCheck size={20}/>
             </button>
           </form>
         )}
 
-        {step === 'details' && (
-          <div className="mt-8 text-center border-t border-slate-100 pt-6">
-            <p className="text-sm text-slate-500">
-              Already have an account? <Link to="/login" className="font-bold text-[#006D77] hover:underline">Log in</Link>
-            </p>
-          </div>
-        )}
+
       </div>
     </div>
   );

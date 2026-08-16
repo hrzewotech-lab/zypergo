@@ -54,30 +54,30 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Control Tower</h1>
-          <p className="text-slate-500 text-sm mt-1">Live snapshot of the ZyperGo logistics network.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Control Tower</h1>
+          <p className="text-slate-500 text-sm mt-1 font-bold">Live snapshot of the ZyperGo logistics network.</p>
         </div>
-        <button onClick={fetchStats} className="flex items-center gap-2 text-[#006D77] font-bold text-sm bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm hover:bg-slate-50">
+        <button onClick={fetchStats} className="flex items-center gap-2 text-[#006D77] font-bold text-sm bg-white/60 backdrop-blur-sm border border-white/80 px-5 py-2.5 rounded-xl shadow-sm hover:bg-white transition-all">
           <RefreshCcw size={16} className={loading ? "animate-spin" : ""} /> Refresh
         </button>
       </div>
 
       {/* Top KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {topKpis.map((kpi, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div className={`p-3 rounded-xl ${kpi.color}`}>
-                {kpi.icon}
+          <div key={idx} className="bg-white/60 backdrop-blur-md rounded-2xl md:rounded-3xl p-4 md:p-6 border border-white/80 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] hover:bg-white/80 transition-all group">
+            <div className="flex justify-between items-start mb-2 md:mb-4">
+              <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl shadow-sm transition-transform group-hover:scale-110 group-hover:shadow-md ${kpi.color}`}>
+                {React.cloneElement(kpi.icon, { className: "w-5 h-5 md:w-6 md:h-6" })}
               </div>
             </div>
-            <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider">{kpi.title}</h3>
-            <div className="flex items-end gap-3 mt-2">
-              <p className="text-3xl font-black text-slate-900">{kpi.value}</p>
-              <p className="text-xs font-bold text-slate-400 mb-1">{kpi.subtitle}</p>
+            <h3 className="text-slate-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest">{kpi.title}</h3>
+            <div className="flex flex-col xl:flex-row xl:items-end gap-0.5 md:gap-3 mt-1 md:mt-2">
+              <p className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter">{kpi.value}</p>
+              <p className="text-[7px] md:text-[10px] font-bold text-slate-500 mb-0.5 md:mb-1.5 uppercase tracking-wider">{kpi.subtitle}</p>
             </div>
           </div>
         ))}
@@ -87,48 +87,49 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Financial Overview */}
-        <div className="bg-gradient-to-br from-[#006D77] to-[#004a51] rounded-xl shadow-sm border border-slate-200 p-6 text-white flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-white/80 text-sm uppercase tracking-wider mb-6">Financial Overview</h3>
+        <div className="bg-gradient-to-br from-[#006D77] to-[#004a51] rounded-[2rem] shadow-[0_8px_30px_-6px_rgba(0,109,119,0.5)] border border-white/10 p-8 text-white flex flex-col justify-between relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-125"></div>
+          <div className="relative z-10">
+            <h3 className="font-black text-white/90 text-[10px] uppercase tracking-widest mb-6">Financial Overview</h3>
             <div className="space-y-6">
               <div>
-                <p className="text-xs text-white/70 mb-1">Total Revenue</p>
-                <p className="text-3xl font-black flex items-center"><IndianRupee size={24} className="mr-1"/> {stats.revenue.toLocaleString()}</p>
+                <p className="text-xs font-bold text-white/70 mb-1">Total Revenue</p>
+                <p className="text-4xl font-black tracking-tighter flex items-center"><IndianRupee size={28} className="mr-1 opacity-80"/> {stats.revenue.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-xs text-white/70 mb-1">Cash Collection (COD)</p>
-                <p className="text-xl font-bold flex items-center text-[#FFB703]"><IndianRupee size={18} className="mr-1"/> {stats.cashCollection.toLocaleString()}</p>
+                <p className="text-xs font-bold text-white/70 mb-1">Cash Collection (COD)</p>
+                <p className="text-2xl font-black flex items-center text-[#FFB703]"><IndianRupee size={20} className="mr-1 opacity-80"/> {stats.cashCollection.toLocaleString()}</p>
               </div>
             </div>
           </div>
-          <div className="mt-8">
-            <Link to="/finance" className="block text-center bg-white/10 hover:bg-white/20 font-bold py-2 rounded transition text-sm">
+          <div className="mt-8 relative z-10">
+            <Link to="/finance" className="block text-center bg-white/20 hover:bg-white/30 backdrop-blur-sm font-black py-3 rounded-2xl transition-all text-sm shadow-sm">
               View Detailed Financials
             </Link>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="font-bold text-slate-900 text-lg mb-4">Quick Actions</h3>
+        <div className="lg:col-span-2 bg-white/50 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white/60 p-8">
+          <h3 className="font-black text-slate-900 text-lg mb-6 tracking-tight">Quick Actions</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <Link to="/bookings" className="bg-[#006D77] hover:bg-[#00585f] text-white p-4 rounded-xl text-sm font-bold shadow-sm transition flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
-              <Package size={20} /> Manual Booking
+            <Link to="/bookings" className="bg-gradient-to-br from-[#006D77] to-[#00585f] hover:from-[#00585f] hover:to-[#004a51] text-white p-4 rounded-2xl text-xs font-black shadow-md hover:shadow-lg transition-all flex flex-col items-center justify-center gap-3 text-center h-28 cursor-pointer group">
+              <Package size={24} className="group-hover:scale-110 transition-transform" /> Manual Booking
             </Link>
-            <Link to="/rider-management" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
-              <Users size={20} /> Assign Rider
+            <Link to="/rider-management" className="bg-white/60 backdrop-blur-sm hover:bg-white text-[#006D77] p-4 rounded-2xl text-xs font-black shadow-sm transition-all border border-white/80 flex flex-col items-center justify-center gap-3 text-center h-28 cursor-pointer group">
+              <div className="w-10 h-10 rounded-full bg-[#006D77]/10 flex items-center justify-center group-hover:bg-[#006D77]/20 transition-colors"><Users size={20} /></div> Assign Rider
             </Link>
-            <Link to="/hubs" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
-              <Network size={20} /> Assign Partner
+            <Link to="/hubs" className="bg-white/60 backdrop-blur-sm hover:bg-white text-[#006D77] p-4 rounded-2xl text-xs font-black shadow-sm transition-all border border-white/80 flex flex-col items-center justify-center gap-3 text-center h-28 cursor-pointer group">
+              <div className="w-10 h-10 rounded-full bg-[#006D77]/10 flex items-center justify-center group-hover:bg-[#006D77]/20 transition-colors"><Network size={20} /></div> Assign Partner
             </Link>
-            <Link to="/scanning" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
-              <Truck size={20} /> Create Manifest
+            <Link to="/scanning" className="bg-white/60 backdrop-blur-sm hover:bg-white text-indigo-600 p-4 rounded-2xl text-xs font-black shadow-sm transition-all border border-white/80 flex flex-col items-center justify-center gap-3 text-center h-28 cursor-pointer group">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors"><Truck size={20} /></div> Create Manifest
             </Link>
-            <Link to="/finance" className="bg-slate-50 hover:bg-slate-100 text-slate-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-slate-200 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
-              <IndianRupee size={20} /> Process Refund
+            <Link to="/finance" className="bg-white/60 backdrop-blur-sm hover:bg-white text-emerald-600 p-4 rounded-2xl text-xs font-black shadow-sm transition-all border border-white/80 flex flex-col items-center justify-center gap-3 text-center h-28 cursor-pointer group">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors"><IndianRupee size={20} /></div> Process Refund
             </Link>
-            <Link to="/support" className="bg-red-50 hover:bg-red-100 text-red-700 p-4 rounded-xl text-sm font-bold shadow-sm transition border border-red-100 flex flex-col items-center justify-center gap-2 text-center h-24 cursor-pointer">
-              <AlertCircle size={20} /> Raise Escalation
+            <Link to="/support" className="bg-red-50/80 backdrop-blur-sm hover:bg-red-100/80 text-red-600 p-4 rounded-2xl text-xs font-black shadow-sm transition-all border border-red-100 flex flex-col items-center justify-center gap-3 text-center h-28 cursor-pointer group">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors"><AlertCircle size={20} /></div> Raise Escalation
             </Link>
           </div>
         </div>

@@ -560,3 +560,110 @@ exports.updateDispatchRules = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to update dispatch rules.' });
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  REAL-TIME BROADCAST & ACCEPT (SOCKET.IO)
+// ═══════════════════════════════════════════════════════════════════════════════
+exports.broadcastToNearby = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ success: false, error: 'Booking not found' });
+
+    // Use a fixed max radius for nearby riders (e.g., 15km)
+    const MAX_RADIUS = 15;
+    const pickupLat = booking.pickupLocation?.lat;
+    const pickupLng = booking.pickupLocation?.lng;
+
+    // Find all online riders
+    const riders = await User.find({
+      role: 'Raider',
+      isActive: true,
+      'raiderDetails.isOnline': true,
+      'raiderDetails.isOnShift': true,
+      'raiderDetails.isOnBreak': false,
+    });
+
+    const nearbyRiders = [];
+    riders.forEach(r => {
+      const rLat = r.raiderDetails?.currentLocation?.lat;
+      const rLng = r.raiderDetails?.currentLocation?.lng;
+      if (rLat && rLng) {
+        const dist = haversineKm(pickupLat, pickupLng, rLat, rLng);
+        if (dist <= MAX_RADIUS) {
+          nearbyRiders.push(r._id.toString());
+        }
+      }
+    });
+
+    // Broadcast via socket.io to the general available_riders room or specific riders
+    try {
+      const socketService = require('../socket');
+      const io = socketService.getIO();
+      // For simplicity, we emit to a global room, but frontend checks proximity
+      // OR we can emit to specific rider rooms if we know their socket IDs.
+      io.to('available_riders').emit('new_booking_available', {
+        bookingId: booking._id,
+        pickupLocation: booking.pickupLocation,
+        dropLocation: booking.dropLocation,
+        packageDetails: booking.packageDetails,
+        pricing: booking.pricing,
+        targetRiders: nearbyRiders // Frontend of each rider will check if their ID is in this list
+      });
+      console.log(`[Dispatch] Broadcasted booking ${booking.trackingId} to ${nearbyRiders.length} nearby riders.`);
+    } catch (e) {
+      console.error('[Dispatch] Socket.io broadcast failed (maybe not initialized).', e);
+    }
+
+    res.status(200).json({ success: true, message: 'Broadcasted successfully', targetCount: nearbyRiders.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to broadcast' });
+  }
+};
+
+exports.acceptBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    const riderId = req.user ? req.user.id : req.body.riderId; // fallback for mock auth
+
+    // Atomic update to ensure only the FIRST rider who accepts gets it
+    const booking = await Booking.findOneAndUpdate(
+      { 
+        _id: bookingId, 
+        status: { $in: ['Pending', 'Booking Confirmed', 'Relay Handoff Pending'] },
+        currentRider: { $exists: false } // ensure no one else has taken it
+      },
+      {
+        status: 'Rider Assigned',
+        currentRider: riderId,
+        $push: {
+          assignedRaiders: { raiderId: riderId, status: 'Active' },
+          trackingHistory: {
+            status: 'Rider Assigned',
+            description: `Booking accepted by rider ${riderId}.`
+          }
+        }
+      },
+      { new: true }
+    ).populate('currentRider', 'name phone');
+
+    if (!booking) {
+      return res.status(400).json({ success: false, error: 'Booking no longer available or already accepted.' });
+    }
+
+    // Emit event to remove it from other riders' screens
+    try {
+      const socketService = require('../socket');
+      const io = socketService.getIO();
+      io.to('available_riders').emit('booking_accepted_by_other', { bookingId });
+      console.log(`[Dispatch] Booking ${booking.trackingId} accepted by ${riderId}. Broadcasted removal.`);
+    } catch (e) {}
+
+    res.status(200).json({ success: true, data: booking });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to accept booking' });
+  }
+};
+

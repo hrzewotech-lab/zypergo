@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import RaiderDashboard from './raider/RaiderDashboard';
 import RaiderProfile from './raider/RaiderProfile';
 import RaiderSettings from './raider/RaiderSettings';
+import RaiderEarnings from './raider/RaiderEarnings';
 import LoginScreen from '../components/Auth/LoginScreen';
 import SignupScreen from '../components/Auth/SignupScreen';
 import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
@@ -91,6 +92,11 @@ export default function RaiderApp() {
       <Route path="/profile" element={
         <ProtectedRoute isAuthenticated={isAuthenticated}>
           <RaiderProfile user={user} />
+        </ProtectedRoute>
+      } />
+      <Route path="/earnings" element={
+        <ProtectedRoute isAuthenticated={isAuthenticated}>
+          <RaiderEarnings user={user} onLogout={handleClearAuth} />
         </ProtectedRoute>
       } />
       <Route path="/settings" element={

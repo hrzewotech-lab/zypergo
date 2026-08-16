@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Navigation, CheckCircle2, MapPin, Package, AlertTriangle, Bell, Settings, Phone, Camera, ArrowRight, ShieldCheck, Clock } from 'lucide-react';
+import { Truck, Navigation, CheckCircle2, MapPin, Package, AlertTriangle, Bell, Settings, Phone, Camera, ArrowRight, ShieldCheck, Clock, LayoutDashboard, Wallet, User as UserIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import RaiderTaskFlow from './RaiderTaskFlow';
 import RaiderHeader from './RaiderHeader';
@@ -12,7 +13,7 @@ export default function RaiderDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('Deliveries');
   const [loading, setLoading] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [showEarningsModal, setShowEarningsModal] = useState(false);
+  const navigate = useNavigate();
 
   // Form State
   const [otp, setOtp] = useState('');
@@ -28,7 +29,7 @@ export default function RaiderDashboard({ user, onLogout }) {
         const allBookings = res.data.data;
         
         // Mock filtering logic for the rider
-        const unassigned = allBookings.filter(b => b.status === 'Booking Confirmed' || b.status === 'Pending');
+        const unassigned = allBookings.filter(b => ['Booking Confirmed', 'Pending', 'Relay Handoff Pending', 'Transhipment Pending'].includes(b.status));
         setAvailableJobs(unassigned);
         
         // Mock active jobs for this raider (any active route statuses)
@@ -84,6 +85,26 @@ export default function RaiderDashboard({ user, onLogout }) {
   };
 
   const acceptJob = async (job) => {
+    if (job.status === 'Relay Handoff Pending' || job.status === 'Transhipment Pending') {
+      const enteredOtp = window.prompt("Enter the 4-digit Handover OTP from the other Raider:");
+      if (!enteredOtp) return;
+      
+      setLoading(true);
+      try {
+        const res = await api.post(`/raider/jobs/${job._id}/accept-handover`, { newRaiderId: user?._id, otp: enteredOtp });
+        if (res.data.success) {
+          fetchJobs();
+          setActiveJob(res.data.data);
+        }
+      } catch (err) {
+        alert(err.response?.data?.error || 'Failed to accept handover');
+        fetchJobs(); 
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await api.put(`/admin/bookings/${job._id}/assign-raider`, { raiderId: user?._id });
@@ -93,7 +114,7 @@ export default function RaiderDashboard({ user, onLogout }) {
       }
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to accept job');
-      fetchJobs(); // Force refresh to remove the job from available list if it was taken by someone else
+      fetchJobs(); 
     } finally {
       setLoading(false);
     }
@@ -171,13 +192,13 @@ export default function RaiderDashboard({ user, onLogout }) {
         </div>
       )}
 
-      <main className="flex-1 p-4 md:p-6 max-w-[1400px] mx-auto w-full flex flex-col gap-4 md:gap-6">
+      <main className="flex-1 p-4 md:p-6 max-w-[1400px] mx-auto w-full flex flex-col gap-4 md:gap-6 pb-24 md:pb-6 relative z-10">
         
         <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-stretch lg:h-[calc(100vh-140px)] pb-8">
           
           {/* LEFT PANE - Active Delivery Flow */}
-          <div className="w-full lg:w-7/12 xl:w-8/12 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-auto lg:h-full relative">
-            <div className="bg-[#F8FAFC] border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+          <div className="w-full lg:w-7/12 xl:w-8/12 bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-auto lg:h-full relative">
+            <div className="bg-white/40 border-b border-white/60 px-6 py-4 flex justify-between items-center backdrop-blur-md">
               <div className="flex items-center gap-2 text-[#fb5c00] font-bold text-sm tracking-wide">
                 <Truck size={18} /> ACTIVE MISSION
               </div>
@@ -199,34 +220,34 @@ export default function RaiderDashboard({ user, onLogout }) {
 
           {/* RIGHT PANE - Job Queue */}
           <div className="w-full lg:w-5/12 xl:w-4/12 flex flex-col gap-4 md:gap-6 h-[500px] lg:h-full">
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex-1 flex flex-col overflow-hidden">
-              <div className="flex border-b border-slate-200 bg-slate-50">
-                <button onClick={() => setActiveTab('Deliveries')} className={`flex-1 py-4 text-sm font-bold text-center border-b-2 transition ${activeTab === 'Deliveries' ? 'border-[#fb5c00] text-[#fb5c00] bg-white' : 'border-transparent text-slate-500 hover:bg-slate-100'}`}>
+            <div className="bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex-1 flex flex-col overflow-hidden relative">
+              <div className="flex border-b border-white/60 bg-white/40 backdrop-blur-md p-1.5 m-4 rounded-2xl shadow-sm">
+                <button onClick={() => setActiveTab('Deliveries')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Deliveries' ? 'bg-[#fb5c00] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
                   My Route ({myJobs.length})
                 </button>
-                <button onClick={() => setActiveTab('Available')} className={`flex-1 py-4 text-sm font-bold text-center border-b-2 transition ${activeTab === 'Available' ? 'border-[#fb5c00] text-[#fb5c00] bg-white' : 'border-transparent text-slate-500 hover:bg-slate-100'}`}>
+                <button onClick={() => setActiveTab('Available')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Available' ? 'bg-[#fb5c00] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
                   Available Jobs ({availableJobs.length})
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+              <div className="flex-1 overflow-y-auto p-4 pt-0 space-y-3">
                 {activeTab === 'Available' ? (
                   availableJobs.map(job => (
-                    <div key={job._id} className="border border-slate-200 bg-white rounded-lg p-4 shadow-sm hover:border-[#fb5c00]/50 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-slate-900">{job.pickupLocation?.pincode} &rarr; {job.dropLocation?.pincode}</h4>
-                        <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-wider">NEW</span>
+                    <div key={job._id} className="border border-white/60 bg-white/60 backdrop-blur-sm rounded-3xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                      <div className="flex justify-between items-start mb-3">
+                        <h4 className="font-black text-slate-900 tracking-tight">{job.pickupLocation?.pincode} &rarr; {job.dropLocation?.pincode}</h4>
+                        <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest shadow-sm">NEW</span>
                       </div>
-                      <p className="text-xs text-slate-500 mb-3 flex items-center gap-1"><MapPin size={12}/> {job.pickupLocation?.address}</p>
-                      <button onClick={() => acceptJob(job)} disabled={loading} className="w-full bg-slate-900 text-white font-bold text-xs py-2 rounded shadow hover:bg-slate-800 transition">
+                      <p className="text-xs text-slate-500 mb-4 flex items-center gap-2 font-medium"><MapPin size={14} className="text-emerald-500"/> {job.pickupLocation?.address}</p>
+                      <button onClick={() => acceptJob(job)} disabled={loading} className="w-full bg-gradient-to-r from-[#0F172A] to-slate-800 text-white font-black text-sm py-3 rounded-2xl shadow-[0_4px_15px_-4px_rgba(15,23,42,0.4)] hover:shadow-[0_6px_20px_-4px_rgba(15,23,42,0.5)] hover:-translate-y-0.5 transition-all disabled:opacity-50">
                         Accept Job
                       </button>
                     </div>
                   ))
                 ) : (
                   myJobs.map((job, index) => (
-                    <div key={job._id} onClick={() => setActiveJob(job)} className={`border rounded-lg p-4 cursor-pointer transition ${activeJob?._id === job._id ? 'border-[#fb5c00] bg-white shadow-md ring-2 ring-[#fb5c00]/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                      <div className="flex justify-between items-start mb-2">
+                    <div key={job._id} onClick={() => setActiveJob(job)} className={`border rounded-3xl p-5 cursor-pointer transition-all ${activeJob?._id === job._id ? 'border-[#fb5c00]/50 bg-gradient-to-br from-[#fb5c00]/5 to-transparent shadow-md -translate-y-1' : 'border-white/60 bg-white/60 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5'}`}>
+                      <div className="flex justify-between items-start mb-3">
                         <h4 className="font-bold text-slate-900 tracking-tight flex items-center gap-2">
                           <span className="bg-slate-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">{index + 1}</span>
                           {job.trackingId}
@@ -247,44 +268,34 @@ export default function RaiderDashboard({ user, onLogout }) {
         </div>
       </main>
 
-      {/* Earnings & Cash Modal */}
-      {showEarningsModal && (
-        <div className="absolute inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200 relative overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900">Earnings & Cash</h3>
-              <button onClick={() => setShowEarningsModal(false)} className="text-slate-400 hover:text-slate-600 font-bold">Close</button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Today's Earnings</p>
-                  <p className="text-2xl font-black text-slate-900">₹{user?.raiderDetails?.earnings?.totalEarnings || 0}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-slate-500 uppercase">Performance</p>
-                  <p className="text-lg font-bold text-emerald-600">{user?.raiderDetails?.performance?.completionRate || 100}%</p>
-                </div>
-              </div>
-
-              <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl">
-                <p className="text-xs font-bold text-orange-800 uppercase mb-1">Cash in Hand (Pending Deposit)</p>
-                <p className="text-2xl font-black text-orange-600">₹{user?.raiderDetails?.earnings?.pendingDeposit || 0}</p>
-                <p className="text-xs text-orange-700 mt-2">You must deposit this cash to the Hub Manager at the end of your shift.</p>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleDepositCash}
-              disabled={!user?.raiderDetails?.earnings?.pendingDeposit}
-              className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl text-lg hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Deposit Cash to Hub
-            </button>
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-3xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-40 px-6 py-4 pb-6 flex justify-between items-center">
+        <button onClick={() => navigate('/')} className="flex flex-col items-center gap-1 text-[#fb5c00]">
+          <div className="w-9 h-9 rounded-2xl bg-[#fb5c00]/10 flex items-center justify-center">
+            <LayoutDashboard size={20} />
           </div>
-        </div>
-      )}
+          <span className="text-[10px] font-black">Dashboard</span>
+        </button>
+        <button onClick={() => navigate('/earnings')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors">
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center">
+            <Wallet size={20} />
+          </div>
+          <span className="text-[10px] font-black">Earnings</span>
+        </button>
+        <button onClick={() => navigate('/profile')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors">
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center">
+            <UserIcon size={20} />
+          </div>
+          <span className="text-[10px] font-black">Profile</span>
+        </button>
+        <button onClick={() => navigate('/settings')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors">
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center">
+            <Settings size={20} />
+          </div>
+          <span className="text-[10px] font-black">Settings</span>
+        </button>
+      </div>
+
     </div>
   );
 }

@@ -9,6 +9,7 @@ import PartnerApp from '../apps/PartnerApp';
 import HubApp from '../apps/HubApp';
 import ResetPasswordScreen from '../components/Auth/ResetPasswordScreen';
 import { useLocation } from 'react-router-dom';
+import api from '../api';
 
 function AppRouter() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -16,15 +17,32 @@ function AppRouter() {
 
 
   useEffect(() => {
-    // Check if there is a token passed from the portal login
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      localStorage.setItem('zypergo_token', token);
-      // Remove token from URL to keep it clean and secure
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    setAuthChecked(true);
+    const verifyAuth = async () => {
+      // Check if there is a token passed from the portal login
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        localStorage.setItem('zypergo_token', token);
+        // Remove token from URL to keep it clean and secure
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      
+      const currentToken = localStorage.getItem('zypergo_token');
+      if (currentToken) {
+        try {
+          const res = await api.get('/auth/me');
+          if (res.data.success) {
+            localStorage.setItem('zypergo_user', JSON.stringify(res.data.data));
+          }
+        } catch (err) {
+          localStorage.removeItem('zypergo_token');
+          localStorage.removeItem('zypergo_user');
+        }
+      }
+      setAuthChecked(true);
+    };
+    
+    verifyAuth();
   }, []);
 
   const subdomain = useMemo(() => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Calculator, DollarSign, Settings, Plus, Edit2, Trash2,
   CheckCircle, AlertTriangle, RefreshCcw, Loader2, ArrowRight, X,
@@ -25,7 +26,7 @@ export default function FinancePricing() {
   const [formData, setFormData] = useState({
     ruleName: '', ruleType: 'Base', movementType: 'Any', speed: 'Any', isSurcharge: false,
     conditions: { originCity: '', destCity: '', originPincode: '', destPincode: '', category: '', minWeight: 0, maxWeight: '' },
-    rates: { basePrice: 0, perKgRate: 0, perKmRate: 0, handlingFee: 0, gstPercentage: 18, insurancePercentage: 0 },
+    rates: { basePrice: 0, perKgRate: 0, perKmRate: 0, handlingCost: 0, partnerCost: 0, riderCost: 0, minimumCharge: 0, marginPercentage: 0, discountPercentage: 0, gstPercentage: 18, insurancePercentage: 0 },
     isActive: true
   });
 
@@ -102,7 +103,7 @@ export default function FinancePricing() {
       setFormData({
         ruleName: '', ruleType: 'Base', movementType: 'Any', speed: 'Any', isSurcharge: false,
         conditions: { originCity: '', destCity: '', originPincode: '', destPincode: '', category: '', minWeight: 0, maxWeight: '' },
-        rates: { basePrice: 0, perKgRate: 0, perKmRate: 0, handlingFee: 0, gstPercentage: 18, insurancePercentage: 0 },
+        rates: { basePrice: 0, perKgRate: 0, perKmRate: 0, handlingCost: 0, partnerCost: 0, riderCost: 0, minimumCharge: 0, marginPercentage: 0, discountPercentage: 0, gstPercentage: 18, insurancePercentage: 0 },
         isActive: true
       });
     }
@@ -185,6 +186,9 @@ export default function FinancePricing() {
                       {rule.conditions.minWeight > 0 && <div className="text-xs text-slate-600 flex items-center gap-1"><Package size={12} /> Min Wt: {rule.conditions.minWeight}kg</div>}
                       {rule.conditions.maxWeight && <div className="text-xs text-slate-600 flex items-center gap-1"><Package size={12} /> Max Wt: {rule.conditions.maxWeight}kg</div>}
                       {rule.conditions.originCity && <div className="text-xs text-slate-600 flex items-center gap-1"><MapPin size={12} /> Orig: {rule.conditions.originCity}</div>}
+                      {rule.conditions.destCity && <div className="text-xs text-slate-600 flex items-center gap-1"><MapPin size={12} /> Dest: {rule.conditions.destCity}</div>}
+                      {rule.conditions.originPincode && <div className="text-xs text-slate-600 flex items-center gap-1"><MapPin size={12} /> Orig Pin: {rule.conditions.originPincode}</div>}
+                      {rule.conditions.destPincode && <div className="text-xs text-slate-600 flex items-center gap-1"><MapPin size={12} /> Dest Pin: {rule.conditions.destPincode}</div>}
                       {rule.conditions.category && <div className="text-xs text-slate-600 flex items-center gap-1"><ShieldAlert size={12} /> Cat: {rule.conditions.category}</div>}
                       {Object.keys(rule.conditions).length === 0 && rule.movementType === 'Any' && rule.speed === 'Any' && (
                         <div className="text-xs text-slate-400 italic">Applies to all bookings if no specific rule matched.</div>
@@ -300,10 +304,10 @@ export default function FinancePricing() {
 
                 <div className="space-y-2 text-sm font-medium font-mono text-white/80">
                   <div className="flex justify-between pb-1 border-b border-white/5"><span>Base Cost</span> <span>₹{simResult.breakdown.baseCost}</span></div>
-                  <div className="flex justify-between pb-1 border-b border-white/5"><span>Weight Charge</span> <span>₹{simResult.breakdown.weightCost}</span></div>
-                  <div className="flex justify-between pb-1 border-b border-white/5"><span>Distance Charge</span> <span>₹{simResult.breakdown.distanceCost}</span></div>
-                  <div className="flex justify-between pb-1 border-b border-white/5"><span>Handling & Surcharges</span> <span className="text-[#FFB703]">+ ₹{simResult.breakdown.handlingFee + simResult.breakdown.surcharges}</span></div>
+                  <div className="flex justify-between pb-1 border-b border-white/5"><span>Handling</span> <span>₹{simResult.breakdown.handlingFee}</span></div>
+                  <div className="flex justify-between pb-1 border-b border-white/5"><span>Surcharges</span> <span className="text-[#FFB703]">+ ₹{simResult.breakdown.surcharges}</span></div>
                   <div className="flex justify-between pb-1 border-b border-white/5"><span>Insurance</span> <span>₹{simResult.breakdown.insurance}</span></div>
+                  {simResult.breakdown.discount > 0 && <div className="flex justify-between pb-1 border-b border-white/5 text-green-300"><span>Discount</span> <span>- ₹{simResult.breakdown.discount}</span></div>}
                   
                   <div className="flex justify-between pt-2 pb-1 text-white font-bold"><span>Subtotal (Pre-tax)</span> <span>₹{simResult.breakdown.subtotal}</span></div>
                   <div className="flex justify-between pb-1 border-b border-white/10 text-xs text-white/50"><span>GST (Tax)</span> <span>₹{simResult.breakdown.gst}</span></div>
@@ -319,7 +323,7 @@ export default function FinancePricing() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
                       <div className="text-[10px] text-white/60 mb-0.5">Est. Internal Cost</div>
-                      <div className="font-bold">₹{simResult.profitability.estimatedInternalCost}</div>
+                      <div className="font-bold">₹{simResult.profitability.totalInternalCost}</div>
                     </div>
                     <div className="border-l border-r border-white/10">
                       <div className="text-[10px] text-white/60 mb-0.5">Gross Margin</div>
@@ -357,8 +361,8 @@ export default function FinancePricing() {
       )}
 
       {/* Modal: Rule Editor */}
-      {showRuleModal && (
-        <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4">
+      {showRuleModal && createPortal(
+        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 mt-0">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
               <h2 className="text-lg font-bold text-slate-900">{editingRule ? 'Edit Pricing Rule' : 'New Pricing Rule'}</h2>
@@ -392,29 +396,69 @@ export default function FinancePricing() {
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
                   <h3 className="font-bold text-sm text-slate-900 border-b pb-2">Rate Configuration (₹)</h3>
                   <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Base/Fixed Price</label>
-                      <input type="number" value={formData.rates.basePrice} onChange={e => setFormData({...formData, rates: {...formData.rates, basePrice: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm" />
+                    {/* Internal Costs row */}
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 col-span-3 mb-2">
+                       <h4 className="text-xs font-bold text-slate-700 mb-2">Internal Cost (₹)</h4>
+                       <div className="grid grid-cols-3 gap-4">
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Partner Cost</label>
+                           <input type="number" value={formData.rates.partnerCost} onChange={e => setFormData({...formData, rates: {...formData.rates, partnerCost: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm bg-white" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Rider Cost</label>
+                           <input type="number" value={formData.rates.riderCost} onChange={e => setFormData({...formData, rates: {...formData.rates, riderCost: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm bg-white" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Handling Cost</label>
+                           <input type="number" value={formData.rates.handlingCost} onChange={e => setFormData({...formData, rates: {...formData.rates, handlingCost: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm bg-white" />
+                         </div>
+                       </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Per Kg Charge</label>
-                      <input type="number" value={formData.rates.perKgRate} onChange={e => setFormData({...formData, rates: {...formData.rates, perKgRate: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm" />
+
+                    {/* Customer Pricing row */}
+                    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 col-span-3 mb-2">
+                       <h4 className="text-xs font-bold text-blue-700 mb-3">Customer Pricing (₹)</h4>
+                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Base/Fixed</label>
+                           <input type="number" value={formData.rates.basePrice} onChange={e => setFormData({...formData, rates: {...formData.rates, basePrice: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Per Kg</label>
+                           <input type="number" value={formData.rates.perKgRate} onChange={e => setFormData({...formData, rates: {...formData.rates, perKgRate: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Per Km</label>
+                           <input type="number" value={formData.rates.perKmRate} onChange={e => setFormData({...formData, rates: {...formData.rates, perKmRate: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Min Charge</label>
+                           <input type="number" value={formData.rates.minimumCharge} onChange={e => setFormData({...formData, rates: {...formData.rates, minimumCharge: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                         </div>
+                       </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Per Km Charge</label>
-                      <input type="number" value={formData.rates.perKmRate} onChange={e => setFormData({...formData, rates: {...formData.rates, perKmRate: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Handling Fee</label>
-                      <input type="number" value={formData.rates.handlingFee} onChange={e => setFormData({...formData, rates: {...formData.rates, handlingFee: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">GST %</label>
-                      <input type="number" value={formData.rates.gstPercentage} onChange={e => setFormData({...formData, rates: {...formData.rates, gstPercentage: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Insurance %</label>
-                      <input type="number" step="0.1" value={formData.rates.insurancePercentage} onChange={e => setFormData({...formData, rates: {...formData.rates, insurancePercentage: Number(e.target.value)}})} className="w-full px-3 py-1.5 border rounded-lg font-mono text-sm" />
+                    
+                    {/* Margins & Taxes row */}
+                    <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 col-span-3">
+                       <h4 className="text-xs font-bold text-emerald-700 mb-3">Margins & Taxes (%)</h4>
+                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Target Margin %</label>
+                           <input type="number" value={formData.rates.marginPercentage} onChange={e => setFormData({...formData, rates: {...formData.rates, marginPercentage: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Discount %</label>
+                           <input type="number" value={formData.rates.discountPercentage} onChange={e => setFormData({...formData, rates: {...formData.rates, discountPercentage: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">GST %</label>
+                           <input type="number" value={formData.rates.gstPercentage} onChange={e => setFormData({...formData, rates: {...formData.rates, gstPercentage: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+                         </div>
+                         <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Insurance %</label>
+                           <input type="number" step="0.1" value={formData.rates.insurancePercentage} onChange={e => setFormData({...formData, rates: {...formData.rates, insurancePercentage: Number(e.target.value)}})} className="w-full px-3 py-2 border rounded-lg font-mono text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+                         </div>
+                       </div>
                     </div>
                   </div>
                 </div>
@@ -438,14 +482,25 @@ export default function FinancePricing() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={`grid grid-cols-2 gap-4 ${formData.ruleType === 'Route' ? 'p-3 bg-blue-50/50 rounded-lg border border-blue-200 shadow-sm' : ''}`}>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Origin City (Optional)</label>
-                      <input type="text" value={formData.conditions.originCity} onChange={e => setFormData({...formData, conditions: {...formData.conditions, originCity: e.target.value}})} className="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="e.g. Hyderabad" />
+                      <label className={`text-[10px] font-bold uppercase block mb-1 ${formData.ruleType === 'Route' ? 'text-blue-700' : 'text-slate-500'}`}>Origin City {formData.ruleType === 'Route' ? '*' : '(Optional)'}</label>
+                      <input type="text" value={formData.conditions.originCity || ''} onChange={e => setFormData({...formData, conditions: {...formData.conditions, originCity: e.target.value}})} className={`w-full px-3 py-1.5 border rounded-lg text-sm ${formData.ruleType === 'Route' ? 'border-blue-300 focus:ring-blue-500 bg-white' : ''}`} placeholder="e.g. Hyderabad" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Dest City (Optional)</label>
-                      <input type="text" value={formData.conditions.destCity} onChange={e => setFormData({...formData, conditions: {...formData.conditions, destCity: e.target.value}})} className="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="e.g. Bangalore" />
+                      <label className={`text-[10px] font-bold uppercase block mb-1 ${formData.ruleType === 'Route' ? 'text-blue-700' : 'text-slate-500'}`}>Dest City {formData.ruleType === 'Route' ? '*' : '(Optional)'}</label>
+                      <input type="text" value={formData.conditions.destCity || ''} onChange={e => setFormData({...formData, conditions: {...formData.conditions, destCity: e.target.value}})} className={`w-full px-3 py-1.5 border rounded-lg text-sm ${formData.ruleType === 'Route' ? 'border-blue-300 focus:ring-blue-500 bg-white' : ''}`} placeholder="e.g. Bangalore" />
+                    </div>
+                  </div>
+
+                  <div className={`grid grid-cols-2 gap-4 ${formData.ruleType === 'Pincode' ? 'p-3 bg-blue-50/50 rounded-lg border border-blue-200 shadow-sm' : ''}`}>
+                    <div>
+                      <label className={`text-[10px] font-bold uppercase block mb-1 ${formData.ruleType === 'Pincode' ? 'text-blue-700' : 'text-slate-500'}`}>Origin Pincode {formData.ruleType === 'Pincode' ? '*' : '(Optional)'}</label>
+                      <input type="text" value={formData.conditions.originPincode || ''} onChange={e => setFormData({...formData, conditions: {...formData.conditions, originPincode: e.target.value}})} className={`w-full px-3 py-1.5 border rounded-lg text-sm ${formData.ruleType === 'Pincode' ? 'border-blue-300 focus:ring-blue-500 bg-white' : ''}`} placeholder="e.g. 500001" />
+                    </div>
+                    <div>
+                      <label className={`text-[10px] font-bold uppercase block mb-1 ${formData.ruleType === 'Pincode' ? 'text-blue-700' : 'text-slate-500'}`}>Dest Pincode {formData.ruleType === 'Pincode' ? '*' : '(Optional)'}</label>
+                      <input type="text" value={formData.conditions.destPincode || ''} onChange={e => setFormData({...formData, conditions: {...formData.conditions, destPincode: e.target.value}})} className={`w-full px-3 py-1.5 border rounded-lg text-sm ${formData.ruleType === 'Pincode' ? 'border-blue-300 focus:ring-blue-500 bg-white' : ''}`} placeholder="e.g. 500081" />
                     </div>
                   </div>
 
@@ -481,7 +536,8 @@ export default function FinancePricing() {
               <button type="submit" form="ruleForm" className="flex-1 py-2.5 text-sm font-bold text-white bg-[#006D77] hover:bg-[#005f6a] rounded-lg transition">Save Rule</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
