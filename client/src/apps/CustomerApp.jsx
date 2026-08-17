@@ -151,24 +151,24 @@ export default function CustomerApp() {
   return (
     <Routes>
       <Route path="/login" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="Customer">
           <LoginScreen role="Customer" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
       <Route path="/signup" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="Customer">
           <SignupScreen role="Customer" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
 
       <Route path="/" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="Customer">
           <CustomerWelcome />
         </PublicRoute>
       } />
 
       <Route element={
-        <ProtectedRoute isAuthenticated={isAuthenticated}>
+        <ProtectedRoute requiredRole="Customer">
           <CustomerLayout />
         </ProtectedRoute>
       }>

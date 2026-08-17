@@ -29,7 +29,7 @@ const NAV_ITEMS = [
   { id: 'account', label: 'Account', icon: User },
 ];
 
-export default function HubManagerDashboard() {
+export default function HubManagerDashboard({ onLogout }) {
   const [user, setUser] = useState({ name: 'Hub Manager', role: 'HubManager', phone: '' });
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,9 +69,13 @@ export default function HubManagerDashboard() {
   }, [activePage, selectedHub]);
 
   const handleLogout = () => {
-    localStorage.removeItem('zypergo_token');
-    localStorage.removeItem('zypergo_user');
-    window.location.reload();
+    if (onLogout) {
+      onLogout();
+    } else {
+      localStorage.removeItem('zypergo_token');
+      localStorage.removeItem('zypergo_user');
+      window.location.reload();
+    }
   };
 
   const fetchHubs = async () => {
@@ -199,7 +203,7 @@ export default function HubManagerDashboard() {
       <div className="fixed bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-[#006D77]/20 to-[#006D77]/10 rounded-full blur-[100px] -z-10 -translate-x-1/3 translate-y-1/4 mix-blend-multiply"></div>
 
       {/* TOP HEADER */}
-      <header className="bg-white/70 backdrop-blur-md text-slate-900 px-4 md:px-6 h-16 flex items-center justify-between shrink-0 shadow-sm border-b border-white/50 z-40 sticky top-0">
+      <header className="bg-white/70 backdrop-blur-xl text-slate-900 px-4 md:px-6 h-16 flex items-center justify-between shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b border-white/50 z-40 sticky top-0">
         
         {/* Left Spacer / Alerts for Mobile */}
         <div className="flex-1 flex items-center justify-start">
@@ -212,8 +216,9 @@ export default function HubManagerDashboard() {
         </div>
 
         {/* Center: Logo */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8 md:h-10 object-contain" />
+          <span className="text-lg font-black tracking-tight text-[#006D77] hidden md:block">Zyper<span className="text-[#FFB703]">Hub</span></span>
         </div>
 
         {/* Hub Selector (desktop center) */}

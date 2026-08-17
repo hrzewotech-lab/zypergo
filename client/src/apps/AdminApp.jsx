@@ -38,13 +38,13 @@ function AdminApp() {
   return (
     <Routes>
       <Route path="/login" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="SuperAdmin">
           <LoginScreen role="SuperAdmin" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
       
       <Route path="/" element={
-        <ProtectedRoute isAuthenticated={isAuthenticated}>
+        <ProtectedRoute requiredRole="SuperAdmin">
           <AdminLayout />
         </ProtectedRoute>
       }>

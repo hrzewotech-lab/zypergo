@@ -141,22 +141,22 @@ export default function RaiderApp() {
   return (
     <Routes>
       <Route path="/" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="Raider">
           <RaiderWelcome />
         </PublicRoute>
       } />
       <Route path="/login" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="Raider">
           <LoginScreen role="Raider" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
       <Route path="/signup" element={
-        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+        <PublicRoute requiredRole="Raider">
           <SignupScreen role="Raider" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
       <Route path="/dashboard" element={
-        <ProtectedRoute isAuthenticated={isAuthenticated}>
+        <ProtectedRoute requiredRole="Raider">
           <RaiderLayout onLogout={handleClearAuth} user={user}>
             {approvalStatus === 'Approved' ? (
               <RaiderDashboard user={user} onLogout={handleClearAuth} />
@@ -178,21 +178,21 @@ export default function RaiderApp() {
         </ProtectedRoute>
       } />
       <Route path="/profile" element={
-        <ProtectedRoute isAuthenticated={isAuthenticated}>
+        <ProtectedRoute requiredRole="Raider">
           <RaiderLayout onLogout={handleClearAuth} user={user}>
             <RaiderProfile user={user} onLogout={handleClearAuth} />
           </RaiderLayout>
         </ProtectedRoute>
       } />
       <Route path="/earnings" element={
-        <ProtectedRoute isAuthenticated={isAuthenticated}>
+        <ProtectedRoute requiredRole="Raider">
           <RaiderLayout onLogout={handleClearAuth} user={user}>
             <RaiderEarnings user={user} onLogout={handleClearAuth} />
           </RaiderLayout>
         </ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <ProtectedRoute isAuthenticated={isAuthenticated}>
+        <ProtectedRoute requiredRole="Raider">
           <RaiderLayout onLogout={handleClearAuth} user={user}>
             <RaiderSettings user={user} onLogout={handleClearAuth} />
           </RaiderLayout>
