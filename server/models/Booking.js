@@ -14,12 +14,14 @@ const bookingSchema = new mongoose.Schema({
   pickupLocation: {
     address: { type: String, required: true },
     pincode: { type: String, required: true },
+    landmark: { type: String },
     lat: { type: Number },
     lng: { type: Number }
   },
   dropLocation: {
     address: { type: String, required: true },
     pincode: { type: String, required: true },
+    landmark: { type: String },
     lat: { type: Number },
     lng: { type: Number }
   },
@@ -29,7 +31,7 @@ const bookingSchema = new mongoose.Schema({
     email: { type: String }
   },
   packageDetails: {
-    category: { type: String, required: true, enum: ['Document', 'Clothes', 'Fertilizers', 'Books', 'Electronics', 'Medicine', 'Fragile Item', 'Commercial Package', 'General Parcel'] },
+    category: { type: String, required: true },
     weight: { type: Number, required: true }, // in kg
     dimensions: {
       length: { type: Number }, // in cm
@@ -48,7 +50,7 @@ const bookingSchema = new mongoose.Schema({
   },
   scheduling: {
     type: { type: String, enum: ['Now', 'Later'], default: 'Now' },
-    date: { type: Date },
+    date: { type: String },
     timeSlot: { type: String }
   },
   preferences: {
@@ -69,11 +71,11 @@ const bookingSchema = new mongoose.Schema({
   },
   metadata: {
     intracity: { type: Boolean, default: true },
-    vehicleType: { type: String, enum: ['Bike', 'Auto/Three-Wheeler', 'Mini Truck', 'Heavy Vehicle'] },
+    vehicleType: { type: String },
     sourceHub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     destinationHub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     assignedPartner: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
-    deliveryType: { type: String, enum: ['Local Direct', 'Intercity Hub-and-Spoke'] }
+    deliveryType: { type: String }
   },
   assignedRaiders: [{
     raiderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -1,276 +1,110 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Building, Save, Camera, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { User, MapPin, CreditCard, Bell, LogOut, ChevronRight, CheckCircle2, FileText, Calendar, Settings, HelpCircle, Package, Receipt } from 'lucide-react';
 
 export default function CustomerProfile() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [originalEmail, setOriginalEmail] = useState('');
-  
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    address: ''
-  });
-
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const navigate = useNavigate();
+  const [user, setUser] = useState({ name: 'Guest', email: 'guest@zypergo.com', phone: '0000000000' });
 
   useEffect(() => {
-    fetchProfile();
+    const userData = localStorage.getItem('zypergo_user');
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {}
+    }
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch('/api/users/profile');
-      const data = await res.json();
-      if (data.success && data.data) {
-        setProfile({
-          name: data.data.name || '',
-          email: data.data.email || '',
-          phone: data.data.phone || '',
-          company: data.data.company || '',
-          address: data.data.address || ''
-        });
-        setOriginalEmail(data.data.email || '');
-      }
-    } catch (err) {
-      console.error('Error fetching profile:', err);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('zypergo_token');
+    localStorage.removeItem('zypergo_user');
+    window.location.href = '/welcome';
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfile({ ...profile, [name]: value });
-  };
-
-  const handleSave = async () => {
-    setErrorMsg('');
-    // If email has changed, trigger OTP workflow
-    if (profile.email !== originalEmail) {
-      setSaving(true);
-      try {
-        const res = await fetch('/api/users/request-email-update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newEmail: profile.email })
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-          setShowOtpModal(true);
-        } else {
-          setErrorMsg(data.error || 'Failed to request email update.');
-        }
-      } catch (err) {
-        setErrorMsg('Network error.');
-      } finally {
-        setSaving(false);
-      }
-    } else {
-      // Standard save
-      executeStandardSave();
-    }
-  };
-
-  const executeStandardSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: profile.name,
-          phone: profile.phone,
-          company: profile.company,
-          address: profile.address
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('Profile updated successfully!');
-        // Update local storage so navbar reflects name change
-        const userData = JSON.parse(localStorage.getItem('zypergo_user')) || {};
-        userData.name = profile.name;
-        localStorage.setItem('zypergo_user', JSON.stringify(userData));
-        window.dispatchEvent(new Event('storage'));
-      } else {
-        alert('Failed to update profile.');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error updating profile.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    setOtpLoading(true);
-    setErrorMsg('');
-    try {
-      const res = await fetch('/api/users/verify-email-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newEmail: profile.email, otp })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setShowOtpModal(false);
-        setOriginalEmail(profile.email);
-        setOtp('');
-        // Now save the rest of the profile
-        await executeStandardSave();
-      } else {
-        setErrorMsg(data.error || 'Invalid OTP');
-      }
-    } catch (err) {
-      setErrorMsg('Network error.');
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  if (loading) {
-    return <div className="p-8 text-center"><div className="w-8 h-8 border-4 border-[#fb5c00] border-t-transparent rounded-full animate-spin mx-auto"></div></div>;
-  }
+  const OptionRow = ({ icon, label, onClick, color = "text-slate-700", noBorder = false }) => (
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center justify-between py-4 bg-white active:bg-slate-50 transition-all ${noBorder ? '' : 'border-b border-slate-50 hover:bg-slate-50/50'}`}
+    >
+      <div className="flex items-center gap-4">
+        <div className={`flex items-center justify-center p-2.5 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 ${color}`}>
+          {icon}
+        </div>
+        <span className={`font-bold text-[15px] tracking-wide ${color}`}>{label}</span>
+      </div>
+      <ChevronRight size={20} className={color === 'text-red-500' ? 'text-red-300' : 'text-slate-300'} />
+    </button>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto py-4 relative">
-      <h1 className="text-2xl font-black text-slate-900 mb-8">My Profile</h1>
+    <div className="flex flex-col bg-white min-h-full pb-20 animate-in fade-in zoom-in-95 duration-300">
       
-      {errorMsg && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 font-medium">
-          {errorMsg}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Column: Avatar */}
-        <div className="md:col-span-1">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col items-center text-center shadow-sm"
-          >
-            <div className="relative mb-4 group cursor-pointer">
-              <div className="w-32 h-32 bg-[#fb5c00] text-white rounded-full flex items-center justify-center font-bold text-4xl shadow-inner uppercase">
-                {profile.name.substring(0, 2)}
-              </div>
-              <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Camera className="text-white" size={32} />
-              </div>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900">{profile.name}</h2>
-            <p className="text-slate-500 font-medium">{profile.company}</p>
-            <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">Customer Account</p>
-          </motion.div>
-        </div>
-
-        {/* Right Column: Form */}
-        <div className="md:col-span-2">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm"
-          >
-            <h3 className="text-lg font-bold text-slate-900 mb-6">Personal Information</h3>
-            
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2"><User size={16} className="text-[#fb5c00]"/> Full Name</label>
-                  <input type="text" name="name" value={profile.name} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#fb5c00] focus:ring-2 focus:ring-[#fb5c00]/20 outline-none text-slate-800 font-medium transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2"><Building size={16} className="text-[#fb5c00]"/> Company Name</label>
-                  <input type="text" name="company" value={profile.company} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#fb5c00] focus:ring-2 focus:ring-[#fb5c00]/20 outline-none text-slate-800 font-medium transition-all" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2"><Mail size={16} className="text-[#fb5c00]"/> Email Address</label>
-                  <input type="email" name="email" value={profile.email} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#fb5c00] focus:ring-2 focus:ring-[#fb5c00]/20 outline-none text-slate-800 font-medium transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2"><Phone size={16} className="text-[#fb5c00]"/> Phone Number</label>
-                  <input type="tel" name="phone" value={profile.phone} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#fb5c00] focus:ring-2 focus:ring-[#fb5c00]/20 outline-none text-slate-800 font-medium transition-all" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2"><MapPin size={16} className="text-[#fb5c00]"/> Billing Address</label>
-                <textarea rows="3" name="address" value={profile.address} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#fb5c00] focus:ring-2 focus:ring-[#fb5c00]/20 outline-none text-slate-800 font-medium transition-all"></textarea>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
-              <button 
-                onClick={handleSave} 
-                disabled={saving}
-                className="bg-[#fb5c00] hover:bg-[#e05200] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-70"
-              >
-                {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Save size={18} />}
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </motion.div>
-        </div>
+      {/* Header */}
+      <div className="bg-white px-4 py-5 flex items-center gap-4 sticky top-0 z-20">
+        <h1 className="text-xl font-black text-slate-900 mx-auto">Profile</h1>
       </div>
 
-      {/* OTP Modal */}
-      {showOtpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative"
-          >
-            <button 
-              onClick={() => { setShowOtpModal(false); setProfile({...profile, email: originalEmail}); }} 
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors"
-            >
-              <X size={20} />
-            </button>
-            
-            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center text-[#fb5c00] mb-6 mx-auto">
-              <Mail size={32} />
+      <div className="px-6">
+        {/* Profile Info */}
+        <div className="flex items-center gap-5 py-8 mb-4 border-b border-slate-100">
+          <div className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center shrink-0 border-4 border-white shadow-md">
+             <User size={36} className="text-[#006D77]" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 leading-tight mb-1">{user.name}</h2>
+            <div className="flex items-center gap-2 text-slate-500 font-bold mb-1">
+              <span className="bg-slate-100 px-2 py-0.5 rounded-md text-xs">+91 {user.phone}</span>
             </div>
-            
-            <h3 className="text-xl font-black text-slate-900 text-center mb-2">Verify Email</h3>
-            <p className="text-sm text-slate-500 text-center mb-6">
-              We sent a verification code to <strong>{profile.email}</strong>. Enter it below to confirm your new email address.
-            </p>
-            
-            <input 
-              type="text" 
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter 4-digit code" 
-              className="w-full text-center tracking-[0.5em] font-mono text-xl px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#fb5c00] focus:ring-2 focus:ring-[#fb5c00]/20 outline-none text-slate-800 font-bold transition-all mb-4"
-              maxLength={4}
-            />
-
-            <button 
-              onClick={handleVerifyOtp}
-              disabled={otp.length < 4 || otpLoading}
-              className="w-full bg-[#fb5c00] hover:bg-[#e05200] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-            >
-              {otpLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : null}
-              {otpLoading ? 'Verifying...' : 'Verify & Update Email'}
-            </button>
-            <p className="text-xs text-center text-slate-400 mt-4">Hint: Use 1234 for testing.</p>
-          </motion.div>
+            <p className="text-slate-500 text-sm font-medium">{user.email || 'No email provided'}</p>
+          </div>
         </div>
-      )}
+
+        {/* Options List */}
+        <div className="mt-4">
+          <OptionRow 
+            icon={<Package size={20} strokeWidth={2.5} />} 
+            label="My Orders" 
+            onClick={() => navigate('/shipments')} 
+          />
+          <OptionRow 
+            icon={<Calendar size={20} strokeWidth={2.5} />} 
+            label="My Bookings" 
+            onClick={() => navigate('/booking')} 
+          />
+          <OptionRow 
+            icon={<MapPin size={20} strokeWidth={2.5} />} 
+            label="Addresses" 
+            onClick={() => navigate('/addresses')} 
+          />
+          <OptionRow 
+            icon={<CreditCard size={20} strokeWidth={2.5} />} 
+            label="Wallet & Payments" 
+            onClick={() => {}} 
+          />
+          <OptionRow 
+            icon={<Receipt size={20} strokeWidth={2.5} />} 
+            label="Rate Card" 
+            onClick={() => {}} 
+          />
+          <OptionRow 
+            icon={<Settings size={20} strokeWidth={2.5} />} 
+            label="Settings" 
+            onClick={() => navigate('/settings')} 
+          />
+          <OptionRow 
+            icon={<HelpCircle size={20} strokeWidth={2.5} />} 
+            label="Help & Support" 
+            onClick={() => navigate('/support')} 
+          />
+          <OptionRow 
+            icon={<LogOut size={20} strokeWidth={2.5} />} 
+            label="Logout" 
+            color="text-red-500"
+            noBorder
+            onClick={handleLogout} 
+          />
+        </div>
+      </div>
     </div>
   );
 }

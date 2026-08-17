@@ -11,8 +11,11 @@ import CustomerProfile from './customer/CustomerProfile';
 import CustomerSettings from './customer/CustomerSettings';
 import LoginScreen from '../components/Auth/LoginScreen';
 import SignupScreen from '../components/Auth/SignupScreen';
+import CustomerWelcome from './customer/CustomerWelcome';
 import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
-import { Search, Bell, ChevronDown, User as UserIcon, Settings, Home, Package, MapPin, PlusCircle } from 'lucide-react';
+import { Search, Bell, ChevronDown, User as UserIcon, Settings, Home, Package, MapPin, Plus, Calendar, HelpCircle } from 'lucide-react';
+import CustomerNotifications from './customer/CustomerNotifications';
+import OrderDetails from './customer/OrderDetails';
 
 function CustomerLayout() {
   const location = useLocation();
@@ -53,135 +56,79 @@ function CustomerLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col font-sans">
-      {/* Top Navigation */}
-      <header className="bg-white border-b border-slate-200 shrink-0 sticky top-0 z-50 h-14 md:h-16 flex items-center">
-        <div className="w-full flex items-center justify-between px-4 md:px-6 relative">
-          {/* Left/Center: Logo */}
-          <div className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 flex items-center">
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-[#fb5c00] tracking-wider uppercase">
-              <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8" />
-            </Link>
-          </div>
-          {/* Search */}
-          <div className="hidden md:flex items-center ml-8 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search shipments..." 
-              className="pl-9 pr-4 py-2 bg-slate-100 border-none rounded-md text-sm focus:ring-2 focus:ring-[#fb5c00] outline-none w-72 transition-all"
-            />
+    <div className="min-h-screen bg-slate-100 flex justify-center font-sans">
+      {/* App Container */}
+      <div className="w-full max-w-md md:max-w-full bg-white h-[100dvh] relative shadow-2xl md:shadow-none flex flex-col md:flex-row overflow-hidden">
+        
+        {/* Desktop Sidebar Navigation */}
+        <nav className="hidden md:flex flex-col w-64 bg-white border-r border-slate-100 p-6 z-50 shadow-[10px_0_40px_rgba(0,0,0,0.02)] shrink-0">
+          <div className="flex items-center gap-2 text-[#006D77] mb-12">
+            <Package size={28} className="fill-[#006D77]/20" />
+            <span className="font-black text-2xl tracking-tight">ZyperGo</span>
           </div>
           
-          {/* Middle: Navigation Links */}
-          <nav className="hidden lg:flex gap-8 absolute left-1/2 -translate-x-1/2">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-              return (
-                <Link 
-                  key={item.path}
-                  to={item.path} 
-                  className={`text-sm font-medium py-4 border-b-2 transition-colors ${
-                    isActive ? 'border-[#fb5c00] text-[#fb5c00]' : 'border-transparent text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-4 ml-auto">
-            <button onClick={() => navigate('/booking')} className="hidden md:block bg-[#fb5c00] text-white px-4 py-2 rounded font-medium text-sm hover:bg-[#e05200] transition-colors shadow-sm">
-              New Booking
-            </button>
-            
-            {/* Settings (Mobile Top Right) */}
-            <button onClick={() => navigate('/settings')} className="md:hidden text-slate-500 hover:text-slate-900 transition-colors p-2">
-              <Settings size={20} />
-            </button>
-
-            <button className="hidden md:block text-slate-500 hover:text-slate-900 transition-colors p-1 relative">
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
-            {/* Profile Dropdown */}
-            <div className="relative hidden md:block" ref={dropdownRef}>
-              <button 
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2 p-1 pl-2 pr-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full transition-colors"
-              >
-                <div className="w-8 h-8 bg-[#fb5c00] text-white rounded-full flex items-center justify-center font-bold text-xs uppercase shadow-inner">
-                  {user?.name ? user.name.substring(0, 2) : 'CU'}
-                </div>
-                <ChevronDown size={14} className={`text-slate-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {profileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 animate-in fade-in slide-in-from-top-2">
-                  <div className="px-4 py-3 border-b border-slate-100">
-                    <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'Customer'}</p>
-                    <p className="text-xs font-medium text-[#fb5c00] truncate">{user?.role || 'Customer'}</p>
-                  </div>
-                  
-                  <div className="py-1">
-                    <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#fb5c00] transition-colors">
-                      <UserIcon size={16} /> My Profile
-                    </button>
-                    <button onClick={() => { setProfileDropdownOpen(false); navigate('/settings'); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#fb5c00] transition-colors">
-                      <Settings size={16} /> Account Settings
-                    </button>
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-1 mt-1">
-                    <button 
-                      onClick={handleLogout} 
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 font-bold hover:bg-red-50 transition-colors"
-                    >
-                      Logout Session
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            
+          <div className="flex flex-col gap-2">
+            <Link to="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname === '/dashboard' ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:bg-teal-50 hover:text-[#006D77]'}`}>
+              <Home size={20} />
+              <span className="font-bold text-sm">Dashboard</span>
+            </Link>
+            <Link to="/shipments" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname.startsWith('/shipments') ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:bg-teal-50 hover:text-[#006D77]'}`}>
+              <Package size={20} />
+              <span className="font-bold text-sm">Orders</span>
+            </Link>
+            <Link to="/booking" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname.startsWith('/booking') ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:bg-teal-50 hover:text-[#006D77]'}`}>
+              <Calendar size={20} />
+              <span className="font-bold text-sm">Bookings</span>
+            </Link>
+            <Link to="/support" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname.startsWith('/support') ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:bg-teal-50 hover:text-[#006D77]'}`}>
+              <HelpCircle size={20} />
+              <span className="font-bold text-sm">Support Center</span>
+            </Link>
           </div>
-        </div>
-      </header>
-      
-      {/* Main Content Area */}
-      <main className="flex-1 w-full mx-auto p-4 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">
-        <Outlet />
-      </main>
+          
+          <div className="mt-auto">
+            <Link to="/profile" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname.startsWith('/profile') ? 'bg-[#006D77] text-white shadow-md' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>
+              <UserIcon size={20} />
+              <div className="flex flex-col">
+                <span className="font-bold text-sm">{user.name}</span>
+                <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{user.role}</span>
+              </div>
+            </Link>
+          </div>
+        </nav>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-end px-2 pb-2 pt-2 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] h-16">
-        <Link to="/" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname === '/' ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
-          <Home size={22} className={location.pathname === '/' ? 'fill-[#fb5c00]/20' : ''} />
-          <span className="text-[10px] font-bold">Home</span>
-        </Link>
-        <Link to="/shipments" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/shipments') ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
-          <Package size={22} className={location.pathname.startsWith('/shipments') ? 'fill-[#fb5c00]/20' : ''} />
-          <span className="text-[10px] font-bold">Shipments</span>
-        </Link>
-        
-        {/* Floating Action Button for Booking */}
-        <div className="w-1/5 flex justify-center relative h-full">
-          <Link to="/booking" className="absolute -top-6 w-14 h-14 bg-[#fb5c00] rounded-full text-white flex items-center justify-center shadow-lg shadow-[#fb5c00]/30 border-[4px] border-white active:scale-95 transition-all">
-            <PlusCircle size={28} />
+        {/* Main Content Area */}
+        <main className="flex-1 w-full overflow-y-auto bg-[#F8F9FA] pb-20 md:pb-0 relative">
+          <Outlet />
+        </main>
+
+        <nav className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-between items-center px-4 pb-4 pt-3 z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.06)] rounded-t-3xl">
+          <Link to="/dashboard" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname === '/dashboard' ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Home size={22} className={location.pathname === '/dashboard' ? 'fill-[#006D77]/20' : ''} />
+            <span className="text-[10px] font-bold">Home</span>
           </Link>
-        </div>
-
-        <Link to="/track" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/track') ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
-          <MapPin size={22} className={location.pathname.startsWith('/track') ? 'fill-[#fb5c00]/20' : ''} />
-          <span className="text-[10px] font-bold">Track</span>
-        </Link>
-        <Link to="/profile" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/profile') ? 'text-[#fb5c00]' : 'text-slate-400 hover:text-slate-600'}`}>
-          <UserIcon size={22} className={location.pathname.startsWith('/profile') ? 'fill-[#fb5c00]/20' : ''} />
-          <span className="text-[10px] font-bold">Profile</span>
-        </Link>
-      </nav>
+          <Link to="/shipments" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/shipments') ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Package size={22} className={location.pathname.startsWith('/shipments') ? 'fill-[#006D77]/20' : ''} />
+            <span className="text-[10px] font-bold">Orders</span>
+          </Link>
+          
+          <Link to="/booking" className="flex flex-col items-center w-1/5 relative group">
+            <div className="absolute -top-8 w-14 h-14 bg-[#00585f] rounded-full border-4 border-white shadow-[0_8px_15px_rgba(0,109,119,0.3)] flex items-center justify-center text-white active:scale-95 transition-transform">
+              <Plus size={32} strokeWidth={2.5} />
+            </div>
+            <span className={`text-[10px] font-bold mt-7 ${location.pathname.startsWith('/booking') ? 'text-[#00585f]' : 'text-[#00585f]'}`}>Book</span>
+          </Link>
+          
+          <Link to="/support" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/support') ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <HelpCircle size={22} className={location.pathname.startsWith('/support') ? 'fill-[#006D77]/20' : ''} />
+            <span className="text-[10px] font-bold">Help</span>
+          </Link>
+          <Link to="/profile" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/profile') ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <UserIcon size={22} className={location.pathname.startsWith('/profile') ? 'fill-[#006D77]/20' : ''} />
+            <span className="text-[10px] font-bold">Profile</span>
+          </Link>
+        </nav>
+      </div>
     </div>
   );
 }
@@ -198,7 +145,7 @@ export default function CustomerApp() {
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-    navigate('/', { replace: true });
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -215,22 +162,31 @@ export default function CustomerApp() {
       } />
 
       <Route path="/" element={
+        <PublicRoute isAuthenticated={isAuthenticated} onClearAuth={handleClearAuth}>
+          <CustomerWelcome />
+        </PublicRoute>
+      } />
+
+      <Route element={
         <ProtectedRoute isAuthenticated={isAuthenticated}>
           <CustomerLayout />
         </ProtectedRoute>
       }>
-        <Route index element={<CustomerDashboard />} />
-        <Route path="shipments" element={<MyShipments />} />
-        <Route path="invoices" element={<CustomerInvoices />} />
-        <Route path="track/:id?" element={<TrackingTimeline />} />
-        <Route path="address-book" element={<AddressBook />} />
-        <Route path="support" element={<SupportCenter />} />
-        <Route path="booking" element={<BookingFlow />} />
-        <Route path="profile" element={<CustomerProfile />} />
-        <Route path="settings" element={<CustomerSettings />} />
+        <Route path="/dashboard" element={<CustomerDashboard />} />
+        <Route path="/shipments" element={<MyShipments />} />
+        <Route path="/invoices" element={<CustomerInvoices />} />
+        <Route path="/order/:id" element={<OrderDetails />} />
+        <Route path="/track/:id?" element={<TrackingTimeline />} />
+        <Route path="/address-book" element={<AddressBook />} />
+        <Route path="/addresses" element={<AddressBook />} />
+        <Route path="/support" element={<SupportCenter />} />
+        <Route path="/notifications" element={<CustomerNotifications />} />
+        <Route path="/booking" element={<BookingFlow />} />
+        <Route path="/profile" element={<CustomerProfile />} />
+        <Route path="/settings" element={<CustomerSettings />} />
       </Route>
       
-      <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />
     </Routes>
   );
 }

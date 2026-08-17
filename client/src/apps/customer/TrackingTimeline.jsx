@@ -76,147 +76,129 @@ export default function TrackingTimeline() {
       case 'Delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'Delayed': return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'Failed': case 'Returned': case 'Cancelled': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-[#e0f2f1] text-[#004d40] border-[#b2dfdb]'; // In Transit etc
+      default: return 'bg-[#006D77]/10 text-[#006D77] border-[#006D77]/20';
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TRACKING ID</span>
-            <span className="bg-slate-100 text-[#00767C] px-2 py-0.5 rounded text-xs font-bold font-mono">{booking.trackingId}</span>
+    <div className="bg-slate-50 min-h-full flex flex-col font-sans pb-24 animate-in slide-in-from-right-4 duration-300">
+      {/* Header Map */}
+      <div className="relative h-[250px] w-full shrink-0">
+          <MapContainer center={position} zoom={13} scrollWheelZoom={false} className="w-full h-full z-0">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={position}>
+              <Popup>
+                {booking.dropLocation?.address || 'Destination'}
+              </Popup>
+            </Marker>
+          </MapContainer>
+          
+          {/* Floating Back/Share buttons */}
+          <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center pointer-events-none">
+            <button onClick={() => navigate(-1)} className="pointer-events-auto w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-md text-slate-700 hover:scale-105 transition-transform active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button onClick={handleShare} className="pointer-events-auto w-10 h-10 bg-[#006D77]/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-md text-white hover:scale-105 transition-transform active:scale-95">
+              <Share2 size={18} />
+            </button>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Shipment to {booking.dropLocation?.pincode}</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <button onClick={handleShare} className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition shadow-md shadow-green-500/20" title="Share on WhatsApp">
-            <Share2 size={20} />
-          </button>
-          <div className={`border rounded-lg p-4 flex items-center gap-6 shadow-sm ${getStatusColor(booking.status)}`}>
-            <div>
-              <div className="text-[10px] font-bold opacity-75 uppercase tracking-widest mb-1">ETA</div>
-              <div className="text-lg font-bold">{booking.eta || 'Calculating...'}</div>
-            </div>
-            <span className="bg-white/50 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1">
-              <Truck size={14} /> {booking.status}
-            </span>
-          </div>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Map & Timeline */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Map */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden h-[300px] md:h-[400px] z-10 relative">
-            <MapContainer center={position} zoom={13} scrollWheelZoom={false} className="w-full h-full">
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <Marker position={position}>
-                <Popup>
-                  Seattle Distribution Hub
-                </Popup>
-              </Marker>
-            </MapContainer>
+      <div className="px-4 -mt-10 relative z-20 space-y-4">
+        {/* Status Card */}
+        <div className="bg-white rounded-3xl p-5 shadow-lg shadow-black/5 border border-slate-100">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Tracking ID</p>
+              <h2 className="text-lg font-black text-slate-900">{booking.trackingId}</h2>
+            </div>
+            <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.status)}`}>
+              {booking.status}
+            </span>
           </div>
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Estimated Delivery</p>
+              <p className="text-sm font-black text-[#006D77]">{booking.eta || 'Calculating...'}</p>
+            </div>
+            <div className="w-10 h-10 bg-[#FFB703]/20 rounded-full flex items-center justify-center shrink-0">
+              <Truck size={18} className="text-[#b58200]" />
+            </div>
+          </div>
+        </div>
 
-          {/* Timeline */}
-          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900 mb-8">Tracking Timeline</h2>
-            
-            <div className="relative border-l-2 border-slate-200 ml-4 space-y-8 pb-4">
-              
-              {booking.trackingHistory && booking.trackingHistory.length > 0 ? (
-                booking.trackingHistory.map((history, idx) => (
-                  <div key={idx} className="relative pl-8">
-                    <div className={`absolute -left-[17px] ${idx === booking.trackingHistory.length - 1 ? 'bg-[#00767C] text-white shadow-md shadow-[#00767C]/30' : 'bg-slate-100 border-2 border-slate-300 text-slate-400'} w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-white`}>
-                      {idx === booking.trackingHistory.length - 1 ? <Truck size={16} /> : <CheckCircle2 size={16} />}
+        {/* Timeline */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+          <h3 className="font-black text-slate-900 mb-6">Tracking History</h3>
+          <div className="relative border-l-2 border-slate-100 ml-4 space-y-6 pb-2">
+            {booking.trackingHistory && booking.trackingHistory.length > 0 ? (
+              booking.trackingHistory.slice().reverse().map((history, idx) => {
+                const isLatest = idx === 0;
+                return (
+                  <div key={idx} className="relative pl-6">
+                    <div className={`absolute -left-[17px] top-0 w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-white ${isLatest ? 'bg-[#FFB703] text-white shadow-md' : 'bg-slate-100 text-slate-400'}`}>
+                      {isLatest ? <Truck size={14} /> : <CheckCircle2 size={14} />}
                     </div>
-                    <div className={idx === booking.trackingHistory.length - 1 ? "bg-slate-50 border border-slate-200 rounded-lg p-4 -mt-2" : ""}>
-                      <h4 className={`text-sm font-bold ${idx === booking.trackingHistory.length - 1 ? 'text-slate-900' : 'text-slate-500'}`}>{history.status}</h4>
-                      <p className={`text-xs mt-1 ${idx === booking.trackingHistory.length - 1 ? 'text-slate-600 mb-2' : 'text-slate-400'}`}>
-                        {new Date(history.timestamp).toLocaleString()} &bull; {history.location || 'System'}
+                    <div className={isLatest ? "" : "opacity-60"}>
+                      <h4 className={`text-sm font-bold ${isLatest ? 'text-slate-900' : 'text-slate-600'}`}>{history.status}</h4>
+                      <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">
+                        {new Date(history.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
                       </p>
-                      {history.description && idx === booking.trackingHistory.length - 1 && (
-                        <div className="flex items-center gap-2 text-[10px] text-[#00767C] font-medium bg-[#e0f2f1] p-2 rounded">
-                          <Info size={14} /> {history.description}
+                      <p className="text-xs text-slate-500 mt-1 font-medium">{history.location || 'System'}</p>
+                      
+                      {history.description && isLatest && (
+                        <div className="mt-3 bg-teal-50 border border-teal-100 rounded-xl p-3 flex items-start gap-2 text-[#006D77]">
+                          <Info size={16} className="shrink-0 mt-0.5" />
+                          <p className="text-xs font-medium leading-relaxed">{history.description}</p>
                         </div>
                       )}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-sm text-slate-500">No tracking history available yet.</div>
-              )}
-
-            </div>
+                );
+              })
+            ) : (
+              <div className="text-sm text-slate-500 font-medium pl-6">No tracking history available yet.</div>
+            )}
           </div>
         </div>
-
-        {/* Right Column: Details & Actions */}
-        <div className="space-y-6">
-          {/* Parcel Details */}
-          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 border-b border-slate-100 pb-4">
-              <Package className="text-slate-500" /> Parcel Details
-            </h3>
-            <div className="space-y-4 text-sm">
-              <div className="flex justify-between border-b border-slate-50 pb-2">
-                <span className="text-slate-500">Weight</span>
-                <span className="font-medium text-slate-900">{booking.packageDetails?.weight || 'N/A'} kg</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-50 pb-2">
-                <span className="text-slate-500">Type</span>
-                <span className="font-medium text-slate-900">{booking.packageDetails?.category || 'General'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Service Level</span>
-                <span className="font-medium text-slate-900">{booking.preferences?.speed || 'Standard'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Routing Info */}
-          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 border-b border-slate-100 pb-4">
-              <MapPin className="text-slate-500" /> Routing Info
-            </h3>
-            
-            <div className="relative border-l-2 border-slate-200 ml-2 space-y-6">
-              {/* Origin */}
-              <div className="relative pl-6">
-                <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-slate-300 ring-4 ring-white"></div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">ORIGIN</div>
-                <h4 className="font-medium text-slate-900 text-sm">Pincode: {booking.pickupLocation?.pincode}</h4>
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{booking.pickupLocation?.address}</p>
-              </div>
-              
-              {/* Destination */}
-              <div className="relative pl-6">
-                <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#00767C] ring-4 ring-white"></div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">DESTINATION</div>
-                <h4 className="font-medium text-slate-900 text-sm">Pincode: {booking.dropLocation?.pincode}</h4>
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{booking.dropLocation?.address}</p>
-                <p className="text-xs text-[#00767C] mt-1 font-medium">Attn: {booking.receiver?.name}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
+        
+        {/* Package & Routing Summary */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-6">
+          <h3 className="font-black text-slate-900 mb-4 flex items-center gap-2">
+            <Package size={18} className="text-[#006D77]" /> Details
+          </h3>
           <div className="space-y-3">
-            <button className="w-full bg-white border border-slate-300 text-slate-700 py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
-              <FileText size={18} /> Download Documents
-            </button>
-            <button className="w-full bg-white border border-slate-300 text-slate-700 py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
-              <HeadphonesIcon size={18} /> Contact Support
-            </button>
+             <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+               <span className="text-xs font-bold text-slate-500">Weight</span>
+               <span className="text-sm font-black text-slate-900">{booking.packageDetails?.weight || 'N/A'} kg</span>
+             </div>
+             <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+               <span className="text-xs font-bold text-slate-500">Service</span>
+               <span className="text-sm font-black text-slate-900">{booking.preferences?.speed || 'Standard'}</span>
+             </div>
+             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center shrink-0 mt-0.5"><div className="w-2 h-2 bg-slate-500 rounded-full"></div></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Origin</p>
+                    <p className="text-xs font-bold text-slate-800 mt-0.5 line-clamp-1">{booking.pickupLocation?.address || booking.pickupLocation?.pincode}</p>
+                  </div>
+                </div>
+                <div className="ml-3 w-px h-6 bg-slate-300 border-dashed border-l-2 -my-2"></div>
+                <div className="flex items-start gap-3 mt-3">
+                  <div className="w-6 h-6 rounded-full bg-[#006D77]/20 flex items-center justify-center shrink-0 mt-0.5"><div className="w-2 h-2 bg-[#006D77] rounded-full"></div></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Destination</p>
+                    <p className="text-xs font-bold text-slate-800 mt-0.5 line-clamp-1">{booking.dropLocation?.address || booking.dropLocation?.pincode}</p>
+                  </div>
+                </div>
+             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

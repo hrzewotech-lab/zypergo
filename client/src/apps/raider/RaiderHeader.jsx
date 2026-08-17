@@ -81,8 +81,8 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
           <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8 md:h-10 cursor-pointer object-contain" onClick={() => navigate('/')} />
           <div className="hidden md:block h-6 w-px bg-slate-300"></div>
           <nav className="hidden md:flex gap-4 md:gap-6">
-            <button onClick={() => navigate('/')} className={`font-bold text-xs md:text-sm border-b-2 pb-1 transition-colors ${window.location.pathname === '/' ? 'text-[#fb5c00] border-[#fb5c00]' : 'text-slate-500 border-transparent hover:text-slate-800'}`}>Dashboard</button>
-            <button onClick={() => navigate('/earnings')} className={`font-bold text-xs md:text-sm border-b-2 pb-1 transition-colors ${window.location.pathname === '/earnings' ? 'text-[#fb5c00] border-[#fb5c00]' : 'text-slate-500 border-transparent hover:text-slate-800'}`}>
+            <button onClick={() => navigate('/')} className={`font-bold text-xs md:text-sm border-b-2 pb-1 transition-colors ${window.location.pathname === '/' ? 'text-[#006D77] border-[#006D77]' : 'text-slate-500 border-transparent hover:text-slate-800'}`}>Dashboard</button>
+            <button onClick={() => navigate('/earnings')} className={`font-bold text-xs md:text-sm border-b-2 pb-1 transition-colors ${window.location.pathname === '/earnings' ? 'text-[#006D77] border-[#006D77]' : 'text-slate-500 border-transparent hover:text-slate-800'}`}>
                Earnings
             </button>
           </nav>
@@ -94,7 +94,7 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
             className="flex items-center gap-1 hover:bg-slate-50/50 p-1 rounded-full transition focus:outline-none"
           >
-            <div className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-[#fb5c00] to-orange-500 text-white rounded-full flex items-center justify-center font-black shadow-md uppercase text-xs md:text-sm border-[3px] border-white ring-1 ring-[#fb5c00]/30 hover:scale-105 transition-transform">
+            <div className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-[#006D77] to-teal-700 text-white rounded-full flex items-center justify-center font-black shadow-md uppercase text-xs md:text-sm border-[3px] border-white ring-1 ring-[#006D77]/30 hover:scale-105 transition-transform">
               {user?.name ? user.name.substring(0, 2) : 'RD'}
             </div>
           </button>
@@ -106,10 +106,10 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
                 <p className="text-xs font-bold text-slate-500 truncate">{user?.phone || user?.email || 'No contact info'}</p>
               </div>
               
-              <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#fb5c00] flex items-center gap-3 font-bold transition">
+              <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#006D77] flex items-center gap-3 font-bold transition">
                 <UserIcon size={16} /> My Profile
               </button>
-              <button onClick={() => { setProfileDropdownOpen(false); navigate('/settings'); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#fb5c00] flex items-center gap-3 font-bold transition">
+              <button onClick={() => { setProfileDropdownOpen(false); navigate('/settings'); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#006D77] flex items-center gap-3 font-bold transition">
                 <SettingsIcon size={16} /> Settings
               </button>
               
@@ -126,7 +126,7 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
       {/* Desktop Right Side: Controls */}
       <div className="hidden md:flex items-center justify-end gap-3 w-auto mt-2 md:mt-0">
         {!isOnShift ? (
-           <button onClick={() => handleShiftToggle('shift')} className="bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white px-5 py-2 rounded-full text-xs font-black whitespace-nowrap shadow-[0_4px_15px_-4px_rgba(251,92,0,0.4)] hover:shadow-[0_6px_20px_-4px_rgba(251,92,0,0.5)] hover:-translate-y-0.5 transition-all text-center">Start Shift</button>
+           <button onClick={() => handleShiftToggle('shift')} className="bg-gradient-to-r from-[#006D77] to-teal-700 text-white px-5 py-2 rounded-full text-xs font-black whitespace-nowrap shadow-[0_4px_15px_-4px_rgba(0,109,119,0.4)] hover:shadow-[0_6px_20px_-4px_rgba(0,109,119,0.5)] hover:-translate-y-0.5 transition-all text-center">Start Shift</button>
         ) : (
            <>
              <button onClick={() => handleShiftToggle('break')} className={`px-5 py-2 rounded-full text-xs font-black transition-all whitespace-nowrap shadow-sm hover:shadow-md hover:-translate-y-0.5 text-center ${isOnBreak ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200' : 'bg-white/60 backdrop-blur-sm text-slate-600 border border-white/60 hover:bg-white/90'}`}>{isOnBreak ? 'End Break' : 'Take Break'}</button>
@@ -144,7 +144,7 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
       {/* Mobile Shift Controls (Floating Island above Bottom Nav) */}
       <div className="fixed bottom-[100px] left-4 right-4 md:hidden z-30 flex items-center justify-between gap-2 bg-white/60 backdrop-blur-2xl border border-white/80 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] p-2 rounded-2xl">
         {!isOnShift ? (
-           <button onClick={() => handleShiftToggle('shift')} className="flex-1 bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white py-3 px-4 rounded-xl text-sm font-black shadow-[0_4px_15px_-5px_rgba(251,92,0,0.4)] transition-all text-center tracking-tight hover:shadow-[0_6px_20px_-5px_rgba(251,92,0,0.5)] active:scale-95">Start Shift</button>
+           <button onClick={() => handleShiftToggle('shift')} className="flex-1 bg-gradient-to-r from-[#006D77] to-teal-700 text-white py-3 px-4 rounded-xl text-sm font-black shadow-[0_4px_15px_-5px_rgba(0,109,119,0.4)] transition-all text-center tracking-tight hover:shadow-[0_6px_20px_-5px_rgba(0,109,119,0.5)] active:scale-95">Start Shift</button>
         ) : (
            <div className="flex-1 flex gap-2">
              <button onClick={() => handleShiftToggle('break')} className={`flex-1 py-3 px-2 rounded-xl text-xs font-black transition-all shadow-sm text-center tracking-tight active:scale-95 ${isOnBreak ? 'bg-amber-100 text-amber-700 border border-amber-200 shadow-inner' : 'bg-white/80 border border-white text-slate-700 hover:bg-white'}`}>{isOnBreak ? 'End Break' : 'Take Break'}</button>

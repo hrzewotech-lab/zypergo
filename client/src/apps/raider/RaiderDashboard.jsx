@@ -199,7 +199,7 @@ export default function RaiderDashboard({ user, onLogout }) {
           {/* LEFT PANE - Active Delivery Flow */}
           <div className="w-full lg:w-7/12 xl:w-8/12 bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-auto lg:h-full relative">
             <div className="bg-white/40 border-b border-white/60 px-6 py-4 flex justify-between items-center backdrop-blur-md">
-              <div className="flex items-center gap-2 text-[#fb5c00] font-bold text-sm tracking-wide">
+              <div className="flex items-center gap-2 text-[#006D77] font-bold text-sm tracking-wide">
                 <Truck size={18} /> ACTIVE MISSION
               </div>
               {activeJob && (
@@ -222,10 +222,10 @@ export default function RaiderDashboard({ user, onLogout }) {
           <div className="w-full lg:w-5/12 xl:w-4/12 flex flex-col gap-4 md:gap-6 h-[500px] lg:h-full">
             <div className="bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex-1 flex flex-col overflow-hidden relative">
               <div className="flex border-b border-white/60 bg-white/40 backdrop-blur-md p-1.5 m-4 rounded-2xl shadow-sm">
-                <button onClick={() => setActiveTab('Deliveries')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Deliveries' ? 'bg-[#fb5c00] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
+                <button onClick={() => setActiveTab('Deliveries')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Deliveries' ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
                   My Route ({myJobs.length})
                 </button>
-                <button onClick={() => setActiveTab('Available')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Available' ? 'bg-[#fb5c00] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
+                <button onClick={() => setActiveTab('Available')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Available' ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
                   Available Jobs ({availableJobs.length})
                 </button>
               </div>
@@ -246,14 +246,14 @@ export default function RaiderDashboard({ user, onLogout }) {
                   ))
                 ) : (
                   myJobs.map((job, index) => (
-                    <div key={job._id} onClick={() => setActiveJob(job)} className={`border rounded-3xl p-5 cursor-pointer transition-all ${activeJob?._id === job._id ? 'border-[#fb5c00]/50 bg-gradient-to-br from-[#fb5c00]/5 to-transparent shadow-md -translate-y-1' : 'border-white/60 bg-white/60 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5'}`}>
+                    <div key={job._id} onClick={() => setActiveJob(job)} className={`border rounded-3xl p-5 cursor-pointer transition-all ${activeJob?._id === job._id ? 'border-[#006D77]/50 bg-gradient-to-br from-[#006D77]/5 to-transparent shadow-md -translate-y-1' : 'border-white/60 bg-white/60 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5'}`}>
                       <div className="flex justify-between items-start mb-3">
                         <h4 className="font-bold text-slate-900 tracking-tight flex items-center gap-2">
                           <span className="bg-slate-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">{index + 1}</span>
                           {job.trackingId}
                         </h4>
                         <div className="flex flex-col items-end">
-                          <span className="bg-[#fffaf7] text-[#fb5c00] text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-wider">{job.status}</span>
+                          <span className="bg-[#e6f0f1] text-[#006D77] text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-wider">{job.status}</span>
                           <span className="text-[10px] text-slate-500 font-bold mt-1">ETA: {15 + (index * 20)} mins</span>
                         </div>
                       </div>
@@ -270,8 +270,8 @@ export default function RaiderDashboard({ user, onLogout }) {
 
       {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-3xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-40 px-6 py-4 pb-6 flex justify-between items-center">
-        <button onClick={() => navigate('/')} className="flex flex-col items-center gap-1 text-[#fb5c00]">
-          <div className="w-9 h-9 rounded-2xl bg-[#fb5c00]/10 flex items-center justify-center">
+        <button onClick={() => navigate('/')} className="flex flex-col items-center gap-1 text-[#006D77]">
+          <div className="w-9 h-9 rounded-2xl bg-[#006D77]/10 flex items-center justify-center">
             <LayoutDashboard size={20} />
           </div>
           <span className="text-[10px] font-black">Dashboard</span>

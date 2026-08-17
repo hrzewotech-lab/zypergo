@@ -97,7 +97,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
           <span className="bg-gradient-to-r from-[#FFB703] to-amber-500 text-white shadow-sm text-[10px] font-black px-2.5 py-1 rounded-lg tracking-widest uppercase">
             Active Job
           </span>
-          <span className="text-2xl text-[#fb5c00] font-black tracking-tight">₹{activeJob.pricing?.total}</span>
+          <span className="text-2xl text-[#006D77] font-black tracking-tight">₹{activeJob.pricing?.total}</span>
         </div>
         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">ID: <span className="font-mono text-slate-700">{activeJob.trackingId}</span></p>
       </header>
@@ -108,12 +108,12 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
 
           {/* Job Details Card (Always visible) */}
           <div className="bg-white/60 backdrop-blur-xl rounded-[2rem] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] p-5 border border-white/60 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#fb5c00]/5 to-transparent rounded-bl-full -z-10"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#006D77]/5 to-transparent rounded-bl-full -z-10"></div>
             <h3 className="font-black text-slate-900 border-b border-white/60 pb-3 mb-4 text-lg">Job Details</h3>
             <div className="space-y-4 text-sm">
               <div className="flex gap-3">
                 <div className="w-6 flex flex-col items-center">
-                  <MapPin size={16} className="text-[#fb5c00]" />
+                  <MapPin size={16} className="text-[#006D77]" />
                   <div className="w-0.5 h-full bg-slate-200 my-1"></div>
                 </div>
                 <div className="pb-4">
@@ -152,7 +152,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
 
           {/* Dynamic Task Action Card */}
           <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-white/60 p-6 md:p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#fb5c00]/10 to-transparent rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#006D77]/10 to-transparent rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
 
             {taskStep === 1 && (
               <div className="text-center animate-in fade-in zoom-in-95 duration-300">
@@ -190,13 +190,13 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                   value={otp} 
                   onChange={(e) => setOtp(e.target.value)} 
                   placeholder="----" 
-                  className="w-full text-center text-4xl tracking-[1em] font-black py-6 px-4 bg-white/60 backdrop-blur-sm border border-white/60 shadow-inner rounded-2xl focus:border-[#fb5c00] focus:ring-4 focus:ring-[#fb5c00]/10 focus:bg-white outline-none mb-6 transition-all"
+                  className="w-full text-center text-4xl tracking-[1em] font-black py-6 px-4 bg-white/60 backdrop-blur-sm border border-white/60 shadow-inner rounded-2xl focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 focus:bg-white outline-none mb-6 transition-all"
                 />
                 
                 <button 
                   onClick={() => setTaskStep(3)} 
                   disabled={otp.length !== 4}
-                  className="w-full bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(251,92,0,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(251,92,0,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
+                  className="w-full bg-gradient-to-r from-[#006D77] to-teal-700 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(0,109,119,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(0,109,119,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
                 >
                   Verify OTP
                 </button>
@@ -239,7 +239,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                   <select 
                     value={parcelCondition}
                     onChange={(e) => setParcelCondition(e.target.value)}
-                    className="w-full p-4 border border-white/60 bg-white/80 rounded-xl focus:outline-none focus:border-[#fb5c00] focus:ring-4 focus:ring-[#fb5c00]/10 font-bold text-slate-700 shadow-inner transition-all appearance-none"
+                    className="w-full p-4 border border-white/60 bg-white/80 rounded-xl focus:outline-none focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 font-bold text-slate-700 shadow-inner transition-all appearance-none"
                   >
                     <option value="Good">Good (Intact)</option>
                     <option value="Damaged">Damaged / Torn</option>
@@ -262,7 +262,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <button 
                   onClick={() => updateStatus('Picked Up')} 
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(251,92,0,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(251,92,0,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#006D77] to-teal-700 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(0,109,119,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(0,109,119,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
                   Confirm Pickup & Start Trip
                 </button>
@@ -279,7 +279,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 
                 <div className="bg-white/60 backdrop-blur-sm border border-white/60 p-5 rounded-2xl mb-8 shadow-sm">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Payment Collection Info</p>
-                  <p className="text-3xl font-black text-[#fb5c00] tracking-tight">₹{activeJob.pricing?.total}</p>
+                  <p className="text-3xl font-black text-[#006D77] tracking-tight">₹{activeJob.pricing?.total}</p>
                   <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-2 bg-slate-100 inline-block px-3 py-1 rounded-lg">Status: {activeJob.payment?.status}</p>
                 </div>
 
@@ -321,13 +321,13 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                   value={otp} 
                   onChange={(e) => setOtp(e.target.value)} 
                   placeholder="----" 
-                  className="w-full text-center text-4xl tracking-[1em] font-black py-6 px-4 bg-white/60 backdrop-blur-sm border border-white/60 shadow-inner rounded-2xl focus:border-[#fb5c00] focus:ring-4 focus:ring-[#fb5c00]/10 focus:bg-white outline-none mb-6 transition-all"
+                  className="w-full text-center text-4xl tracking-[1em] font-black py-6 px-4 bg-white/60 backdrop-blur-sm border border-white/60 shadow-inner rounded-2xl focus:border-[#006D77] focus:ring-4 focus:ring-[#006D77]/10 focus:bg-white outline-none mb-6 transition-all"
                 />
                 
                 <button 
                   onClick={() => setTaskStep(6)} 
                   disabled={otp.length !== 4}
-                  className="w-full bg-gradient-to-r from-[#fb5c00] to-orange-500 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(251,92,0,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(251,92,0,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
+                  className="w-full bg-gradient-to-r from-[#006D77] to-teal-700 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(0,109,119,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(0,109,119,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
                 >
                   Verify OTP
                 </button>
@@ -389,7 +389,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 {generatedHandoverOtp ? (
                   <div className="mb-6">
                     <p className="text-slate-500 text-sm mb-4">Show this OTP to the new Raider to securely transfer custody.</p>
-                    <div className="text-5xl font-black text-[#fb5c00] tracking-[0.5em] text-center bg-orange-50 border border-orange-200 py-6 rounded-2xl shadow-inner mb-6">
+                    <div className="text-5xl font-black text-[#006D77] tracking-[0.5em] text-center bg-teal-50 border border-teal-200 py-6 rounded-2xl shadow-inner mb-6">
                       {generatedHandoverOtp}
                     </div>
                     <button 
@@ -405,7 +405,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                     <button 
                       onClick={handleTranshipment} 
                       disabled={loading}
-                      className="w-full bg-[#fb5c00] text-white font-bold py-4 rounded-xl text-lg mb-4"
+                      className="w-full bg-[#006D77] text-white font-bold py-4 rounded-xl text-lg mb-4"
                     >
                       Generate Handover OTP
                     </button>

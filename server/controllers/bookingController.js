@@ -34,7 +34,7 @@ exports.createBooking = async (req, res) => {
     let deliveryType = 'Intercity Hub-and-Spoke';
     
     // Apply Admin Override if present
-    if (routingRule.overrideDeliveryType) {
+    if (routingRule && routingRule.overrideDeliveryType) {
       deliveryType = routingRule.overrideDeliveryType;
     } else {
       // Default Distance Rules
@@ -96,7 +96,7 @@ exports.createBooking = async (req, res) => {
     }
 
     const totalBeforeSpeed = baseCharge + distanceCharge + weightCharge;
-    const total = Math.round(totalBeforeSpeed * speedModifier);
+    const total = bookingData.pricing?.total || Math.round(totalBeforeSpeed * speedModifier);
 
     bookingData.pricing = {
       base: baseCharge,
@@ -111,6 +111,10 @@ exports.createBooking = async (req, res) => {
     const trackingId = 'ZYP' + Math.random().toString().slice(2, 10);
     bookingData.trackingId = trackingId;
     bookingData.status = 'Booking Confirmed';
+
+    // Generate Mock Delivery OTP
+    const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    bookingData.proofOfDelivery = { otp: deliveryOtp };
 
     // Mock ETA calculation
     const today = new Date();
@@ -189,9 +193,9 @@ exports.getBookingDetails = async (req, res) => {
     
     // Check if it's a tracking ID (ZYP... or ZGO...) or an ObjectId
     if (id.startsWith('ZYP') || id.startsWith('ZGO')) {
-      booking = await Booking.findOne({ trackingId: id });
+      booking = await Booking.findOne({ trackingId: id }).populate('currentRider', 'name phone');
     } else {
-      booking = await Booking.findById(id);
+      booking = await Booking.findById(id).populate('currentRider', 'name phone');
     }
     
     if (!booking) {

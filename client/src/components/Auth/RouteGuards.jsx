@@ -48,7 +48,7 @@ export function PublicRoute({ isAuthenticated: propIsAuth, children }) {
   }, [location.pathname]);
 
   if (isAuth) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return children ? children : <Outlet />;
 }

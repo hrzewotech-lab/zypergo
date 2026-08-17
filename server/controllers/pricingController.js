@@ -53,8 +53,12 @@ exports.calculatePrice = async (req, res) => {
       length = 10, width = 10, height = 10,
       category = 'General Parcel',
       speed = 'Standard',
-      parcelValue = 0
+      parcelValue = 0,
+      vehicle = 'GoFast'
     } = req.body;
+
+    // Mock distance if not provided
+    const calcDistance = distanceKm > 0 ? distanceKm : (originCity === destCity ? 15 : 350);
 
     const movementType = originCity === destCity ? 'Intracity' : 'Intercity';
     
@@ -90,15 +94,22 @@ exports.calculatePrice = async (req, res) => {
     }
 
     if (!baseRule) {
-      // Fallback defaults if no rule matches
+      // Dynamic fallback rules based on vehicle
+      let vBase = 50; let vPerKm = 5; let vPerKg = 10;
+      if (vehicle === 'Bike') { vBase = 40; vPerKm = 8; vPerKg = 5; }
+      else if (vehicle === 'Auto') { vBase = 60; vPerKm = 10; vPerKg = 12; }
+      else if (vehicle === 'Car') { vBase = 100; vPerKm = 12; vPerKg = 10; }
+      else if (vehicle === 'Mini Truck') { vBase = 150; vPerKm = 15; vPerKg = 10; }
+      else if (vehicle === 'Heavy Truck') { vBase = 500; vPerKm = 25; vPerKg = 8; }
+
       baseRule = {
-        rates: { basePrice: 50, perKgRate: 10, perKmRate: 0, handlingCost: 0, minimumCharge: 50, gstPercentage: 18, insurancePercentage: 0, discountPercentage: 0, partnerCost: 20, riderCost: 15, marginPercentage: 20 }
+        rates: { basePrice: vBase, perKgRate: vPerKg, perKmRate: vPerKm, handlingCost: 0, minimumCharge: vBase, gstPercentage: 18, insurancePercentage: 0, discountPercentage: 0, partnerCost: vBase * 0.4, riderCost: vBase * 0.3, marginPercentage: 20 }
       };
-      appliedRules.push('Default Fallback Rule');
+      appliedRules.push(`Default ${vehicle} Rule`);
     }
 
     // 4. Calculate Base Costs & Customer Price
-    let calculatedBase = baseRule.rates.basePrice + (chargeableWeight * baseRule.rates.perKgRate) + (distanceKm * baseRule.rates.perKmRate);
+    let calculatedBase = baseRule.rates.basePrice + (chargeableWeight * baseRule.rates.perKgRate) + (calcDistance * baseRule.rates.perKmRate);
     let priceBase = Math.max(calculatedBase, baseRule.rates.minimumCharge || 0);
     
     let internalPartnerCost = baseRule.rates.partnerCost + (chargeableWeight * (baseRule.rates.partnerCost > 0 ? 2 : 0)); // mock scaling of partner cost
@@ -151,6 +162,7 @@ exports.calculatePrice = async (req, res) => {
         movementType,
         chargeableWeight: parseFloat(chargeableWeight.toFixed(2)),
         actualWeight,
+        distanceKm: calcDistance,
         volumetricWeight: parseFloat(volWeight.toFixed(2)),
         breakdown: {
           baseCost: parseFloat(priceBase.toFixed(2)),

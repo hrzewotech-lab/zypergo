@@ -76,24 +76,39 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, phone, role, otp } = req.body;
 
-    // Support multiple roles for Hub Portal login and Admin Portal
-    const adminRoles = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'];
-    const hubRoles = ['HubManager', 'HubOperator'];
-    
-    let roleQuery = {};
-    if (role === 'SuperAdmin' || role === 'Admin') {
-      roleQuery = { role: { $in: adminRoles } };
-    } else if (hubRoles.includes(role)) {
-      roleQuery = { role: { $in: hubRoles } };
-    } else {
-      roleQuery = { role };
-    }
-    
     const emailRegex = email ? { $regex: new RegExp(`^${email}$`, 'i') } : null;
-    const user = await User.findOne({ $or: [{ email: emailRegex }, { phone }], ...roleQuery });
+    const user = await User.findOne({ $or: [{ email: emailRegex }, { phone }] });
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (role) {
+      const adminRoles = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'];
+      const hubRoles = ['HubManager', 'HubOperator'];
+      
+      let isAuthorized = false;
+      if (user.role === 'SuperAdmin') {
+        isAuthorized = true;
+      } else if (role === 'Admin' || role === 'SuperAdmin') {
+        isAuthorized = adminRoles.includes(user.role);
+      } else if (hubRoles.includes(role)) {
+        isAuthorized = hubRoles.includes(user.role);
+      } else {
+        isAuthorized = (user.role === role);
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, error: `Unauthorized. User role '${user.role}' cannot access this portal.` });
+      }
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({ success: false, error: 'Account is suspended or inactive.' });
+    }
+
+    if (user.role === 'Raider' && user.raiderDetails && user.raiderDetails.approvalStatus !== 'Approved') {
+      return res.status(403).json({ success: false, error: 'Raider account is pending admin approval.' });
     }
 
     // Special bypass for seed admin or mock
@@ -137,30 +152,42 @@ exports.loginWithPassword = async (req, res) => {
     }
 
     const isEmail = identifier.includes('@');
-    const query = { role };
+    const query = {};
     if (isEmail) query.email = { $regex: new RegExp(`^${identifier}$`, 'i') };
     else query.phone = identifier.replace(/\D/g, '');
 
-    // Support multiple roles for Hub Portal login and Admin Portal
-    const adminRoles = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'];
-    const hubRoles = ['HubManager', 'HubOperator'];
-    
-    let roleQuery = {};
-    if (role === 'SuperAdmin' || role === 'Admin') {
-      roleQuery = { role: { $in: adminRoles } };
-      delete query.role; // Remove strict role check
-    } else if (hubRoles.includes(role)) {
-      roleQuery = { role: { $in: hubRoles } };
-      delete query.role;
-    } else {
-      roleQuery = { role };
-      delete query.role;
-    }
-    
-    const user = await User.findOne({ ...query, ...roleQuery });
+    const user = await User.findOne(query);
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found. Please check your credentials.' });
+    }
+
+    if (role) {
+      const adminRoles = ['SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'DispatchManager', 'FinanceManager'];
+      const hubRoles = ['HubManager', 'HubOperator'];
+      
+      let isAuthorized = false;
+      if (user.role === 'SuperAdmin') {
+        isAuthorized = true;
+      } else if (role === 'Admin' || role === 'SuperAdmin') {
+        isAuthorized = adminRoles.includes(user.role);
+      } else if (hubRoles.includes(role)) {
+        isAuthorized = hubRoles.includes(user.role);
+      } else {
+        isAuthorized = (user.role === role);
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, error: `Unauthorized. User role '${user.role}' cannot access this portal.` });
+      }
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({ success: false, error: 'Account is suspended or inactive.' });
+    }
+
+    if (user.role === 'Raider' && user.raiderDetails && user.raiderDetails.approvalStatus !== 'Approved') {
+      return res.status(403).json({ success: false, error: 'Raider account is pending admin approval.' });
     }
 
     if (!user.password) {
