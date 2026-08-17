@@ -80,9 +80,9 @@ function CustomerLayout() {
               <Calendar size={20} />
               <span className="font-bold text-sm">Bookings</span>
             </Link>
-            <Link to="/support" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname.startsWith('/support') ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:bg-teal-50 hover:text-[#006D77]'}`}>
-              <HelpCircle size={20} />
-              <span className="font-bold text-sm">Support Center</span>
+            <Link to="/track" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname.startsWith('/track') ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:bg-teal-50 hover:text-[#006D77]'}`}>
+              <MapPin size={20} />
+              <span className="font-bold text-sm">Track Order</span>
             </Link>
           </div>
           
@@ -119,9 +119,9 @@ function CustomerLayout() {
             <span className={`text-[10px] font-bold mt-7 ${location.pathname.startsWith('/booking') ? 'text-[#00585f]' : 'text-[#00585f]'}`}>Book</span>
           </Link>
           
-          <Link to="/support" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/support') ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
-            <HelpCircle size={22} className={location.pathname.startsWith('/support') ? 'fill-[#006D77]/20' : ''} />
-            <span className="text-[10px] font-bold">Help</span>
+          <Link to="/track" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/track') ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <MapPin size={22} className={location.pathname.startsWith('/track') ? 'fill-[#006D77]/20' : ''} />
+            <span className="text-[10px] font-bold">Track</span>
           </Link>
           <Link to="/profile" className={`flex flex-col items-center gap-1 w-1/5 transition-colors ${location.pathname.startsWith('/profile') ? 'text-[#006D77]' : 'text-slate-400 hover:text-slate-600'}`}>
             <UserIcon size={22} className={location.pathname.startsWith('/profile') ? 'fill-[#006D77]/20' : ''} />

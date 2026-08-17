@@ -63,6 +63,9 @@ const userSchema = new mongoose.Schema({
       enum: ['Bike', 'Auto', 'Mini Truck', 'Heavy Vehicle']
     },
     vehicleRegistration: String,
+    vehicleMake: String,
+    vehicleModel: String,
+    rcNumber: String,
     approvalStatus: {
       type: String,
       enum: ['Pending', 'Approved', 'Rejected', 'Suspended'],
@@ -88,7 +91,11 @@ const userSchema = new mongoose.Schema({
     documents: {
       drivingLicenseUrl: String,
       rcUrl: String,
-      idProofUrl: String // Aadhaar/PAN
+      aadhaarUrl: String,
+      panUrl: String,
+      vehiclePicUrl: String,
+      profileImageUrl: String,
+      idProofUrl: String // Legacy
     },
     bankDetails: {
       accountNumber: String,
@@ -97,11 +104,6 @@ const userSchema = new mongoose.Schema({
     emergencyContact: {
       name: String,
       phone: String
-    },
-    roleFlexibility: {
-      type: String,
-      enum: ['Pickup Only', 'Delivery Only', 'Both'],
-      default: 'Both'
     },
     isOnShift: {
       type: Boolean,
@@ -114,7 +116,8 @@ const userSchema = new mongoose.Schema({
     earnings: {
       cashCollected: { type: Number, default: 0 },
       pendingDeposit: { type: Number, default: 0 },
-      totalEarnings: { type: Number, default: 0 }
+      totalEarnings: { type: Number, default: 0 },
+      walletBalance: { type: Number, default: 0 }
     },
     performance: {
       completionRate: { type: Number, default: 100 },

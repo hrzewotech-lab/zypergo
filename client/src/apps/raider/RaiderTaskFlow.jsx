@@ -3,7 +3,13 @@ import { Navigation, MapPin, Camera, Key, CheckCircle, Package, ArrowRight, Uplo
 import api from '../../api';
 
 export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
-  const [taskStep, setTaskStep] = useState(1);
+  const [taskStep, setTaskStep] = useState(() => {
+    if (!activeJob) return 1;
+    if (activeJob.status === 'Arrived at Pickup') return 2;
+    if (['Picked Up', 'In Transit'].includes(activeJob.status)) return 4;
+    if (activeJob.status === 'Out for Delivery') return 5;
+    return 1;
+  });
   const [otp, setOtp] = useState('');
   const [cash, setCash] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,6 +19,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
   
   // NDR (Exception Handling) State
   const [showExceptionModal, setShowExceptionModal] = useState(false);
+  const [exceptionType, setExceptionType] = useState('Failed'); // 'Failed' or 'Cancelled'
   const [exceptionReason, setExceptionReason] = useState('');
   const [parcelCondition, setParcelCondition] = useState('Good');
   
@@ -53,7 +60,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
           // Progress task step based on standard flow
           if (status === 'Arrived at Pickup') setTaskStep(2);
           if (status === 'Picked Up') setTaskStep(4);
-          if (status === 'In Transit') setTaskStep(5);
+          if (status === 'In Transit' || status === 'Out for Delivery') setTaskStep(5);
           setOtp(''); // reset OTP for drop
           setCash(''); // reset cash
           setShowExceptionModal(false);
@@ -63,6 +70,20 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
       }
     } catch (err) {
       alert(err.response?.data?.details || err.response?.data?.error || 'Network Error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtp = async (nextStep) => {
+    setLoading(true);
+    try {
+      const res = await api.post(`/raider/jobs/${activeJob._id}/verify-otp`, { otp });
+      if (res.data.success) {
+        setTaskStep(nextStep);
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || 'Invalid OTP');
     } finally {
       setLoading(false);
     }
@@ -87,7 +108,28 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
     }
   };
 
-  const isIntercity = activeJob.metadata?.deliveryType === 'Intercity Hub-and-Spoke';
+  const pickupPincode = activeJob.pickupLocation?.pincode;
+  const dropPincode = activeJob.dropLocation?.pincode;
+  
+  const pickupParts = (activeJob.pickupLocation?.address || '').toLowerCase().split(',').map(s => s.trim());
+  const dropParts = (activeJob.dropLocation?.address || '').toLowerCase().split(',').map(s => s.trim());
+  
+  // Find common localities/cities (ignoring country, states, and numbers)
+  const ignoreList = ['india', 'andhra pradesh', 'telangana', 'karnataka', 'tamil nadu', 'maharashtra'];
+  const commonLocalities = pickupParts.filter(part => 
+    dropParts.includes(part) && 
+    part.length > 3 && 
+    isNaN(part) &&
+    !ignoreList.includes(part)
+  );
+
+  // Consider it the "same region" if pincodes match OR they share a city/locality name
+  const isSameRegion = (pickupPincode && dropPincode && pickupPincode === dropPincode) || commonLocalities.length > 0;
+  
+  // Routing Algorithm: 
+  // Deliver directly to the customer if they are in the same region (isSameRegion = true)
+  // Drop at the Hub ONLY if they are different regions AND it's an Intercity delivery.
+  const isHubDrop = activeJob.metadata?.deliveryType === 'Intercity Hub-and-Spoke' && !isSameRegion;
 
   return (
     <div className="h-full bg-transparent font-sans flex flex-col relative rounded-[2rem]">
@@ -97,7 +139,10 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
           <span className="bg-gradient-to-r from-[#FFB703] to-amber-500 text-white shadow-sm text-[10px] font-black px-2.5 py-1 rounded-lg tracking-widest uppercase">
             Active Job
           </span>
-          <span className="text-2xl text-[#006D77] font-black tracking-tight">₹{activeJob.pricing?.total}</span>
+          <div className="text-right">
+            <span className="text-2xl text-[#006D77] font-black tracking-tight">₹{Math.floor((activeJob.pricing?.total || 800) * 0.15)}</span>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Est. Payout</p>
+          </div>
         </div>
         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">ID: <span className="font-mono text-slate-700">{activeJob.trackingId}</span></p>
       </header>
@@ -119,7 +164,15 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <div className="pb-4">
                   <p className="text-xs font-bold text-slate-400 uppercase">Pickup Location</p>
                   <p className="font-bold text-slate-800">{activeJob.pickupLocation?.address}</p>
-                  <p className="text-slate-500 flex items-center gap-1 mt-1"><Phone size={14}/> {activeJob.sender?.phone || 'Customer Phone'}</p>
+                  <p className="text-slate-500 flex items-center gap-1 mt-1 mb-2"><Phone size={14}/> {activeJob.sender?.phone || 'Customer Phone'}</p>
+                  {taskStep <= 2 && (
+                    <button 
+                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(activeJob.pickupLocation?.address || '')}`, '_blank')}
+                      className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-black flex items-center gap-1 w-fit transition-colors"
+                    >
+                      <Navigation size={14}/> Get Directions
+                    </button>
+                  )}
                   {activeJob.preferences?.handlingNotes && (
                     <p className="text-slate-500 flex items-center gap-1 mt-1 text-xs italic"><FileText size={14}/> {activeJob.preferences.handlingNotes}</p>
                   )}
@@ -127,13 +180,21 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
               </div>
               <div className="flex gap-3">
                 <div className="w-6 flex flex-col items-center">
-                  <MapPin size={16} className={isIntercity ? "text-[#FFB703]" : "text-green-600"} />
+                  <MapPin size={16} className={isHubDrop ? "text-[#FFB703]" : "text-green-600"} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase">{isIntercity ? 'Drop to Source Hub' : 'Delivery Location'}</p>
-                  <p className="font-bold text-slate-800">{isIntercity ? 'ZyperGo Central Hub, Madhapur' : activeJob.dropLocation?.address}</p>
-                  <p className="text-slate-500 flex items-center gap-1 mt-1"><Phone size={14}/> {isIntercity ? 'Hub Manager' : activeJob.receiver?.phone}</p>
-                  <p className="text-slate-500 flex items-center gap-1 mt-1 text-xs font-bold"><CreditCard size={14}/> Pay Mode: {activeJob.payment?.mode}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase">{isHubDrop ? 'Drop to Source Hub' : 'Delivery Location'}</p>
+                  <p className="font-bold text-slate-800">{isHubDrop ? 'ZyperGo Central Hub, Madhapur' : activeJob.dropLocation?.address}</p>
+                  <p className="text-slate-500 flex items-center gap-1 mt-1"><Phone size={14}/> {isHubDrop ? 'Hub Manager' : activeJob.receiver?.phone}</p>
+                  <p className="text-slate-500 flex items-center gap-1 mt-1 mb-2 text-xs font-bold"><CreditCard size={14}/> Pay Mode: {activeJob.payment?.mode}</p>
+                  {taskStep >= 4 && (
+                    <button 
+                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(isHubDrop ? 'ZyperGo Central Hub' : activeJob.dropLocation?.address || '')}`, '_blank')}
+                      className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-black flex items-center gap-1 w-fit transition-colors"
+                    >
+                      <Navigation size={14}/> Get Directions
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -159,20 +220,21 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-blue-100">
                   <Navigation size={36} />
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Navigate to Pickup</h2>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Pickup Journey</h2>
                 <p className="text-slate-500 text-sm mb-8 font-medium">Head to the sender's location.</p>
-                <button 
-                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(activeJob.pickupLocation?.address || '')}`, '_blank')}
-                  className="w-full bg-white text-slate-700 hover:text-blue-600 border border-slate-200 font-black py-4 rounded-2xl text-base flex justify-center items-center gap-2 mb-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                >
-                  <Navigation size={20}/> Open Google Maps
-                </button>
                 <button 
                   onClick={() => updateStatus('Arrived at Pickup')} 
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-[#0F172A] to-slate-800 text-white font-black py-4.5 rounded-2xl text-lg flex justify-center items-center gap-2 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(15,23,42,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
                   Mark 'Arrived at Pickup' <ArrowRight size={20}/>
+                </button>
+
+                <button 
+                  onClick={() => { setExceptionType('Cancelled'); setShowExceptionModal(true); }} 
+                  className="mt-6 text-red-500 font-bold text-sm hover:text-red-600 transition-colors bg-red-50 px-4 py-2 rounded-lg"
+                >
+                  Cancel Job
                 </button>
               </div>
             )}
@@ -194,15 +256,15 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 />
                 
                 <button 
-                  onClick={() => setTaskStep(3)} 
-                  disabled={otp.length !== 4}
+                  onClick={() => verifyOtp(3)} 
+                  disabled={otp.length !== 4 || loading}
                   className="w-full bg-gradient-to-r from-[#006D77] to-teal-700 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(0,109,119,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(0,109,119,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
                 >
                   Verify OTP
                 </button>
 
                 <button 
-                  onClick={() => setShowExceptionModal(true)} 
+                  onClick={() => { setExceptionType('Failed'); setShowExceptionModal(true); }} 
                   className="text-red-500 font-bold text-sm hover:text-red-600 transition-colors bg-red-50 px-4 py-2 rounded-lg"
                 >
                   Report Issue (Pickup Failed)
@@ -274,21 +336,14 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-fuchsia-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-purple-100">
                   <Package size={36} />
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Navigate to Drop</h2>
-                <p className="text-slate-500 text-sm mb-8 font-medium">Head to the {isIntercity ? 'Source Hub' : 'Delivery Address'}.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Drop Journey</h2>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Head to the {isHubDrop ? 'Source Hub' : 'Delivery Address'}.</p>
                 
                 <div className="bg-white/60 backdrop-blur-sm border border-white/60 p-5 rounded-2xl mb-8 shadow-sm">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Payment Collection Info</p>
                   <p className="text-3xl font-black text-[#006D77] tracking-tight">₹{activeJob.pricing?.total}</p>
                   <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-2 bg-slate-100 inline-block px-3 py-1 rounded-lg">Status: {activeJob.payment?.status}</p>
                 </div>
-
-                <button 
-                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(isIntercity ? 'ZyperGo Central Hub' : activeJob.dropLocation?.address || '')}`, '_blank')}
-                  className="w-full bg-white text-slate-700 hover:text-blue-600 border border-slate-200 font-black py-4 rounded-2xl text-base flex justify-center items-center gap-2 mb-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                >
-                  <Navigation size={20}/> Open Google Maps
-                </button>
 
                 <button 
                   onClick={() => updateStatus('Out for Delivery')} 
@@ -314,7 +369,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                   <Key size={36} />
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Delivery Verification</h2>
-                <p className="text-slate-500 text-sm mb-8 font-medium">Ask the {isIntercity ? 'Hub Staff' : 'Receiver'} for the 4-digit OTP.</p>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Ask the {isHubDrop ? 'Hub Staff' : 'Receiver'} for the 4-digit OTP.</p>
                 
                 <input 
                   type="number" 
@@ -325,15 +380,15 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 />
                 
                 <button 
-                  onClick={() => setTaskStep(6)} 
-                  disabled={otp.length !== 4}
+                  onClick={() => verifyOtp(6)} 
+                  disabled={otp.length !== 4 || loading}
                   className="w-full bg-gradient-to-r from-[#006D77] to-teal-700 text-white font-black py-4.5 rounded-2xl text-lg shadow-[0_8px_20px_-6px_rgba(0,109,119,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(0,109,119,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-4"
                 >
                   Verify OTP
                 </button>
 
                 <button 
-                  onClick={() => setShowExceptionModal(true)} 
+                  onClick={() => { setExceptionType('Failed'); setShowExceptionModal(true); }} 
                   className="text-red-500 font-bold text-sm hover:text-red-600 transition-colors bg-red-50 px-4 py-2 rounded-lg"
                 >
                   Report Issue (Delivery Failed)
@@ -370,7 +425,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 )}
 
                 <button 
-                  onClick={() => updateStatus(isIntercity ? 'Source Hub Received' : 'Delivered', true)} 
+                  onClick={() => updateStatus(isHubDrop ? 'Source Hub Received' : 'Delivered', true)} 
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black py-4.5 rounded-2xl text-lg flex justify-center items-center gap-2 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50"
                 >
@@ -454,11 +509,11 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
             <div className="flex gap-4">
               <button onClick={() => setShowExceptionModal(false)} className="flex-1 py-4 bg-white/60 border border-white/60 shadow-sm text-slate-700 font-black rounded-2xl hover:bg-white transition-colors">Cancel</button>
               <button 
-                onClick={() => updateStatus('Failed', true)} 
+                onClick={() => updateStatus(exceptionType, true)} 
                 disabled={!exceptionReason || loading}
                 className="flex-[2] py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-black rounded-2xl shadow-[0_8px_20px_-6px_rgba(239,68,68,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(239,68,68,0.6)] disabled:opacity-50 transition-all hover:-translate-y-1"
               >
-                Submit & Mark Failed
+                Submit & {exceptionType === 'Cancelled' ? 'Cancel Job' : 'Mark Failed'}
               </button>
             </div>
           </div>

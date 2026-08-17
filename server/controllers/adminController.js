@@ -144,6 +144,7 @@ exports.assignRaider = async (req, res) => {
       },
       {
         status: 'Rider Assigned',
+        currentRider: raiderId,
         $push: {
           assignedRaiders: { raiderId, status: 'Active' },
           trackingHistory: {

@@ -28,7 +28,7 @@ export default function OrderDetails() {
 
   const isPending = !booking.status || booking.status === 'Pending' || booking.status === 'Booking Confirmed';
   const hasRaider = !['Delivered', 'Cancelled', 'Failed'].includes(booking.status) && !isPending;
-  const otp = booking.trackingId.replace(/\D/g, '').slice(-4) || '5921';
+  const otp = booking.proofOfDelivery?.otp || booking.trackingId.replace(/\D/g, '').slice(-4) || '5921';
 
   return (
     <div className="flex flex-col bg-slate-50 min-h-full animate-in fade-in zoom-in-95 duration-300 relative pb-24">
@@ -72,37 +72,39 @@ export default function OrderDetails() {
         )}
 
         {/* Raider Details (Rapido Style) */}
-        {hasRaider && (
+        {hasRaider && booking.currentRider && (
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 relative overflow-hidden animate-in slide-in-from-bottom-4">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#006D77] to-[#FFB703]"></div>
             
             <div className="flex justify-between items-start mb-4">
               <div className="flex gap-3">
                 <div className="w-14 h-14 bg-slate-100 rounded-full border-2 border-white shadow-sm overflow-hidden shrink-0 mt-1">
-                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.trackingId}`} alt="Raider" className="w-full h-full object-cover" />
+                   <img src={booking.currentRider?.raiderDetails?.documents?.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.trackingId}`} alt="Raider" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-900 leading-tight text-base">Rajesh Kumar</h3>
+                  <h3 className="font-black text-slate-900 leading-tight text-base">{booking.currentRider.name}</h3>
                   <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mt-0.5">
-                    <span className="text-[#FFB703]">★</span> 4.8 (120+ deliveries)
+                    <span className="text-[#FFB703]">★</span> {booking.currentRider.raiderDetails?.performance?.rating || '4.8'} ({booking.currentRider.raiderDetails?.performance?.completedJobs || '120+'} deliveries)
                   </div>
                   <p className="text-[10px] font-black text-slate-600 mt-1.5 bg-slate-100 px-2.5 py-1 rounded-md inline-block uppercase tracking-wider">
-                    KA 01 AB 1234 • Bajaj Pulsar
+                    {booking.currentRider.raiderDetails?.vehicleRegistration || 'ZYP REG'} • {booking.currentRider.raiderDetails?.vehicleType || 'Bike'}
                   </p>
                 </div>
               </div>
               
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2 text-center shrink-0 min-w-[70px] shadow-inner shadow-slate-100/50">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Pickup OTP</p>
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl py-2 px-3 text-center shrink-0 min-w-[70px] shadow-inner shadow-slate-100/50">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                  {['Picked Up', 'In Transit', 'Out for Delivery'].includes(booking.status) ? 'Delivery OTP' : 'Pickup OTP'}
+                </p>
                 <p className="text-xl font-black text-[#006D77] tracking-widest">{otp}</p>
               </div>
             </div>
 
             <div className="flex gap-3 mt-4 pt-4 border-t border-slate-50">
-               <a href="tel:9876543210" className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors active:scale-95 shadow-sm">
+               <a href={`tel:${booking.currentRider.phone}`} className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors active:scale-95 shadow-sm">
                  <Phone size={16} /> Call Raider
                </a>
-               <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#006D77] text-white py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-[#005a62] transition-colors shadow-md shadow-[#006D77]/20 active:scale-95">
+               <a href={`https://wa.me/91${booking.currentRider.phone}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#006D77] text-white py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-[#005a62] transition-colors shadow-md shadow-[#006D77]/20 active:scale-95">
                  <MessageCircle size={16} /> Message
                </a>
             </div>

@@ -5,11 +5,42 @@ const NotificationService = require('../services/notificationService');
 
 exports.getAvailableJobs = async (req, res) => {
   try {
-    const availableJobs = await Booking.find({ status: 'Booking Confirmed' }).sort({ createdAt: -1 });
+    const { userId } = req.query;
+    let query = { status: { $in: ['Booking Confirmed', 'Pending', 'Relay Handoff Pending', 'Transhipment Pending'] } };
+    
+    if (userId) {
+      const user = await User.findById(userId);
+      if (!user?.raiderDetails?.isOnline || !user?.raiderDetails?.isOnShift) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+      
+      // Filter by the raider's specific vehicle type
+      if (user.raiderDetails?.vehicleType) {
+        query['metadata.vehicleType'] = user.raiderDetails.vehicleType;
+      }
+    }
+    
+    const availableJobs = await Booking.find(query).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: availableJobs });
   } catch (error) {
     console.error('Error fetching available jobs:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch jobs' });
+  }
+};
+
+exports.updateLocation = async (req, res) => {
+  try {
+    const { userId, lat, lng } = req.body;
+    if (!userId) return res.status(400).json({ success: false, error: 'User ID is required' });
+    
+    await User.findByIdAndUpdate(userId, {
+      'raiderDetails.currentLocation': { lat, lng },
+      'raiderDetails.lastLocationUpdate': new Date()
+    });
+
+    res.status(200).json({ success: true, message: 'Location updated' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update location' });
   }
 };
 
@@ -55,15 +86,12 @@ exports.updateJobStatus = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    // Generate and notify OTP when Raider Arrives at Pickup
+    // Notify when Raider Arrives at Pickup
     if (status === 'Arrived at Pickup') {
-      const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
-      if (!booking.proofOfDelivery) booking.proofOfDelivery = {};
-      booking.proofOfDelivery.otp = generatedOtp;
-      
+      const expectedOtp = booking.proofOfDelivery?.otp || '1234';
       const customerPhone = booking.sender?.phone || booking.senderDetails?.phone || '9999999999';
       const customerEmail = booking.sender?.email || booking.senderDetails?.email;
-      NotificationService.notifyPickupOTP(customerPhone, customerEmail, generatedOtp, booking.trackingId);
+      NotificationService.notifyPickupOTP(customerPhone, customerEmail, expectedOtp, booking.trackingId);
     }
 
     // Generate and notify OTP when Raider is Out for Delivery
@@ -80,8 +108,8 @@ exports.updateJobStatus = async (req, res) => {
     // Strict Validations per step
     if (status === 'Picked Up') {
       const expectedOtp = booking.proofOfDelivery?.otp || '1234';
-      if (!otp || otp !== expectedOtp) { 
-        return res.status(400).json({ success: false, error: `Valid OTP is mandatory (use ${expectedOtp} for testing).` });
+      if (!otp || String(otp) !== String(expectedOtp)) { 
+        return res.status(400).json({ success: false, error: `Invalid OTP. Please check and try again.` });
       }
       if (!photoUrl) {
         return res.status(400).json({ success: false, error: 'Pickup Photo upload is mandatory.' });
@@ -91,8 +119,8 @@ exports.updateJobStatus = async (req, res) => {
 
     if (status === 'Delivered') {
       const expectedOtp = booking.proofOfDelivery?.otp || '1234';
-      if (!otp || otp !== expectedOtp) {
-        return res.status(400).json({ success: false, error: `Valid OTP is mandatory (use ${expectedOtp} for testing).` });
+      if (!otp || String(otp) !== String(expectedOtp)) {
+        return res.status(400).json({ success: false, error: `Invalid OTP. Please check and try again.` });
       }
       if (!photoUrl) {
         return res.status(400).json({ success: false, error: 'Delivery Photo upload is mandatory.' });
@@ -151,6 +179,16 @@ exports.updateJobStatus = async (req, res) => {
         timestamp: new Date(),
         gpsLocation: gpsLocation
       };
+      
+      // Calculate and credit earnings
+      const estimatedPayout = Math.floor((booking.pricing?.total || 800) * 0.15);
+      
+      await User.findByIdAndUpdate(userId, {
+        $inc: {
+          'raiderDetails.earnings.totalEarnings': estimatedPayout,
+          'raiderDetails.earnings.walletBalance': estimatedPayout
+        }
+      });
     }
 
     await booking.save();
@@ -168,6 +206,28 @@ exports.updateJobStatus = async (req, res) => {
   } catch (error) {
     console.error('Error updating job status:', error);
     res.status(500).json({ success: false, error: 'Failed to update job status', details: error.message, stack: error.stack });
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { otp, type } = req.body;
+    
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ success: false, error: 'Job not found' });
+    }
+    
+    const expectedOtp = booking.proofOfDelivery?.otp || '1234';
+    if (!otp || String(otp) !== String(expectedOtp)) { 
+      return res.status(400).json({ success: false, error: `Invalid OTP. Please check and try again.` });
+    }
+    
+    res.status(200).json({ success: true, message: 'OTP Verified successfully' });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ success: false, error: 'Failed to verify OTP' });
   }
 };
 
@@ -232,6 +292,8 @@ exports.acceptHandover = async (req, res) => {
       raiderId: newRaiderId,
       status: 'Active'
     });
+    
+    booking.currentRider = newRaiderId;
     
     booking.status = 'In Transit'; 
     
@@ -326,5 +388,44 @@ exports.updateShift = async (req, res) => {
     res.status(200).json({ success: true, data: user, message });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update shift' });
+  }
+};
+
+exports.withdrawEarnings = async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    
+    if ((user.raiderDetails?.earnings?.walletBalance || 0) < amount) {
+      return res.status(400).json({ success: false, error: 'Insufficient balance' });
+    }
+    
+    await User.findByIdAndUpdate(userId, {
+      $inc: {
+        'raiderDetails.earnings.walletBalance': -amount
+      }
+    });
+    
+    res.status(200).json({ success: true, message: `Successfully withdrew ₹${amount} to bank account.` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to process withdrawal' });
+  }
+};
+
+exports.getHistory = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ success: false, error: 'User ID is required' });
+
+    const history = await Booking.find({
+      'assignedRaiders.raiderId': userId,
+      status: { $in: ['Delivered', 'Source Hub Received'] }
+    }).sort({ updatedAt: -1 });
+
+    res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch history' });
   }
 };

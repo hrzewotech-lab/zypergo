@@ -24,6 +24,7 @@ export default function TrackingTimeline() {
   const trackingId = paramId || searchParams.get('id');
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
+  const [activeShipments, setActiveShipments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,18 +39,13 @@ export default function TrackingTimeline() {
           setLoading(false);
         });
     } else {
-      // If no specific tracking ID is given, find the user's latest active shipment
+      // If no specific tracking ID is given, fetch active shipments to display a list
       api.get('/bookings/my-shipments')
         .then(res => {
           const shipments = res.data?.data || [];
-          if (shipments.length > 0) {
-            // Find first active, otherwise first overall
-            const target = shipments.find(s => !['Delivered', 'Cancelled', 'Failed'].includes(s.status)) || shipments[0];
-            // Redirect to it
-            navigate(`/track/${target.trackingId}`, { replace: true });
-          } else {
-            setLoading(false);
-          }
+          const active = shipments.filter(s => ['Picked Up', 'In Transit', 'Out for Delivery'].includes(s.status));
+          setActiveShipments(active);
+          setLoading(false);
         })
         .catch(err => {
           console.error(err);
@@ -60,6 +56,46 @@ export default function TrackingTimeline() {
 
   if (loading) return <div className="p-12 text-center text-slate-500 font-bold">Loading tracking information...</div>;
   
+  if (!trackingId) {
+    return (
+      <div className="bg-slate-50 min-h-full font-sans pb-24 p-6 animate-in fade-in duration-300">
+        <h1 className="text-2xl font-black text-slate-900 mb-6">Track Orders</h1>
+        {activeShipments.length === 0 ? (
+          <div className="bg-white rounded-3xl p-8 text-center shadow-sm border border-slate-100">
+            <Package size={48} className="text-slate-300 mx-auto mb-4" />
+            <p className="text-lg font-bold text-slate-600">No active tracking</p>
+            <p className="text-sm text-slate-400 mt-2">You don't have any orders currently on the way.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activeShipments.map(shipment => (
+              <div 
+                key={shipment._id} 
+                onClick={() => navigate(`/track/${shipment.trackingId}`)}
+                className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all active:scale-95"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Tracking ID</p>
+                    <h3 className="text-sm font-black text-[#006D77]">{shipment.trackingId}</h3>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-[#006D77]/10 text-[#006D77] border-[#006D77]/20">
+                    {shipment.status}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2 mt-4 text-xs font-bold text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <MapPin size={14} className="text-slate-400 shrink-0" />
+                  <span className="line-clamp-1">{shipment.dropLocation?.address || shipment.dropLocation?.pincode}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!booking) return <div className="p-12 text-center text-slate-500 font-bold">No tracking information found for this ID.</div>;
 
   // Mock map position based on drop location (if lat/lng exists) or just generic
@@ -129,6 +165,34 @@ export default function TrackingTimeline() {
             </div>
           </div>
         </div>
+
+        {/* Raider Details (If Assigned) */}
+        {booking.currentRider && (
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                {booking.currentRider.raiderDetails?.profilePicture ? (
+                  <img src={booking.currentRider.raiderDetails.profilePicture} alt={booking.currentRider.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl font-black text-slate-400">{booking.currentRider.name.charAt(0)}</span>
+                )}
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Assigned Raider</p>
+                <p className="text-sm font-black text-slate-900">{booking.currentRider.name}</p>
+                <p className="text-xs font-medium text-slate-500 mt-0.5 flex items-center gap-1">
+                  <span className="text-amber-500">★</span> {booking.currentRider.raiderDetails?.performance?.rating || '4.9'}
+                </p>
+              </div>
+            </div>
+            <a 
+              href={`tel:${booking.currentRider.phone}`}
+              className="w-10 h-10 rounded-full bg-teal-50 text-[#006D77] flex items-center justify-center hover:bg-teal-100 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </a>
+          </div>
+        )}
 
         {/* Timeline */}
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">

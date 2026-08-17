@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Truck, Navigation, CheckCircle2, MapPin, Package, AlertTriangle, Bell, Settings, Phone, Camera, ArrowRight, ShieldCheck, Clock, LayoutDashboard, Wallet, User as UserIcon } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Truck, Navigation, CheckCircle2, MapPin, Package, AlertTriangle, Bell, Settings, Phone, Camera, ArrowRight, ShieldCheck, Clock, LayoutDashboard, Wallet, User as UserIcon, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import RaiderTaskFlow from './RaiderTaskFlow';
@@ -10,10 +10,13 @@ export default function RaiderDashboard({ user, onLogout }) {
   const [myJobs, setMyJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
   
-  const [activeTab, setActiveTab] = useState('Deliveries');
   const [loading, setLoading] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const navigate = useNavigate();
+
+  // Location State
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const watchIdRef = useRef(null);
 
   // Form State
   const [otp, setOtp] = useState('');
@@ -22,22 +25,23 @@ export default function RaiderDashboard({ user, onLogout }) {
   // Fetch Jobs
   const fetchJobs = async () => {
     try {
-      // Mocking endpoints, in reality we'd have a getMyJobs and getAvailableJobs endpoint
-      // Using generic admin bookings fetch with a filter for the sake of the prototype
-      const res = await api.get('/admin/bookings');
-      if (res.data.success) {
-        const allBookings = res.data.data;
-        
-        // Mock filtering logic for the rider
-        const unassigned = allBookings.filter(b => ['Booking Confirmed', 'Pending', 'Relay Handoff Pending', 'Transhipment Pending'].includes(b.status));
-        setAvailableJobs(unassigned);
-        
-        // Mock active jobs for this raider (any active route statuses)
-        const active = allBookings.filter(b => ['Rider Assigned', 'Rider On the Way', 'Arrived at Pickup', 'Picked Up', 'In Transit', 'Out for Delivery'].includes(b.status));
+      // 1. Fetch Active/My Jobs from generic endpoint
+      const resAll = await api.get('/admin/bookings');
+      if (resAll.data.success) {
+        const allBookings = resAll.data.data;
+        const active = allBookings.filter(b => ['Rider Assigned', 'Rider On the Way', 'Arrived at Pickup', 'Picked Up', 'In Transit', 'Out for Delivery'].includes(b.status) && b.assignedRaiders?.some(r => r.raiderId === user?._id || true));
         setMyJobs(active);
         
         if (active.length > 0 && !activeJob) {
           setActiveJob(active[0]);
+        }
+      }
+
+      // 2. Fetch Available Jobs (only works if online & on shift on backend)
+      if (user?._id) {
+        const resAvail = await api.get(`/raider/jobs?userId=${user._id}`);
+        if (resAvail.data.success) {
+          setAvailableJobs(resAvail.data.data);
         }
       }
     } catch (err) {
@@ -58,12 +62,51 @@ export default function RaiderDashboard({ user, onLogout }) {
     const handleOffline = () => setIsOffline(true);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Location Tracking
+    const startTracking = () => {
+      if ('geolocation' in navigator) {
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            setCurrentLocation({ lat: latitude, lng: longitude });
+            // Push to backend
+            if (user?._id) {
+               try {
+                 await api.post('/raider/location', { userId: user._id, lat: latitude, lng: longitude });
+               } catch (e) {
+                 // Ignore background ping fails
+               }
+            }
+          },
+          (err) => console.error("Error watching position", err),
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      }
+    };
+
+    const stopTracking = () => {
+      if (watchIdRef.current !== null && 'geolocation' in navigator) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+
+    if (user?.raiderDetails?.isOnline && user?.raiderDetails?.isOnShift) {
+      startTracking();
+    } else {
+      stopTracking();
+      // Also clear available jobs if offline
+      setAvailableJobs([]);
+    }
+
     return () => {
       clearInterval(interval);
+      stopTracking();
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [user?.raiderDetails?.isOnline, user?.raiderDetails?.isOnShift]);
 
   const handleStatusUpdate = async (newStatus, payload = {}) => {
     if (!activeJob) return;
@@ -183,119 +226,136 @@ export default function RaiderDashboard({ user, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col">
-      <RaiderHeader user={user} onLogout={onLogout} onShowEarnings={() => setShowEarningsModal(true)} />
+    <div className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col text-slate-900">
+      <RaiderHeader user={user} onLogout={onLogout} onShowEarnings={() => {}} />
       
       {isOffline && (
-        <div className="bg-red-600 text-white text-center py-2 text-sm font-bold flex items-center justify-center gap-2">
-           <AlertTriangle size={16} /> No Internet Connection. Actions will sync when online.
+        <div className="bg-red-600 text-white text-center py-2 text-sm font-bold flex items-center justify-center gap-2 z-50">
+           <AlertTriangle size={16} /> No Internet Connection. Check your network.
         </div>
       )}
 
-      <main className="flex-1 p-4 md:p-6 max-w-[1400px] mx-auto w-full flex flex-col gap-4 md:gap-6 pb-24 md:pb-6 relative z-10">
+      <main className="flex-1 w-full flex flex-col relative overflow-hidden">
         
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-stretch lg:h-[calc(100vh-140px)] pb-8">
-          
-          {/* LEFT PANE - Active Delivery Flow */}
-          <div className="w-full lg:w-7/12 xl:w-8/12 bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-auto lg:h-full relative">
-            <div className="bg-white/40 border-b border-white/60 px-6 py-4 flex justify-between items-center backdrop-blur-md">
-              <div className="flex items-center gap-2 text-[#006D77] font-bold text-sm tracking-wide">
-                <Truck size={18} /> ACTIVE MISSION
-              </div>
-              {activeJob && (
-                <div className="bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-xs font-mono border border-slate-200 font-bold">
-                  ID: {activeJob.trackingId}
-                </div>
-              )}
-            </div>
+        {/* Background Map / Radar Pattern */}
+        <div className="absolute inset-0 pointer-events-none opacity-40" 
+             style={{ backgroundImage: 'radial-gradient(circle at center, #FFB703 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+        </div>
 
-            {activeJob ? renderActiveJobState() : (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50">
-                <Package size={64} className="mb-4 opacity-20" />
-                <p className="font-bold text-xl text-slate-500">No Active Mission</p>
-                <p className="text-sm mt-2">Select a job from the queue to start earning.</p>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT PANE - Job Queue */}
-          <div className="w-full lg:w-5/12 xl:w-4/12 flex flex-col gap-4 md:gap-6 h-[500px] lg:h-full">
-            <div className="bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex-1 flex flex-col overflow-hidden relative">
-              <div className="flex border-b border-white/60 bg-white/40 backdrop-blur-md p-1.5 m-4 rounded-2xl shadow-sm">
-                <button onClick={() => setActiveTab('Deliveries')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Deliveries' ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
-                  My Route ({myJobs.length})
-                </button>
-                <button onClick={() => setActiveTab('Available')} className={`flex-1 py-3 text-sm font-black text-center rounded-xl transition-all ${activeTab === 'Available' ? 'bg-[#006D77] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}>
-                  Available Jobs ({availableJobs.length})
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 pt-0 space-y-3">
-                {activeTab === 'Available' ? (
-                  availableJobs.map(job => (
-                    <div key={job._id} className="border border-white/60 bg-white/60 backdrop-blur-sm rounded-3xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-black text-slate-900 tracking-tight">{job.pickupLocation?.pincode} &rarr; {job.dropLocation?.pincode}</h4>
-                        <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest shadow-sm">NEW</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mb-4 flex items-center gap-2 font-medium"><MapPin size={14} className="text-emerald-500"/> {job.pickupLocation?.address}</p>
-                      <button onClick={() => acceptJob(job)} disabled={loading} className="w-full bg-gradient-to-r from-[#0F172A] to-slate-800 text-white font-black text-sm py-3 rounded-2xl shadow-[0_4px_15px_-4px_rgba(15,23,42,0.4)] hover:shadow-[0_6px_20px_-4px_rgba(15,23,42,0.5)] hover:-translate-y-0.5 transition-all disabled:opacity-50">
-                        Accept Job
-                      </button>
-                    </div>
-                  ))
+        {/* Central Content Area */}
+        <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4">
+           
+           {activeJob ? (
+             <div className="w-full max-w-lg h-full pb-20">
+               {renderActiveJobState()}
+             </div>
+           ) : (
+             <div className="flex flex-col items-center text-center">
+                {(!user?.raiderDetails?.isOnline || !user?.raiderDetails?.isOnShift) ? (
+                   // Offline State
+                   <div className="bg-white/70 backdrop-blur-xl p-10 rounded-3xl border border-white/60 max-w-sm w-full shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+                     <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-6 flex items-center justify-center border border-slate-200 shadow-inner">
+                       <Clock size={32} className="text-slate-400" />
+                     </div>
+                     <h2 className="text-2xl font-black uppercase tracking-widest text-slate-800 mb-2">You are Offline</h2>
+                     <p className="text-sm text-slate-500 font-medium leading-relaxed">To start receiving missions, you must grant location access and start your shift.</p>
+                     
+                     <button 
+                       onClick={() => {
+                         if ('geolocation' in navigator) {
+                           navigator.geolocation.getCurrentPosition(
+                             (pos) => alert("Location access granted! You can now turn your shift ON in the header."),
+                             (err) => alert("Please allow location access in your browser settings to continue.")
+                           );
+                         } else {
+                           alert("Geolocation is not supported by your browser.");
+                         }
+                       }}
+                       className="w-full mt-6 bg-[#FFB703] hover:bg-[#e5a400] text-black font-black uppercase tracking-widest py-4 rounded-xl shadow-md transition-colors"
+                     >
+                       Grant Location Access
+                     </button>
+                   </div>
                 ) : (
-                  myJobs.map((job, index) => (
-                    <div key={job._id} onClick={() => setActiveJob(job)} className={`border rounded-3xl p-5 cursor-pointer transition-all ${activeJob?._id === job._id ? 'border-[#006D77]/50 bg-gradient-to-br from-[#006D77]/5 to-transparent shadow-md -translate-y-1' : 'border-white/60 bg-white/60 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5'}`}>
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                          <span className="bg-slate-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">{index + 1}</span>
-                          {job.trackingId}
-                        </h4>
-                        <div className="flex flex-col items-end">
-                          <span className="bg-[#e6f0f1] text-[#006D77] text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-wider">{job.status}</span>
-                          <span className="text-[10px] text-slate-500 font-bold mt-1">ETA: {15 + (index * 20)} mins</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-500 flex items-center gap-1 truncate"><MapPin size={12}/> {['Rider Assigned', 'Rider On the Way'].includes(job.status) ? job.pickupLocation?.address : job.dropLocation?.address}</p>
-                    </div>
-                  ))
+                   // Online / Radar State
+                   <div className="flex flex-col items-center relative">
+                     {/* Pulsing Radar Rings */}
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-[#FFB703] rounded-full animate-ping opacity-30"></div>
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-[#FFB703] rounded-full animate-ping opacity-50" style={{ animationDelay: '500ms' }}></div>
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-[#FFB703] rounded-full animate-ping opacity-70" style={{ animationDelay: '1000ms' }}></div>
+                     
+                     <div className="w-28 h-28 bg-white/80 backdrop-blur-md rounded-full mx-auto mb-8 flex items-center justify-center relative z-10 shadow-[0_0_40px_rgba(255,183,3,0.3)] border-4 border-[#FFB703]">
+                       <div className="w-20 h-20 bg-[#FFB703] rounded-full flex items-center justify-center shadow-inner">
+                         <Activity size={40} className="text-black" />
+                       </div>
+                     </div>
+                     
+                     <h2 className="text-3xl font-black uppercase tracking-widest text-slate-900 mb-3 drop-shadow-sm">Searching...</h2>
+                     <p className="text-sm text-slate-700 font-bold tracking-wide uppercase bg-white/60 backdrop-blur-xl px-5 py-2.5 rounded-full border border-white/80 shadow-sm">Scanning for nearby missions</p>
+                     
+                     {currentLocation && (
+                       <p className="text-xs text-slate-500 mt-6 font-mono bg-white/60 backdrop-blur-md border border-white/60 shadow-sm px-3 py-1 rounded-md">
+                         LAT: {currentLocation.lat.toFixed(4)} • LNG: {currentLocation.lng.toFixed(4)}
+                       </p>
+                     )}
+                   </div>
                 )}
-              </div>
-            </div>
-          </div>
+             </div>
+           )}
 
         </div>
+
+        {/* Incoming Job Bottom Sheet (Rapido Style) */}
+        {!activeJob && availableJobs.length > 0 && user?.raiderDetails?.isOnline && user?.raiderDetails?.isOnShift && (
+          <div className="fixed bottom-[70px] md:bottom-0 left-0 right-0 z-40 bg-white text-slate-900 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 p-6 pb-6 md:pb-10 max-w-lg mx-auto animate-in slide-in-from-bottom duration-300 ease-out">
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+            
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <span className="bg-[#FFB703] text-black px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase shadow-sm animate-pulse">New Mission</span>
+                <h3 className="text-2xl font-black mt-2 tracking-tight">Mission Assigned</h3>
+              </div>
+              <div className="text-right">
+                <span className="text-3xl font-black text-slate-900 drop-shadow-sm">₹{availableJobs[0].estimatedPrice || 120}</span>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Est. Payout</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex flex-col items-center mt-1">
+                  <div className="w-3 h-3 bg-slate-900 rounded-full border-2 border-white ring-1 ring-slate-900"></div>
+                  <div className="w-0.5 h-12 bg-slate-300 my-1"></div>
+                  <div className="w-3 h-3 bg-red-500 rounded-sm border-2 border-white ring-1 ring-red-500"></div>
+                </div>
+                <div className="flex-1 flex flex-col gap-6">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Pickup</p>
+                    <p className="font-bold text-sm leading-tight text-slate-800 line-clamp-2">{availableJobs[0].pickupLocation?.address}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Drop-off</p>
+                    <p className="font-bold text-sm leading-tight text-slate-800 line-clamp-2">{availableJobs[0].dropLocation?.address}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setAvailableJobs(availableJobs.slice(1))} className="w-16 h-14 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl flex items-center justify-center font-bold transition-colors">
+                Skip
+              </button>
+              <button 
+                onClick={() => acceptJob(availableJobs[0])} 
+                disabled={loading} 
+                className="flex-1 h-14 bg-black text-[#FFB703] font-black uppercase tracking-widest text-lg rounded-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
+              >
+                {loading ? 'Accepting...' : 'ACCEPT MISSION'}
+              </button>
+            </div>
+          </div>
+        )}
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-3xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-40 px-6 py-4 pb-6 flex justify-between items-center">
-        <button onClick={() => navigate('/')} className="flex flex-col items-center gap-1 text-[#006D77]">
-          <div className="w-9 h-9 rounded-2xl bg-[#006D77]/10 flex items-center justify-center">
-            <LayoutDashboard size={20} />
-          </div>
-          <span className="text-[10px] font-black">Dashboard</span>
-        </button>
-        <button onClick={() => navigate('/earnings')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center">
-            <Wallet size={20} />
-          </div>
-          <span className="text-[10px] font-black">Earnings</span>
-        </button>
-        <button onClick={() => navigate('/profile')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center">
-            <UserIcon size={20} />
-          </div>
-          <span className="text-[10px] font-black">Profile</span>
-        </button>
-        <button onClick={() => navigate('/settings')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center">
-            <Settings size={20} />
-          </div>
-          <span className="text-[10px] font-black">Settings</span>
-        </button>
-      </div>
-
     </div>
   );
 }
