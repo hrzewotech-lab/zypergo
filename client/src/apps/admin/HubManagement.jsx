@@ -11,7 +11,7 @@ export default function HubManagement() {
   // Setup State
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [newHub, setNewHub] = useState({ name: '', hubType: 'Source', city: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
+  const [newHub, setNewHub] = useState({ name: '', city: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
   const [editingHub, setEditingHub] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -52,7 +52,6 @@ export default function HubManagement() {
     try {
       const payload = {
         name: newHub.name,
-        hubType: newHub.hubType,
         address: { city: newHub.city },
         capacity: { maxCapacity: Number(newHub.maxCapacity) },
         contactDetails: { 
@@ -63,7 +62,7 @@ export default function HubManagement() {
       };
       await api.post('/hub', payload);
       setShowAddModal(false);
-      setNewHub({ name: '', hubType: 'Source', city: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
+      setNewHub({ name: '', city: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
       fetchHubs();
     } catch (error) {
       console.error('Failed to add hub', error);
@@ -75,7 +74,6 @@ export default function HubManagement() {
     setEditingHub({
       _id: hub._id,
       name: hub.name,
-      hubType: hub.hubType,
       city: hub.address?.city || '',
       maxCapacity: hub.capacity?.maxCapacity || 5000,
       managerName: hub.contactDetails?.managerName || ''
@@ -89,7 +87,6 @@ export default function HubManagement() {
     try {
       const payload = {
         name: editingHub.name,
-        hubType: editingHub.hubType,
         'address.city': editingHub.city,
         'capacity.maxCapacity': Number(editingHub.maxCapacity),
         'contactDetails.managerName': editingHub.managerName
@@ -242,7 +239,6 @@ export default function HubManagement() {
                         <td className="p-4">
                           <div className="font-bold text-slate-900">{hub.name}</div>
                           <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-bold uppercase">{hub.hubType}</span> 
                             {hub._id.substring(hub._id.length - 6).toUpperCase()}
                           </div>
                         </td>
@@ -333,7 +329,7 @@ export default function HubManagement() {
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium bg-slate-50"
                 >
                   <option value="">-- Select Active Hub --</option>
-                  {hubs.map(h => <option key={h._id} value={h._id}>{h.name} ({h.hubType})</option>)}
+                  {hubs.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
                 </select>
               </div>
 
@@ -485,19 +481,7 @@ export default function HubManagement() {
                   placeholder="e.g. Portland Sorting Center"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Hub Type</label>
-                  <select 
-                    value={newHub.hubType} onChange={e => setNewHub({...newHub, hubType: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium"
-                  >
-                    <option value="Source">Source Hub</option>
-                    <option value="Destination">Destination Hub</option>
-                    <option value="City">City Hub</option>
-                  </select>
-                </div>
-                <div>
+              <div className="mb-4">
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">City/Region</label>
                   <input 
                     type="text" required
@@ -505,7 +489,6 @@ export default function HubManagement() {
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
                     placeholder="e.g. Portland"
                   />
-                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -575,26 +558,13 @@ export default function HubManagement() {
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Hub Type</label>
-                  <select 
-                    value={editingHub.hubType} onChange={e => setEditingHub({...editingHub, hubType: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium"
-                  >
-                    <option value="Source">Source Hub</option>
-                    <option value="Destination">Destination Hub</option>
-                    <option value="City">City Hub</option>
-                  </select>
-                </div>
-                <div>
+              <div className="mb-4">
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">City/Region</label>
                   <input 
                     type="text" required
                     value={editingHub.city} onChange={e => setEditingHub({...editingHub, city: e.target.value})}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
                   />
-                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

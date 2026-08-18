@@ -88,6 +88,18 @@ exports.getAllManifests = async (req, res) => {
       if (to) filter.createdAt.$lte = new Date(to);
     }
 
+    // Role-based visibility
+    if (['HubManager', 'HubOperator'].includes(req.user.role)) {
+      const User = require('../models/User');
+      const user = await User.findById(req.user.id);
+      if (user && user.assignedHubForStaff) {
+        filter.$or = [
+          { sourceHub: user.assignedHubForStaff },
+          { destinationHub: user.assignedHubForStaff }
+        ];
+      }
+    }
+
     const manifests = await Manifest.find(filter)
       .populate('sourceHub', 'name hubType')
       .populate('destinationHub', 'name hubType')
@@ -151,6 +163,25 @@ exports.dispatchManifest = async (req, res) => {
     manifest.status = 'Dispatched';
     manifest.dispatchedAt = new Date();
     await manifest.save();
+
+    // Create HubRecords for each parcel
+    if (manifest.sourceHub && manifest.parcels && manifest.parcels.length > 0) {
+      const HubRecord = require('../models/HubRecord');
+      
+      const recordsToCreate = manifest.parcels.map(p => ({
+        hubId: manifest.sourceHub,
+        bookingId: p.bookingId,
+        trackingId: p.trackingId,
+        recordType: 'Outbound To Hub',
+        actionBy: req.user?.id,
+        associatedHub: manifest.destinationHub,
+        modeOfTransfer: manifest.route || manifest.manifestType,
+        notes: `Dispatched in manifest ${manifest.manifestId}`
+      }));
+      
+      await HubRecord.insertMany(recordsToCreate);
+    }
+
     res.status(200).json({ success: true, data: manifest });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to dispatch manifest.' });

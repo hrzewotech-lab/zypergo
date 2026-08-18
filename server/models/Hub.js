@@ -4,8 +4,7 @@ const hubSchema = new mongoose.Schema({
   name: { type: String, required: true },
   hubType: {
     type: String,
-    enum: ['Source', 'Destination', 'City'],
-    required: true
+    default: 'City'
   },
   address: {
     line1: String,

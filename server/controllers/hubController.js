@@ -8,10 +8,29 @@ const NotificationService = require('../services/notificationService');
 // --- HUB SETUP ---
 exports.getAllHubs = async (req, res) => {
   try {
-    const hubs = await Hub.find().sort({ createdAt: -1 });
+    let filter = {};
+    if (['HubManager', 'HubOperator'].includes(req.user.role)) {
+       const user = await User.findById(req.user.id);
+       if (user && user.assignedHubForStaff) {
+          filter._id = user.assignedHubForStaff;
+       } else {
+          return res.status(200).json({ success: true, data: [] });
+       }
+    }
+    const hubs = await Hub.find(filter).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: hubs });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch hubs' });
+  }
+};
+
+exports.getDestinationHubs = async (req, res) => {
+  try {
+    // Return a simplified list of all active hubs for destination selection
+    const hubs = await Hub.find({ isActive: true }).select('_id name address.city').sort({ name: 1 });
+    res.status(200).json({ success: true, data: hubs });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch destination hubs' });
   }
 };
 
@@ -19,6 +38,7 @@ exports.createHub = async (req, res) => {
   try {
     const { contactDetails, ...hubData } = req.body;
     
+    let createdManager = null;
     // Automatic Hub Manager Provisioning
     if (contactDetails && contactDetails.email && contactDetails.phone) {
       const existingUser = await User.findOne({ 
@@ -32,7 +52,7 @@ exports.createHub = async (req, res) => {
       // Generate a simple random password
       const generatedPassword = `Hub-${Math.floor(1000 + Math.random() * 9000)}`;
 
-      const newManager = new User({
+      createdManager = new User({
         name: contactDetails.managerName || 'Hub Manager',
         email: contactDetails.email,
         phone: contactDetails.phone,
@@ -41,12 +61,12 @@ exports.createHub = async (req, res) => {
         isActive: true
       });
 
-      await newManager.save();
+      await createdManager.save();
 
       // Fire-and-forget email
       const htmlBody = NotificationService.generateEmailTemplate({
-        title: `Welcome, ${newManager.name}!`,
-        message: `Your Hub Manager account has been created. You can now log in to the ZyperGo Hub Portal to manage your hub operations.<br><br><b>Login Portal:</b> <a href="http://hub.localhost:5173">hub.localhost:5173</a><br><b>Phone Number:</b> ${newManager.phone}<br><b>Password:</b> ${generatedPassword}`,
+        title: `Welcome, ${createdManager.name}!`,
+        message: `Your Hub Manager account has been created. You can now log in to the ZyperGo Hub Portal to manage your hub operations.<br><br><b>Login Portal:</b> <a href="http://hub.localhost:5173">hub.localhost:5173</a><br><b>Phone Number:</b> ${createdManager.phone}<br><b>Password:</b> ${generatedPassword}`,
         buttonText: 'Login to Hub Portal',
         buttonUrl: 'http://hub.localhost:5173',
         footerNote: 'Please change your password after first login. If you did not request this access, contact your administrator.'
@@ -70,6 +90,12 @@ exports.createHub = async (req, res) => {
     });
     
     await hub.save();
+
+    if (createdManager) {
+      createdManager.assignedHubForStaff = hub._id;
+      await createdManager.save();
+    }
+
     res.status(201).json({ success: true, data: hub });
   } catch (error) {
     console.error('Error creating hub:', error);
@@ -294,5 +320,50 @@ exports.createLastMileRoute = async (req, res) => {
     res.status(200).json({ success: true, message: 'Last-mile route created successfully' });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to create last-mile route' });
+  }
+};
+
+// --- HUB RECORDS ---
+exports.getHubRecords = async (req, res) => {
+  try {
+    const hubId = req.params.id;
+    const { recordType, startDate, endDate, page = 1, limit = 50 } = req.query;
+
+    const filter = { hubId: new mongoose.Types.ObjectId(hubId) };
+    if (recordType) {
+      filter.recordType = recordType;
+    }
+    if (startDate || endDate) {
+      filter.timestamp = {};
+      if (startDate) filter.timestamp.$gte = new Date(startDate);
+      if (endDate) filter.timestamp.$lte = new Date(endDate);
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const HubRecord = require('../models/HubRecord');
+    
+    const records = await HubRecord.find(filter)
+      .populate('actionBy', 'name role')
+      .populate('associatedHub', 'name')
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+      
+    const total = await HubRecord.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: records,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching hub records:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch hub records' });
   }
 };

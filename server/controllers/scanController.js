@@ -99,6 +99,30 @@ exports.processscan = async (req, res) => {
       mismatchReason
     });
 
+    // 5.1 Create HubRecord if applicable
+    if (hubId) {
+      const HubRecord = require('../models/HubRecord');
+      let recordType = 'Other';
+      if (scanType === 'SourceHubReceive' || scanType === 'DestinationHubReceive') {
+        recordType = scanType === 'SourceHubReceive' ? 'Inbound From Rider' : 'Inbound From Hub';
+      } else if (scanType === 'OutForDelivery') {
+        recordType = 'Outbound To Rider';
+      }
+
+      if (recordType !== 'Other') {
+        await HubRecord.create({
+          hubId,
+          bookingId: booking._id,
+          trackingId: booking.trackingId,
+          recordType,
+          actionBy: req.user?.id,
+          customerDetails: booking.senderDetails ? { name: booking.senderDetails.name, phone: booking.senderDetails.phone } : undefined,
+          destination: booking.dropLocation ? { address: booking.dropLocation.address, pincode: booking.dropLocation.pincode } : undefined,
+          notes: notes || `Scan: ${scanType}`
+        });
+      }
+    }
+
     // 6. Update booking status and trackingHistory
     booking.status = newStatus;
     booking.trackingHistory.push({

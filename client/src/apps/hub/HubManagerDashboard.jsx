@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { id: 'scan', label: 'Scan', icon: Scan },
   { id: 'manifests', label: 'Manifests', icon: FileText },
   { id: 'inventory', label: 'Inventory', icon: Warehouse },
+  { id: 'records', label: 'Records', icon: Activity },
   { id: 'account', label: 'Account', icon: User },
 ];
 
@@ -34,6 +35,7 @@ export default function HubManagerDashboard({ onLogout }) {
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hubs, setHubs] = useState([]);
+  const [destinationHubs, setDestinationHubs] = useState([]);
   const [selectedHub, setSelectedHub] = useState(null);
   const [inventory, setInventory] = useState(null);
 
@@ -53,12 +55,13 @@ export default function HubManagerDashboard({ onLogout }) {
   const [manifestLoading, setManifestLoading] = useState(false);
   const [showCreateManifest, setShowCreateManifest] = useState(false);
   const [selectedManifest, setSelectedManifest] = useState(null);
-  const [newManifest, setNewManifest] = useState({ manifestType: 'HubReceiving', type: 'Bag', route: '', notes: '', parcels: '' });
+  const [newManifest, setNewManifest] = useState({ manifestType: 'HubReceiving', type: 'Bag', destinationHub: '', route: '', notes: '', parcels: '' });
 
   useEffect(() => {
     const saved = localStorage.getItem('zypergo_user');
     if (saved) setUser(JSON.parse(saved));
     fetchHubs();
+    fetchDestinationHubs();
     fetchManifests();
     fetchUnscannedAlerts();
   }, []);
@@ -66,7 +69,8 @@ export default function HubManagerDashboard({ onLogout }) {
   useEffect(() => {
     if (activePage === 'scan') setTimeout(() => scanInputRef.current?.focus(), 200);
     if (activePage === 'inventory' && selectedHub) fetchInventory(selectedHub._id);
-  }, [activePage, selectedHub]);
+    if (activePage === 'records' && selectedHub) fetchRecords(selectedHub._id);
+  }, [activePage, selectedHub, recordFilter]);
 
   const handleLogout = () => {
     if (onLogout) {
@@ -87,6 +91,13 @@ export default function HubManagerDashboard({ onLogout }) {
     } catch {}
   };
 
+  const fetchDestinationHubs = async () => {
+    try {
+      const r = await api.get('/hub/destinations');
+      setDestinationHubs(r.data.data || []);
+    } catch {}
+  };
+
   const fetchInventory = async (hubId) => {
     try {
       const r = await api.get(`/hub/${hubId}/inventory`);
@@ -100,6 +111,24 @@ export default function HubManagerDashboard({ onLogout }) {
       const r = await api.get('/manifest');
       setManifests(r.data.data || []);
     } catch {} finally { setManifestLoading(false); }
+  };
+
+  // Records state
+  const [records, setRecords] = useState([]);
+  const [recordsLoading, setRecordsLoading] = useState(false);
+  const [recordFilter, setRecordFilter] = useState('');
+
+  const fetchRecords = async (hubId) => {
+    setRecordsLoading(true);
+    try {
+      const url = `/hub/${hubId}/records${recordFilter ? `?recordType=${recordFilter}` : ''}`;
+      const r = await api.get(url);
+      setRecords(r.data.data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRecordsLoading(false);
+    }
   };
 
   const fetchUnscannedAlerts = async () => {
@@ -153,12 +182,13 @@ export default function HubManagerDashboard({ onLogout }) {
         manifestType: newManifest.manifestType,
         type: newManifest.type,
         sourceHub: selectedHub?._id,
+        destinationHub: newManifest.destinationHub || undefined,
         route: newManifest.route || undefined,
         notes: newManifest.notes || undefined,
         parcels: parcelIds
       });
       setShowCreateManifest(false);
-      setNewManifest({ manifestType: 'HubReceiving', type: 'Bag', route: '', notes: '', parcels: '' });
+      setNewManifest({ manifestType: 'HubReceiving', type: 'Bag', destinationHub: '', route: '', notes: '', parcels: '' });
       fetchManifests();
     } catch (err) { alert(err.response?.data?.error || 'Failed to create manifest.'); }
   };
@@ -218,11 +248,10 @@ export default function HubManagerDashboard({ onLogout }) {
         {/* Center: Logo */}
         <div className="flex items-center justify-center gap-2">
           <img src="/images/logo.png" alt="ZyperGo Logo" className="h-8 md:h-10 object-contain" />
-          <span className="text-lg font-black tracking-tight text-[#006D77] hidden md:block">Zyper<span className="text-[#FFB703]">Hub</span></span>
         </div>
 
         {/* Hub Selector (desktop center) */}
-        {hubs.length > 0 && (
+        {hubs.length > 1 && (
           <div className="hidden md:flex items-center justify-center absolute left-1/2 -translate-x-1/2 gap-2">
             <MapPin size={14} className="text-[#006D77]" />
             <select
@@ -230,7 +259,7 @@ export default function HubManagerDashboard({ onLogout }) {
               onChange={e => setSelectedHub(hubs.find(h => h._id === e.target.value))}
               className="bg-white/60 backdrop-blur-md text-slate-800 text-sm font-bold px-3 py-1.5 rounded-xl border border-white/80 outline-none focus:border-[#006D77] shadow-sm hover:bg-white transition-colors"
             >
-              {hubs.map(h => <option key={h._id} value={h._id}>{h.name} ({h.hubType})</option>)}
+              {hubs.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
             </select>
           </div>
         )}
@@ -269,7 +298,6 @@ export default function HubManagerDashboard({ onLogout }) {
               <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-200">
                 <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">Active Hub</div>
                 <div className="text-slate-900 font-bold text-sm truncate">{selectedHub.name}</div>
-                <div className="text-xs text-[#006D77] font-bold">{selectedHub.hubType} Hub</div>
               </div>
             )}
 
@@ -316,12 +344,20 @@ export default function HubManagerDashboard({ onLogout }) {
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <MapPin size={16} className="text-[#006D77]" />
                     </div>
-                    <select value={selectedHub?._id || ''} onChange={e => setSelectedHub(hubs.find(h => h._id === e.target.value))} className="w-full bg-white/60 backdrop-blur-md text-slate-800 font-bold pl-12 pr-4 py-3 rounded-2xl border border-white/80 outline-none focus:border-[#006D77] shadow-sm appearance-none">
-                      {hubs.map(h => <option key={h._id} value={h._id}>{h.name} ({h.hubType})</option>)}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                      <ChevronRight size={16} className="text-slate-400 rotate-90" />
-                    </div>
+                    {hubs.length === 1 ? (
+                      <div className="w-full bg-white/60 backdrop-blur-md text-slate-800 font-bold pl-12 pr-4 py-3 rounded-2xl border border-white/80 shadow-sm">
+                        {hubs[0].name}
+                      </div>
+                    ) : (
+                      <>
+                        <select value={selectedHub?._id || ''} onChange={e => setSelectedHub(hubs.find(h => h._id === e.target.value))} className="w-full bg-white/60 backdrop-blur-md text-slate-800 font-bold pl-12 pr-4 py-3 rounded-2xl border border-white/80 outline-none focus:border-[#006D77] shadow-sm appearance-none">
+                          {hubs.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                          <ChevronRight size={16} className="text-slate-400 rotate-90" />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -566,6 +602,7 @@ export default function HubManagerDashboard({ onLogout }) {
                           ['Weight', `${selectedManifest.totalWeight?.toFixed(2)} kg`],
                           ['Status', selectedManifest.status],
                           ['Source', selectedManifest.sourceHub?.name || 'N/A'],
+                          ['Destination', selectedManifest.destinationHub?.name || 'N/A'],
                           ['Route', selectedManifest.route || 'N/A'],
                           ['Operator', selectedManifest.operator?.name || 'N/A']
                         ].map(([l, v]) => (
@@ -631,7 +668,7 @@ export default function HubManagerDashboard({ onLogout }) {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h2 className="text-lg font-black text-slate-900">{selectedHub.name}</h2>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedHub.hubType} Hub • {selectedHub.address?.city}</p>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Hub • {selectedHub.address?.city}</p>
                       </div>
                       <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${selectedHub.isActive ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-300 text-slate-600'}`}>
                         {selectedHub.isActive ? 'Active' : 'Inactive'}
@@ -680,6 +717,106 @@ export default function HubManagerDashboard({ onLogout }) {
             </div>
           )}
 
+          {/* ===== RECORDS PAGE ===== */}
+          {activePage === 'records' && (
+            <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
+              <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hub Records</h1>
+                  <p className="text-slate-500 text-sm mt-1 font-bold">Detailed log of all inbound and outbound parcels for this hub.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={recordFilter}
+                    onChange={(e) => setRecordFilter(e.target.value)}
+                    className="bg-white/60 backdrop-blur-md text-slate-800 text-sm font-bold px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#006D77] shadow-sm hover:bg-white transition-colors"
+                  >
+                    <option value="">All Records</option>
+                    <option value="Inbound From Rider">Inbound From Rider</option>
+                    <option value="Outbound To Hub">Outbound To Hub</option>
+                    <option value="Inbound From Hub">Inbound From Hub</option>
+                    <option value="Outbound To Rider">Outbound To Rider</option>
+                  </select>
+                  <button onClick={() => selectedHub && fetchRecords(selectedHub._id)} className="p-2.5 bg-white/60 backdrop-blur-md border border-slate-200 rounded-xl hover:bg-white transition-colors text-slate-600 shadow-sm">
+                    <RefreshCcw size={18} className={recordsLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+              </div>
+
+              {selectedHub ? (
+                <div className="bg-white/50 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-white/40 border-b border-white/60">
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Tracking ID</th>
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Type</th>
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Date & Time</th>
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Customer</th>
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Destination</th>
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Action By / Mode</th>
+                          <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Related Hub</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recordsLoading ? (
+                          <tr><td colSpan="7" className="p-8 text-center text-slate-500 font-bold"><Loader2 size={24} className="animate-spin mx-auto mb-2 text-[#006D77]"/>Loading records...</td></tr>
+                        ) : records.length === 0 ? (
+                          <tr><td colSpan="7" className="p-8 text-center text-slate-500 font-bold">No records found for this hub.</td></tr>
+                        ) : (
+                          records.map((r, i) => (
+                            <tr key={r._id} className={`border-b border-white/40 hover:bg-white/60 transition-colors ${i % 2 === 0 ? 'bg-transparent' : 'bg-white/20'}`}>
+                              <td className="p-4 font-mono text-sm font-bold text-slate-800 whitespace-nowrap">{r.trackingId}</td>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold inline-block border ${r.recordType.includes('Inbound') ? 'bg-green-100 text-green-700 border-green-200' : r.recordType.includes('Outbound') ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                                  {r.recordType}
+                                </span>
+                              </td>
+                              <td className="p-4 text-sm font-medium text-slate-600 whitespace-nowrap">
+                                {new Date(r.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                              </td>
+                              <td className="p-4 whitespace-nowrap">
+                                {r.customerDetails?.name ? (
+                                  <div>
+                                    <div className="text-sm font-bold text-slate-800">{r.customerDetails.name}</div>
+                                    <div className="text-xs text-slate-500">{r.customerDetails.phone}</div>
+                                  </div>
+                                ) : <span className="text-slate-400 text-sm">-</span>}
+                              </td>
+                              <td className="p-4 whitespace-nowrap">
+                                {r.destination?.address ? (
+                                  <div>
+                                    <div className="text-sm font-bold text-slate-800 truncate max-w-[150px]" title={r.destination.address}>{r.destination.address}</div>
+                                    <div className="text-xs text-slate-500">{r.destination.pincode}</div>
+                                  </div>
+                                ) : <span className="text-slate-400 text-sm">-</span>}
+                              </td>
+                              <td className="p-4 whitespace-nowrap">
+                                {r.actionBy ? (
+                                  <div className="text-sm font-bold text-slate-800">{r.actionBy.name} <span className="text-[10px] uppercase text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded ml-1">{r.actionBy.role}</span></div>
+                                ) : <span className="text-slate-400 text-sm">-</span>}
+                                {r.modeOfTransfer && (
+                                  <div className="text-xs text-slate-500 mt-0.5">Mode: {r.modeOfTransfer}</div>
+                                )}
+                              </td>
+                              <td className="p-4 text-sm font-medium text-slate-800 whitespace-nowrap">
+                                {r.associatedHub?.name || '-'}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white/40 backdrop-blur-md rounded-3xl border border-white/80 p-8 text-center text-slate-400 font-bold">
+                  No hub selected. Please select a hub from the header.
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ===== ACCOUNT PAGE (Mobile Only) ===== */}
           {activePage === 'account' && (
             <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300 md:hidden">
@@ -698,16 +835,24 @@ export default function HubManagerDashboard({ onLogout }) {
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <MapPin size={16} className="text-[#006D77]" />
                       </div>
-                      <select
-                        value={selectedHub?._id || ''}
-                        onChange={e => setSelectedHub(hubs.find(h => h._id === e.target.value))}
-                        className="w-full bg-white/60 backdrop-blur-md text-slate-800 font-bold pl-12 pr-4 py-4 rounded-2xl border border-white/80 outline-none focus:border-[#006D77] shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] appearance-none hover:bg-white/70 transition-all"
-                      >
-                        {hubs.map(h => <option key={h._id} value={h._id}>{h.name} ({h.hubType})</option>)}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                        <ChevronRight size={16} className="text-slate-400 rotate-90" />
-                      </div>
+                      {hubs.length === 1 ? (
+                        <div className="w-full bg-white/60 backdrop-blur-md text-slate-800 font-bold pl-12 pr-4 py-4 rounded-2xl border border-white/80 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)]">
+                          {hubs[0].name}
+                        </div>
+                      ) : (
+                        <>
+                          <select
+                            value={selectedHub?._id || ''}
+                            onChange={e => setSelectedHub(hubs.find(h => h._id === e.target.value))}
+                            className="w-full bg-white/60 backdrop-blur-md text-slate-800 font-bold pl-12 pr-4 py-4 rounded-2xl border border-white/80 outline-none focus:border-[#006D77] shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] appearance-none hover:bg-white/70 transition-all"
+                          >
+                            {hubs.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <ChevronRight size={16} className="text-slate-400 rotate-90" />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -761,9 +906,18 @@ export default function HubManagerDashboard({ onLogout }) {
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Route (optional)</label>
-                <input type="text" value={newManifest.route} onChange={e => setNewManifest({ ...newManifest, route: e.target.value })} placeholder="e.g. RT-HYD-04" className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Destination Hub</label>
+                  <select value={newManifest.destinationHub} onChange={e => setNewManifest({ ...newManifest, destinationHub: e.target.value })} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium">
+                    <option value="">-- Select Destination --</option>
+                    {destinationHubs.filter(h => h._id !== selectedHub?._id).map(h => <option key={h._id} value={h._id}>{h.name} {h.address?.city ? `(${h.address.city})` : ''}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Route (optional)</label>
+                  <input type="text" value={newManifest.route} onChange={e => setNewManifest({ ...newManifest, route: e.target.value })} placeholder="e.g. RT-HYD-04" className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm" />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Booking IDs (comma separated)</label>
