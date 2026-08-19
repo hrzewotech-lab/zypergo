@@ -4,6 +4,12 @@ import HubManagerDashboard from './hub/HubManagerDashboard';
 import LoginScreen from '../components/Auth/LoginScreen';
 import HubWelcome from './hub/HubWelcome';
 import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
+import HubScan from './hub/HubScan';
+import HubManifests from './hub/HubManifests';
+import HubInventory from './hub/HubInventory';
+import HubRecords from './hub/HubRecords';
+import HubHome from './hub/HubHome';
+import HubAccount from './hub/HubAccount';
 
 export default function HubApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
@@ -36,11 +42,18 @@ export default function HubApp() {
       } />
 
       {/* Protected Routes */}
-      <Route path="/dashboard/*" element={
+      <Route path="/dashboard" element={
         <ProtectedRoute requiredRole="HubManager">
           <HubManagerDashboard onLogout={handleClearAuth} />
         </ProtectedRoute>
-      } />
+      }>
+        <Route index element={<HubHome />} />
+        <Route path="scan" element={<HubScan />} />
+        <Route path="manifests" element={<HubManifests />} />
+        <Route path="inventory" element={<HubInventory />} />
+        <Route path="records" element={<HubRecords />} />
+        <Route path="account" element={<HubAccount />} />
+      </Route>
       
       {/* Wildcard */}
       <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />

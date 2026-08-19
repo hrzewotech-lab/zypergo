@@ -11,7 +11,7 @@ export default function HubManagement() {
   // Setup State
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [newHub, setNewHub] = useState({ name: '', city: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
+  const [newHub, setNewHub] = useState({ name: '', city: '', addressLine1: '', state: '', pincode: '', lat: '', lng: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
   const [editingHub, setEditingHub] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -52,7 +52,14 @@ export default function HubManagement() {
     try {
       const payload = {
         name: newHub.name,
-        address: { city: newHub.city },
+        address: { 
+          line1: newHub.addressLine1,
+          city: newHub.city, 
+          state: newHub.state,
+          pincode: newHub.pincode,
+          lat: newHub.lat ? Number(newHub.lat) : undefined,
+          lng: newHub.lng ? Number(newHub.lng) : undefined
+        },
         capacity: { maxCapacity: Number(newHub.maxCapacity) },
         contactDetails: { 
           managerName: newHub.managerName,
@@ -62,7 +69,7 @@ export default function HubManagement() {
       };
       await api.post('/hub', payload);
       setShowAddModal(false);
-      setNewHub({ name: '', city: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
+      setNewHub({ name: '', city: '', addressLine1: '', state: '', pincode: '', lat: '', lng: '', maxCapacity: 5000, managerName: '', managerEmail: '', managerPhone: '' });
       fetchHubs();
     } catch (error) {
       console.error('Failed to add hub', error);
@@ -463,16 +470,16 @@ export default function HubManagement() {
 
       {/* Add Hub Modal */}
       {showAddModal && isSuperOrOps && (
-        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+        <div className="fixed inset-0 bg-slate-900/50 z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 flex-shrink-0">
               <h2 className="text-xl font-bold text-slate-900">Add Hub Location</h2>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-700">
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleAddHub} className="p-6 space-y-4">
-              <div>
+            <form onSubmit={handleAddHub} className="p-6 grid grid-cols-2 gap-4 overflow-y-auto">
+              <div className="col-span-2">
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Hub Name</label>
                 <input 
                   type="text" required
@@ -481,56 +488,97 @@ export default function HubManagement() {
                   placeholder="e.g. Portland Sorting Center"
                 />
               </div>
-              <div className="mb-4">
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">City/Region</label>
-                  <input 
-                    type="text" required
-                    value={newHub.city} onChange={e => setNewHub({...newHub, city: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
-                    placeholder="e.g. Portland"
-                  />
+              <div className="col-span-2">
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Full Address</label>
+                <input 
+                  type="text" required
+                  value={newHub.addressLine1} onChange={e => setNewHub({...newHub, addressLine1: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="Street Address or Locality"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Max Capacity (Parcels)</label>
-                  <input 
-                    type="number" required min="100"
-                    value={newHub.maxCapacity} onChange={e => setNewHub({...newHub, maxCapacity: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
-                    placeholder="5000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Assign Manager</label>
-                  <input 
-                    type="text" required
-                    value={newHub.managerName} onChange={e => setNewHub({...newHub, managerName: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
-                    placeholder="Staff Name"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">City/Region</label>
+                <input 
+                  type="text" required
+                  value={newHub.city} onChange={e => setNewHub({...newHub, city: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="e.g. Portland"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manager Email</label>
-                  <input 
-                    type="email" required
-                    value={newHub.managerEmail} onChange={e => setNewHub({...newHub, managerEmail: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
-                    placeholder="manager@hub.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manager Phone</label>
-                  <input 
-                    type="tel" required
-                    value={newHub.managerPhone} onChange={e => setNewHub({...newHub, managerPhone: e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
-                    placeholder="9999999999"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">State</label>
+                <input 
+                  type="text" required
+                  value={newHub.state} onChange={e => setNewHub({...newHub, state: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="e.g. OR"
+                />
               </div>
-              <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Pincode</label>
+                <input 
+                  type="text" required
+                  value={newHub.pincode} onChange={e => setNewHub({...newHub, pincode: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="e.g. 97204"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Latitude</label>
+                <input 
+                  type="number" step="any"
+                  value={newHub.lat} onChange={e => setNewHub({...newHub, lat: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="e.g. 45.5231"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Longitude</label>
+                <input 
+                  type="number" step="any"
+                  value={newHub.lng} onChange={e => setNewHub({...newHub, lng: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="e.g. -122.6765"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Max Capacity</label>
+                <input 
+                  type="number" required min="100"
+                  value={newHub.maxCapacity} onChange={e => setNewHub({...newHub, maxCapacity: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="5000"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Assign Manager</label>
+                <input 
+                  type="text" required
+                  value={newHub.managerName} onChange={e => setNewHub({...newHub, managerName: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="Staff Name"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manager Email</label>
+                <input 
+                  type="email" required
+                  value={newHub.managerEmail} onChange={e => setNewHub({...newHub, managerEmail: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="manager@hub.com"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manager Phone</label>
+                <input 
+                  type="tel" required
+                  value={newHub.managerPhone} onChange={e => setNewHub({...newHub, managerPhone: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-[#006D77] outline-none text-sm font-medium" 
+                  placeholder="9999999999"
+                />
+              </div>
+              <div className="col-span-2 pt-4 border-t border-slate-100 flex justify-end gap-3 mt-2">
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button>
                 <button type="submit" className="px-5 py-2.5 text-sm font-bold text-white bg-[#006D77] hover:bg-[#00585f] rounded-lg transition shadow-md">Create Hub</button>
               </div>

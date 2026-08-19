@@ -184,12 +184,12 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase">{isHubDrop ? 'Drop to Source Hub' : 'Delivery Location'}</p>
-                  <p className="font-bold text-slate-800">{isHubDrop ? 'ZyperGo Central Hub, Madhapur' : activeJob.dropLocation?.address}</p>
-                  <p className="text-slate-500 flex items-center gap-1 mt-1"><Phone size={14}/> {isHubDrop ? 'Hub Manager' : activeJob.receiver?.phone}</p>
+                  <p className="font-bold text-slate-800">{isHubDrop ? (activeJob.metadata?.sourceHub?.name || 'Nearest ZyperGo Hub') + (activeJob.metadata?.sourceHub?.city ? `, ${activeJob.metadata.sourceHub.city}` : '') : activeJob.dropLocation?.address}</p>
+                  <p className="text-slate-500 flex items-center gap-1 mt-1"><Phone size={14}/> {isHubDrop ? (activeJob.metadata?.sourceHub?.managerPhone || 'Hub Manager') : activeJob.receiver?.phone}</p>
                   <p className="text-slate-500 flex items-center gap-1 mt-1 mb-2 text-xs font-bold"><CreditCard size={14}/> Pay Mode: {activeJob.payment?.mode}</p>
                   {taskStep >= 4 && (
                     <button 
-                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(isHubDrop ? 'ZyperGo Central Hub' : activeJob.dropLocation?.address || '')}`, '_blank')}
+                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(isHubDrop ? (activeJob.metadata?.sourceHub?.lat ? `${activeJob.metadata.sourceHub.lat},${activeJob.metadata.sourceHub.lng}` : activeJob.metadata?.sourceHub?.addressLine1 || 'ZyperGo Hub') : activeJob.dropLocation?.address || '')}`, '_blank')}
                       className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-black flex items-center gap-1 w-fit transition-colors"
                     >
                       <Navigation size={14}/> Get Directions

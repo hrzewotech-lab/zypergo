@@ -236,6 +236,31 @@ exports.receiveParcel = async (req, res) => {
     hub.capacity.currentParcels += 1;
     await hub.save();
 
+    const HubRecord = require('../models/HubRecord');
+    
+    // Determine the raider who dropped it off
+    let dropOffRaider = null;
+    if (booking.assignedRaiders && booking.assignedRaiders.length > 0) {
+      dropOffRaider = booking.assignedRaiders[booking.assignedRaiders.length - 1].raiderId;
+    }
+
+    await HubRecord.create({
+      hubId: hub._id,
+      bookingId: booking._id,
+      recordType: 'Inbound From Rider',
+      trackingId: booking.trackingId,
+      customerDetails: {
+        name: booking.receiver?.name,
+        phone: booking.receiver?.phone
+      },
+      destination: {
+        address: booking.dropLocation?.address,
+        pincode: booking.dropLocation?.pincode
+      },
+      actionBy: dropOffRaider || (req.user ? req.user.id : null),
+      notes: `Received at hub. Ack: ${acknowledgementType || 'Digital'}`
+    });
+
     res.status(200).json({ success: true, data: booking, warning });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to receive parcel' });
@@ -245,7 +270,7 @@ exports.receiveParcel = async (req, res) => {
 // 2. Sort parcels
 exports.sortParcel = async (req, res) => {
   try {
-    const { bookingId, route, partnerId, sortType } = req.body;
+    const { bookingId, hubId, route, partnerId, sortType } = req.body;
     
     const booking = await Booking.findByIdAndUpdate(bookingId, {
       status: 'Sorted',
@@ -256,6 +281,27 @@ exports.sortParcel = async (req, res) => {
         }
       }
     }, { new: true });
+
+    if (hubId) {
+      const HubRecord = require('../models/HubRecord');
+      await HubRecord.create({
+        hubId: hubId,
+        bookingId: booking._id,
+        recordType: 'Other',
+        trackingId: booking.trackingId,
+        customerDetails: {
+          name: booking.receiver?.name,
+          phone: booking.receiver?.phone
+        },
+        destination: {
+          address: booking.dropLocation?.address,
+          pincode: booking.dropLocation?.pincode
+        },
+        route: route,
+        notes: `Sorted via ${sortType || 'Manual'} (Route: ${route || 'N/A'})`,
+        actionBy: req.user ? req.user.id : null
+      });
+    }
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {

@@ -3,6 +3,9 @@ const User = require('../models/User');
 const NotificationService = require('../services/notificationService');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.sendOtp = async (req, res) => {
   try {
@@ -359,5 +362,97 @@ exports.getMe = async (req, res) => {
     res.json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token, accessToken, role } = req.body;
+    let email, name, picture;
+    
+    if (!token && !accessToken) {
+      return res.status(400).json({ success: false, error: 'Google token is required' });
+    }
+
+    if (token) {
+      // Verify the Google token (id_token flow)
+      if (!process.env.GOOGLE_CLIENT_ID) {
+         return res.status(500).json({ success: false, error: 'Server misconfiguration: Google Auth is disabled.' });
+      }
+      const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+    } else if (accessToken) {
+      // Fetch user info using access_token (implicit flow)
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user info from Google');
+      }
+      const payload = await response.json();
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+    }
+
+    if (!email) {
+       return res.status(400).json({ success: false, error: 'Google token did not contain an email.' });
+    }
+
+    // Check if user exists
+    let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    
+    if (!user) {
+      // Create a new user if they don't exist
+      user = new User({
+        email,
+        name: name || 'Google User',
+        role: role || 'Customer', // Default to Customer if role is not specified
+        // No password needed for Google auth users, assuming User model allows it (or we can set a dummy)
+      });
+      await user.save();
+    } else {
+      // If a role was passed in but the user already exists as another role, check authorization
+      if (role && user.role !== role) {
+         // Allow SuperAdmin to login anywhere, otherwise restrict
+         if (user.role !== 'SuperAdmin') {
+            return res.status(403).json({ success: false, error: `Account exists as ${user.role}. Cannot login to ${role} portal.` });
+         }
+      }
+      
+      // Check if active
+      if (user.isActive === false) {
+        return res.status(403).json({ success: false, error: 'Account is suspended or inactive.' });
+      }
+    }
+
+    // Generate ZyperGo JWT
+    const jwtToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({
+      success: true,
+      token: jwtToken,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        picture // Pass the profile picture back if needed for UI
+      }
+    });
+
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(401).json({ success: false, error: 'Invalid Google token or authentication failed' });
   }
 };

@@ -19,7 +19,7 @@ import api from '../../api';
 
 export default function BookingFlow() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bookingResult, setBookingResult] = useState(null);
@@ -39,6 +39,8 @@ export default function BookingFlow() {
   const currentUser = JSON.parse(localStorage.getItem('zypergo_user') || '{}');
 
   const [formData, setFormData] = useState({
+    // Step 0: Service Type
+    serviceType: '',
     // Step 1: Book Parcel
     pickupAddress: 'Locating...',
     dropAddress: '',
@@ -75,7 +77,7 @@ export default function BookingFlow() {
         }
       }, () => {
         setFormData(prev => ({ ...prev, pickupAddress: 'Location Access Denied' }));
-      });
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     } else {
       setFormData(prev => ({ ...prev, pickupAddress: 'Manual Entry Required' }));
     }
@@ -178,7 +180,8 @@ export default function BookingFlow() {
           handlingNotes: formData.instructions 
         },
         metadata: {
-          vehicleType: formData.vehicle
+          vehicleType: formData.vehicle,
+          deliveryType: formData.serviceType === 'Outstation' ? 'Intercity Hub-and-Spoke' : 'Within City'
         },
         pricing: {
           total: estimatedFare
@@ -237,9 +240,48 @@ export default function BookingFlow() {
     <div className="bg-slate-50 min-h-full flex flex-col font-sans md:p-8 md:items-center">
       <div className="w-full h-full md:h-auto md:min-h-[80vh] md:max-w-4xl bg-white flex flex-col md:rounded-3xl md:shadow-2xl md:border border-slate-100 overflow-hidden relative mx-auto">
       
-      {step === 1 && (
+      {step === 0 && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col justify-end pb-[70px] sm:pb-24 px-4 animate-in fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-md mx-auto p-6 sm:p-8 shadow-2xl relative mb-4">
+            <button onClick={() => navigate('/')} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
+              <X size={18} strokeWidth={2.5} />
+            </button>
+            <h2 className="text-2xl font-black text-slate-900 mb-8 tracking-tight">Choose your service</h2>
+            
+            <div className="space-y-4">
+              <button 
+                onClick={() => { setFormData(prev => ({...prev, serviceType: 'Within City'})); setStep(1); }}
+                className="w-full bg-slate-50/50 border border-slate-100 hover:border-[#006D77] hover:bg-teal-50/30 rounded-3xl p-3 flex items-center justify-between transition-all group active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-14 bg-blue-100/50 rounded-2xl flex items-center justify-center shrink-0 border border-blue-100">
+                     <Truck size={24} className="text-blue-500" />
+                  </div>
+                  <span className="font-black text-[17px] text-slate-800">Within City</span>
+                </div>
+                <ChevronDown size={20} className="text-slate-400 group-hover:text-[#006D77] -rotate-90 transition-colors mr-2" />
+              </button>
+
+              <button 
+                onClick={() => { setFormData(prev => ({...prev, serviceType: 'Outstation'})); setStep(1); }}
+                className="w-full bg-slate-50/50 border border-slate-100 hover:border-[#FFB703] hover:bg-amber-50/30 rounded-3xl p-3 flex items-center justify-between transition-all group active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-14 bg-green-100/50 rounded-2xl flex items-center justify-center shrink-0 border border-green-100">
+                     <Map size={24} className="text-green-600" />
+                  </div>
+                  <span className="font-black text-[17px] text-slate-800">Outstation</span>
+                </div>
+                <ChevronDown size={20} className="text-slate-400 group-hover:text-[#FFB703] -rotate-90 transition-colors mr-2" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(step === 0 || step === 1) && (
         <div className="flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
-          <Header title="Book Parcel" />
+          <Header title={`Book Parcel ${formData.serviceType ? `(${formData.serviceType})` : ''}`} />
           
           <div className="p-4 flex-1 overflow-y-auto pb-24 md:p-8 md:grid md:grid-cols-2 md:gap-8">
             <div className="md:col-span-1">

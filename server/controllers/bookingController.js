@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const RoutingRule = require('../models/RoutingRule');
 const VehicleConfig = require('../models/VehicleConfig');
+const Hub = require('../models/Hub');
 
 // Calculate distance based on pincode difference (Mock implementation)
 const calculateMockDistance = (pin1, pin2) => {
@@ -71,10 +72,24 @@ exports.createBooking = async (req, res) => {
       else if (actualWeight < 2000) vehicleType = 'Mini Truck';
     }
 
+    // Hub Assignment (Mock: Pick first available hubs for source/destination if Intercity)
+    let sourceHubId = null;
+    let destHubId = null;
+    
+    if (deliveryType === 'Intercity Hub-and-Spoke') {
+      const hubs = await Hub.find({ isActive: true });
+      if (hubs.length > 0) {
+        sourceHubId = hubs[0]._id;
+        destHubId = hubs.length > 1 ? hubs[1]._id : hubs[0]._id;
+      }
+    }
+
     bookingData.metadata = { 
       intracity: isIntracity,
       deliveryType,
-      vehicleType
+      vehicleType,
+      sourceHub: sourceHubId,
+      destinationHub: destHubId
     };
 
     // Pricing Calculation (Mock logic)

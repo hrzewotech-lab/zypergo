@@ -20,7 +20,10 @@ exports.getAvailableJobs = async (req, res) => {
       }
     }
     
-    const availableJobs = await Booking.find(query).sort({ createdAt: -1 });
+    const availableJobs = await Booking.find(query)
+      .populate('metadata.sourceHub')
+      .populate('metadata.destinationHub')
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: availableJobs });
   } catch (error) {
     console.error('Error fetching available jobs:', error);
@@ -60,7 +63,7 @@ exports.acceptJob = async (req, res) => {
         }
       },
       { new: true }
-    );
+    ).populate('metadata.sourceHub').populate('metadata.destinationHub');
 
     if (!booking) {
       return res.status(400).json({ success: false, error: 'Job already taken or invalid.' });
@@ -81,7 +84,7 @@ exports.updateJobStatus = async (req, res) => {
     const { id } = req.params;
     const { status, otp, photoUrl, reason, cashCollected, gpsLocation, parcelCondition, userId } = req.body;
 
-    const booking = await Booking.findById(id).populate('sender');
+    const booking = await Booking.findById(id).populate('sender').populate('metadata.sourceHub').populate('metadata.destinationHub');
     if (!booking) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }

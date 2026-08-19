@@ -10,6 +10,7 @@ router.post('/login-password', authController.loginWithPassword);
 router.post('/raider-apply', authController.raiderApply);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
+router.post('/google', authController.googleLogin);
 
 router.get('/me', protect, authController.getMe);
 

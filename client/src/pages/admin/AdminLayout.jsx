@@ -195,7 +195,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dashboard Canvas */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4 md:p-6 lg:p-8 pb-32 md:pb-8 relative z-10">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4 md:p-6 lg:p-8 pb-32 md:pb-8 relative">
           <Outlet />
         </main>
       </div>

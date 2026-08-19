@@ -305,56 +305,65 @@ export default function RaiderDashboard({ user, onLogout }) {
 
         </div>
 
-        {/* Incoming Job Bottom Sheet (Rapido Style) */}
-        {!activeJob && availableJobs.length > 0 && user?.raiderDetails?.isOnline && user?.raiderDetails?.isOnShift && (
-          <div className="fixed bottom-[70px] md:bottom-0 left-0 right-0 z-40 bg-white text-slate-900 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 p-6 pb-6 md:pb-10 max-w-lg mx-auto animate-in slide-in-from-bottom duration-300 ease-out">
-            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
-            
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <span className="bg-[#FFB703] text-black px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase shadow-sm animate-pulse">New Mission</span>
-                <h3 className="text-2xl font-black mt-2 tracking-tight">Mission Assigned</h3>
-              </div>
-              <div className="text-right">
-                <span className="text-3xl font-black text-slate-900 drop-shadow-sm">₹{availableJobs[0].estimatedPrice || 120}</span>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Est. Payout</p>
-              </div>
-            </div>
+        {(!activeJob && availableJobs.length > 0 && user?.raiderDetails?.isOnline && user?.raiderDetails?.isOnShift) && (() => {
+          const job = availableJobs[0];
+          const pickupParts = (job.pickupLocation?.address || '').toLowerCase().split(',').map(s => s.trim());
+          const dropParts = (job.dropLocation?.address || '').toLowerCase().split(',').map(s => s.trim());
+          const ignoreList = ['india', 'andhra pradesh', 'telangana', 'karnataka', 'tamil nadu', 'maharashtra'];
+          const commonLocalities = pickupParts.filter(part => dropParts.includes(part) && part.length > 3 && isNaN(part) && !ignoreList.includes(part));
+          const isSameRegion = (job.pickupLocation?.pincode && job.dropLocation?.pincode && job.pickupLocation?.pincode === job.dropLocation?.pincode) || commonLocalities.length > 0;
+          const isHubDrop = job.metadata?.deliveryType === 'Intercity Hub-and-Spoke' && !isSameRegion;
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="flex flex-col items-center mt-1">
-                  <div className="w-3 h-3 bg-slate-900 rounded-full border-2 border-white ring-1 ring-slate-900"></div>
-                  <div className="w-0.5 h-12 bg-slate-300 my-1"></div>
-                  <div className="w-3 h-3 bg-red-500 rounded-sm border-2 border-white ring-1 ring-red-500"></div>
+          return (
+            <div className="fixed bottom-[70px] md:bottom-0 left-0 right-0 z-40 bg-white text-slate-900 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 p-6 pb-6 md:pb-10 max-w-lg mx-auto animate-in slide-in-from-bottom duration-300 ease-out">
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+              
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="bg-[#FFB703] text-black px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase shadow-sm animate-pulse">New Mission</span>
+                  <h3 className="text-2xl font-black mt-2 tracking-tight">Mission Assigned</h3>
                 </div>
-                <div className="flex-1 flex flex-col gap-6">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Pickup</p>
-                    <p className="font-bold text-sm leading-tight text-slate-800 line-clamp-2">{availableJobs[0].pickupLocation?.address}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Drop-off</p>
-                    <p className="font-bold text-sm leading-tight text-slate-800 line-clamp-2">{availableJobs[0].dropLocation?.address}</p>
-                  </div>
+                <div className="text-right">
+                  <span className="text-3xl font-black text-slate-900 drop-shadow-sm">₹{job.estimatedPrice || 120}</span>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Est. Payout</p>
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3">
-              <button onClick={() => setAvailableJobs(availableJobs.slice(1))} className="w-16 h-14 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl flex items-center justify-center font-bold transition-colors">
-                Skip
-              </button>
-              <button 
-                onClick={() => acceptJob(availableJobs[0])} 
-                disabled={loading} 
-                className="flex-1 h-14 bg-black text-[#FFB703] font-black uppercase tracking-widest text-lg rounded-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
-              >
-                {loading ? 'Accepting...' : 'ACCEPT MISSION'}
-              </button>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex flex-col items-center mt-1">
+                    <div className="w-3 h-3 bg-slate-900 rounded-full border-2 border-white ring-1 ring-slate-900"></div>
+                    <div className="w-0.5 h-12 bg-slate-300 my-1"></div>
+                    <div className="w-3 h-3 bg-red-500 rounded-sm border-2 border-white ring-1 ring-red-500"></div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-6">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Pickup</p>
+                      <p className="font-bold text-sm leading-tight text-slate-800 line-clamp-2">{job.pickupLocation?.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">{isHubDrop ? 'Drop-off (Hub)' : 'Drop-off'}</p>
+                      <p className="font-bold text-sm leading-tight text-slate-800 line-clamp-2">{isHubDrop ? (job.metadata?.sourceHub?.name || job.metadata?.sourceHub?.city || 'Nearest ZyperGo Hub') : job.dropLocation?.address}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setAvailableJobs(availableJobs.slice(1))} className="w-16 h-14 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl flex items-center justify-center font-bold transition-colors">
+                  Skip
+                </button>
+                <button 
+                  onClick={() => acceptJob(job)} 
+                  disabled={loading} 
+                  className="flex-1 h-14 bg-black text-[#FFB703] font-black uppercase tracking-widest text-lg rounded-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                >
+                  {loading ? 'Accepting...' : 'ACCEPT MISSION'}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );
