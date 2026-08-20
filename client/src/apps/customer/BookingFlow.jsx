@@ -203,6 +203,25 @@ export default function BookingFlow() {
     }
   };
 
+  const cancelBooking = async () => {
+    if (!bookingResult || !bookingResult._id) return;
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    
+    setLoading(true);
+    try {
+      const res = await api.post(`/bookings/${bookingResult._id}/cancel`);
+      if (res.data.success) {
+        alert('Order cancelled successfully.');
+        navigate('/');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || 'Failed to cancel booking.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMapConfirm = async () => {
     if (!tempLocation) return;
     try {
@@ -228,11 +247,16 @@ export default function BookingFlow() {
   }
 
   const Header = ({ title }) => (
-    <div className="bg-white px-4 py-4 flex items-center gap-4 sticky top-0 z-20 shadow-sm border-b border-slate-100">
-      <button onClick={() => step > 1 && step < 4 ? setStep(step - 1) : navigate('/')} className="p-1 -ml-1 text-slate-700 hover:bg-slate-50 rounded-full transition-colors">
-        <ArrowLeft size={24} />
-      </button>
-      <h1 className="text-lg font-black text-slate-900">{title}</h1>
+    <div className="sticky top-0 z-20 bg-white shadow-sm border-b border-slate-100 flex flex-col">
+      <div className="flex items-center justify-center py-4 border-b border-slate-50 w-full">
+        <img src="/images/logo.png" alt="ZyperGo" className="h-8 w-auto object-contain" />
+      </div>
+      <div className="px-4 py-4 flex items-center gap-4">
+        <button onClick={() => step > 1 && step < 4 ? setStep(step - 1) : navigate('/')} className="p-1 -ml-1 text-slate-700 hover:bg-slate-50 rounded-full transition-colors">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-xl font-black text-slate-900">{title}</h1>
+      </div>
     </div>
   );
 
@@ -241,8 +265,8 @@ export default function BookingFlow() {
       <div className="w-full h-full md:h-auto md:min-h-[80vh] md:max-w-4xl bg-white flex flex-col md:rounded-3xl md:shadow-2xl md:border border-slate-100 overflow-hidden relative mx-auto">
       
       {step === 0 && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col justify-end pb-[70px] sm:pb-24 px-4 animate-in fade-in">
-          <div className="bg-white rounded-[2rem] w-full max-w-md mx-auto p-6 sm:p-8 shadow-2xl relative mb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col justify-end pb-[70px] sm:pb-24 md:px-4 animate-in fade-in">
+          <div className="bg-white rounded-t-[2.5rem] md:rounded-[2rem] w-full md:max-w-md mx-auto p-6 sm:p-8 shadow-2xl relative md:mb-4">
             <button onClick={() => navigate('/')} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
               <X size={18} strokeWidth={2.5} />
             </button>
@@ -251,28 +275,28 @@ export default function BookingFlow() {
             <div className="space-y-4">
               <button 
                 onClick={() => { setFormData(prev => ({...prev, serviceType: 'Within City'})); setStep(1); }}
-                className="w-full bg-slate-50/50 border border-slate-100 hover:border-[#006D77] hover:bg-teal-50/30 rounded-3xl p-3 flex items-center justify-between transition-all group active:scale-[0.98]"
+                className="w-full bg-white border border-slate-100 hover:border-blue-100 hover:shadow-md rounded-[1.5rem] p-3 flex items-center justify-between transition-all group active:scale-[0.98]"
               >
                 <div className="flex items-center gap-5">
-                  <div className="w-16 h-14 bg-blue-100/50 rounded-2xl flex items-center justify-center shrink-0 border border-blue-100">
-                     <Truck size={24} className="text-blue-500" />
+                  <div className="w-16 h-14 bg-[#F0F5FF] rounded-2xl flex items-center justify-center shrink-0">
+                     <Truck size={24} className="text-blue-500" strokeWidth={2} />
                   </div>
-                  <span className="font-black text-[17px] text-slate-800">Within City</span>
+                  <span className="font-black text-[17px] text-slate-800 tracking-tight">Within City</span>
                 </div>
-                <ChevronDown size={20} className="text-slate-400 group-hover:text-[#006D77] -rotate-90 transition-colors mr-2" />
+                <ChevronDown size={18} className="text-slate-400 group-hover:text-blue-500 -rotate-90 transition-colors mr-3" />
               </button>
 
               <button 
                 onClick={() => { setFormData(prev => ({...prev, serviceType: 'Outstation'})); setStep(1); }}
-                className="w-full bg-slate-50/50 border border-slate-100 hover:border-[#FFB703] hover:bg-amber-50/30 rounded-3xl p-3 flex items-center justify-between transition-all group active:scale-[0.98]"
+                className="w-full bg-white border border-slate-100 hover:border-green-100 hover:shadow-md rounded-[1.5rem] p-3 flex items-center justify-between transition-all group active:scale-[0.98]"
               >
                 <div className="flex items-center gap-5">
-                  <div className="w-16 h-14 bg-green-100/50 rounded-2xl flex items-center justify-center shrink-0 border border-green-100">
-                     <Map size={24} className="text-green-600" />
+                  <div className="w-16 h-14 bg-[#F0FDF4] rounded-2xl flex items-center justify-center shrink-0">
+                     <Map size={24} className="text-green-600" strokeWidth={2} />
                   </div>
-                  <span className="font-black text-[17px] text-slate-800">Outstation</span>
+                  <span className="font-black text-[17px] text-slate-800 tracking-tight">Outstation</span>
                 </div>
-                <ChevronDown size={20} className="text-slate-400 group-hover:text-[#FFB703] -rotate-90 transition-colors mr-2" />
+                <ChevronDown size={18} className="text-slate-400 group-hover:text-green-600 -rotate-90 transition-colors mr-3" />
               </button>
             </div>
           </div>
@@ -362,10 +386,16 @@ export default function BookingFlow() {
                 <div className="relative border border-slate-200 rounded-xl px-4 py-3 shadow-sm bg-slate-50">
                   <select name="weight" value={formData.weight} onChange={handleChange} className={`w-full bg-transparent font-bold text-sm outline-none appearance-none pr-6 ${!formData.weight ? 'text-slate-400' : 'text-slate-800'}`}>
                     <option value="" disabled hidden>Select</option>
-                    <option value="1 kg" className="text-slate-800">1 kg</option>
-                    <option value="5 kg" className="text-slate-800">5 kg</option>
-                    <option value="15 kg" className="text-slate-800">15 kg</option>
-                    <option value="50 kg" className="text-slate-800">50 kg</option>
+                    <option value="1 kg" className="text-slate-800">1 kg (Document)</option>
+                    <option value="5 kg" className="text-slate-800">Up to 5 kg (Small)</option>
+                    <option value="20 kg" className="text-slate-800">Up to 20 kg (Scooter)</option>
+                    <option value="90 kg" className="text-slate-800">Up to 90 kg (Mini 3W)</option>
+                    <option value="500 kg" className="text-slate-800">Up to 500 kg (3 Wheeler)</option>
+                    <option value="750 kg" className="text-slate-800">Up to 750 kg (Tata Ace)</option>
+                    <option value="1200 kg" className="text-slate-800">Up to 1200 kg (Pickup 8ft)</option>
+                    <option value="1700 kg" className="text-slate-800">Up to 1700 kg (Pickup 9ft)</option>
+                    <option value="3500 kg" className="text-slate-800">Up to 3500 kg (14ft)</option>
+                    <option value="6000 kg" className="text-slate-800">Up to 6000 kg (17ft)</option>
                   </select>
                   <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
@@ -375,10 +405,16 @@ export default function BookingFlow() {
                 <div className="relative border border-slate-200 rounded-xl px-4 py-3 shadow-sm bg-slate-50">
                   <select name="parcelType" value={formData.parcelType} onChange={handleChange} className={`w-full bg-transparent font-bold text-sm outline-none appearance-none pr-6 ${!formData.parcelType ? 'text-slate-400' : 'text-slate-800'}`}>
                     <option value="" disabled hidden>Select</option>
+                    <option value="General Parcel" className="text-slate-800">General Parcel</option>
                     <option value="Box" className="text-slate-800">Box</option>
                     <option value="Document" className="text-slate-800">Document</option>
                     <option value="Clothes" className="text-slate-800">Clothes</option>
                     <option value="Electronics" className="text-slate-800">Electronics</option>
+                    <option value="Furniture" className="text-slate-800">Furniture</option>
+                    <option value="Appliances" className="text-slate-800">Appliances</option>
+                    <option value="Industrial Goods" className="text-slate-800">Industrial Goods</option>
+                    <option value="Construction Material" className="text-slate-800">Construction Material</option>
+                    <option value="Food & Perishables" className="text-slate-800">Food & Perishables</option>
                   </select>
                   <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
@@ -414,34 +450,52 @@ export default function BookingFlow() {
           
           <div className="p-4 flex-1 overflow-y-auto pb-24 md:p-8 space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 lg:gap-6">
              <VehicleOption 
-                name="Bike" weight="1 - 5 kg" time="2 - 4 Days" 
-                icon={<Bike size={32} className="text-slate-600" />}
-                selected={formData.vehicle === 'Bike'} 
-                onClick={() => setFormData({...formData, vehicle: 'Bike'})} 
+                name="Scooter" weight="20 Kg" time="10 mins" 
+                icon={<img src="/images/bike.png" alt="Scooter" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === 'Scooter'} 
+                onClick={() => setFormData({...formData, vehicle: 'Scooter'})} 
              />
              <VehicleOption 
-                name="Auto" weight="5 - 15 kg" time="1 - 2 Days" 
-                icon={<Car size={32} className="text-[#FFB703]" />}
-                selected={formData.vehicle === 'Auto'} 
-                onClick={() => setFormData({...formData, vehicle: 'Auto'})} 
+                name="Mini 3W" weight="90 Kg" time="1 mins" 
+                icon={<img src="/images/miniAuto.png" alt="Mini 3W" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === 'Mini 3W'} 
+                onClick={() => setFormData({...formData, vehicle: 'Mini 3W'})} 
              />
              <VehicleOption 
-                name="Car" weight="15 - 30 kg" time="1 - 2 Days" 
-                icon={<CarFront size={32} className="text-emerald-600" />}
-                selected={formData.vehicle === 'Car'} 
-                onClick={() => setFormData({...formData, vehicle: 'Car'})} 
+                name="3 Wheeler" weight="500 kg" time="3 mins" 
+                icon={<img src="/images/3%20wheeler.png" alt="3 Wheeler" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === '3 Wheeler'} 
+                onClick={() => setFormData({...formData, vehicle: '3 Wheeler'})} 
              />
              <VehicleOption 
-                name="Mini Truck" weight="15 - 50 kg" time="1 - 2 Days" 
-                icon={<Package size={32} className="text-[#006D77]" />}
-                selected={formData.vehicle === 'Mini Truck'} 
-                onClick={() => setFormData({...formData, vehicle: 'Mini Truck'})} 
+                name="Tata Ace" weight="750 kg" time="10 mins" 
+                icon={<img src="/images/tataace.png" alt="Tata Ace" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === 'Tata Ace'} 
+                onClick={() => setFormData({...formData, vehicle: 'Tata Ace'})} 
              />
              <VehicleOption 
-                name="Heavy Truck" weight="50 kg & above" time="1 - 3 Days" 
-                icon={<Truck size={36} className="text-slate-800" />}
-                selected={formData.vehicle === 'Heavy Truck'} 
-                onClick={() => setFormData({...formData, vehicle: 'Heavy Truck'})} 
+                name="Pickup 8ft" weight="1200 kg" time="10 mins" 
+                icon={<img src="/images/pickup8ft.png" alt="Pickup 8ft" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === 'Pickup 8ft'} 
+                onClick={() => setFormData({...formData, vehicle: 'Pickup 8ft'})} 
+             />
+             <VehicleOption 
+                name="Pickup 9ft" weight="1700 Kg" time="9 mins" 
+                icon={<img src="/images/9ft.png" alt="Pickup 9ft" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === 'Pickup 9ft'} 
+                onClick={() => setFormData({...formData, vehicle: 'Pickup 9ft'})} 
+             />
+             <VehicleOption 
+                name="14ft" weight="3500 Kg" time="20 mins" 
+                icon={<img src="/images/14ft.png" alt="14ft" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === '14ft'} 
+                onClick={() => setFormData({...formData, vehicle: '14ft'})} 
+             />
+             <VehicleOption 
+                name="17ft" weight="6000 Kg" time="25 mins" 
+                icon={<img src="/images/17ft.png" alt="17ft" className="w-20 h-20 object-contain drop-shadow-sm" />}
+                selected={formData.vehicle === '17ft'} 
+                onClick={() => setFormData({...formData, vehicle: '17ft'})} 
              />
           </div>
 
@@ -570,6 +624,9 @@ export default function BookingFlow() {
             </button>
             <button onClick={() => navigate('/')} className="w-full md:w-48 bg-slate-100 text-slate-700 font-black py-4 rounded-xl hover:bg-slate-200 transition-colors">
               Back to Home
+            </button>
+            <button onClick={cancelBooking} disabled={loading} className="w-full md:w-48 bg-red-50 text-red-600 font-black py-4 rounded-xl hover:bg-red-100 transition-colors border border-red-200">
+              {loading ? 'Cancelling...' : 'Cancel Order'}
             </button>
           </div>
         </div>
@@ -728,21 +785,21 @@ function VehicleOption({ name, weight, time, icon, selected, onClick }) {
   return (
     <div 
       onClick={onClick}
-      className={`border rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all active:scale-[0.98] ${selected ? 'border-[#FFB703] bg-amber-50 shadow-md ring-2 ring-[#FFB703]/20' : 'border-slate-200 bg-white hover:border-[#FFB703]/50'}`}
+      className={`border rounded-3xl p-6 flex items-center justify-between cursor-pointer transition-all active:scale-[0.98] ${selected ? 'border-[#FFB703] bg-amber-50 shadow-md ring-4 ring-[#FFB703]/20' : 'border-slate-200 bg-white hover:border-[#FFB703]/50 hover:shadow-md'}`}
     >
-      <div className="flex items-center gap-4">
-         <div className="w-14 h-14 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center">
+      <div className="flex items-center gap-6">
+         <div className="w-24 h-24 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center p-2">
             {icon}
          </div>
          <div>
-            <h4 className="font-black text-slate-900 text-sm mb-0.5">{name}</h4>
-            <p className="text-[10px] text-slate-500 font-bold mb-1">{weight}</p>
-            <p className="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-1.5 py-0.5 rounded">{time}</p>
+            <h4 className="font-black text-slate-900 text-lg mb-1">{name}</h4>
+            <p className="text-xs text-slate-500 font-bold mb-2">{weight}</p>
+            <p className="text-xs text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 inline-block px-2.5 py-1 rounded-md">{time}</p>
          </div>
       </div>
       <div className="text-right flex flex-col items-end gap-2">
-         <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selected ? 'border-[#FFB703] bg-[#FFB703] text-white' : 'border-slate-300 bg-white'}`}>
-            {selected && <Check size={14} strokeWidth={3} />}
+         <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${selected ? 'border-[#FFB703] bg-[#FFB703] text-white' : 'border-slate-300 bg-white'}`}>
+            {selected && <Check size={16} strokeWidth={3.5} />}
          </div>
       </div>
     </div>

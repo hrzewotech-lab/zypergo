@@ -3,15 +3,15 @@ import { Wallet, TrendingUp, History, ArrowRightLeft, CheckCircle2, ChevronRight
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 
-export default function RaiderEarnings({ user, onLogout }) {
+export default function RiderEarnings({ user, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [history, setHistory] = useState([]);
   const navigate = useNavigate();
   
-  const walletBalance = user?.raiderDetails?.earnings?.walletBalance || 0;
-  const totalEarnings = user?.raiderDetails?.earnings?.totalEarnings || 0;
-  const cashCollected = user?.raiderDetails?.earnings?.cashCollected || 0;
+  const walletBalance = user?.riderDetails?.earnings?.walletBalance || 0;
+  const totalEarnings = user?.riderDetails?.earnings?.totalEarnings || 0;
+  const cashCollected = user?.riderDetails?.earnings?.cashCollected || 0;
 
   const handleWithdraw = async () => {
     if (!amount || isNaN(amount) || amount <= 0) {
@@ -25,7 +25,7 @@ export default function RaiderEarnings({ user, onLogout }) {
     
     setLoading(true);
     try {
-      const res = await api.post('/raider/withdraw', { userId: user?._id, amount: Number(amount) });
+      const res = await api.post('/rider/withdraw', { userId: user?._id, amount: Number(amount) });
       if (res.data.success) {
         alert(res.data.message);
         setAmount('');
@@ -41,7 +41,7 @@ export default function RaiderEarnings({ user, onLogout }) {
 
   React.useEffect(() => {
     if (user?._id) {
-      api.get(`/raider/history?userId=${user._id}`)
+      api.get(`/rider/history?userId=${user._id}`)
         .then(res => {
           if (res.data.success) {
              setHistory(res.data.data);

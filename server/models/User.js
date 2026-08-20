@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   role: {
     type: String,
-    enum: ['Customer', 'Raider', 'SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'PartnerManager', 'FinanceManager', 'SupportExecutive', 'Auditor'],
+    enum: ['Customer', 'Rider', 'SuperAdmin', 'OperationsAdmin', 'OperationsStaff', 'HubManager', 'HubOperator', 'DispatchManager', 'PartnerManager', 'FinanceManager', 'SupportExecutive', 'Auditor'],
     required: true,
     default: 'Customer'
   },
@@ -56,11 +56,11 @@ const userSchema = new mongoose.Schema({
     default: false
   },
 
-  // --- Raider Specific Fields ---
-  raiderDetails: {
+  // --- Rider Specific Fields ---
+  riderDetails: {
     vehicleType: {
       type: String,
-      enum: ['Bike', 'Auto', 'Mini Truck', 'Heavy Vehicle']
+      enum: ['Scooter', 'Mini 3W', '3 Wheeler', 'Tata Ace', 'Pickup 8ft', 'Pickup 9ft', '14ft', '17ft']
     },
     vehicleRegistration: String,
     vehicleMake: String,

@@ -733,7 +733,7 @@ exports.checkServiceability = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────────
     // Check if riders exist in system/hub
     const activeRidersCount = await User.countDocuments({
-      role: 'Raider',
+      role: 'Rider',
       isActive: { $ne: false }
     });
     // Rider check passes if active riders exist or hub has assigned riders

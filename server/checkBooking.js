@@ -20,13 +20,13 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/zypergo')
       console.log('Sender Phone:', booking.sender?.phone);
       console.log('Sender Email:', booking.sender?.email);
       
-      // Let's also check if it's assigned to any raider via trackingHistory
+      // Let's also check if it's assigned to any rider via trackingHistory
       const assignedLog = booking.trackingHistory.find(h => h.status === 'Rider Assigned');
       if (assignedLog && assignedLog.scannedBy) {
-        console.log('Assigned Raider ID:', assignedLog.scannedBy._id);
-        console.log('Assigned Raider Phone:', assignedLog.scannedBy.phone);
+        console.log('Assigned Rider ID:', assignedLog.scannedBy._id);
+        console.log('Assigned Rider Phone:', assignedLog.scannedBy.phone);
       } else {
-        console.log('No specific raider assignment log found in tracking history.');
+        console.log('No specific rider assignment log found in tracking history.');
       }
       
       process.exit(0);

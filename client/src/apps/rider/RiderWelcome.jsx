@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation, Banknote, ShieldCheck, MapPin } from 'lucide-react';
 
-export default function RaiderWelcome() {
+export default function RiderWelcome() {
   const navigate = useNavigate();
 
   return (
@@ -12,7 +12,7 @@ export default function RaiderWelcome() {
 
         {/* Header Text */}
         <div className="text-center mb-8 w-full">
-          <p className="text-[10px] font-black text-black mb-4 tracking-widest uppercase bg-white/30 inline-block px-3 py-1 rounded-full border border-black/10">Raider App</p>
+          <p className="text-[10px] font-black text-black mb-4 tracking-widest uppercase bg-white/30 inline-block px-3 py-1 rounded-full border border-black/10">Rider App</p>
           <img src="/images/logo.png" alt="ZyperGo Logo" className="h-12 w-auto object-contain mx-auto mb-6" />
           <h1 className="text-4xl font-black text-black leading-[1.1] tracking-tight uppercase">
             Drive, Deliver, <br /> & Earn
@@ -35,7 +35,7 @@ export default function RaiderWelcome() {
             onClick={() => navigate('/login')}
             className="w-full bg-black text-[#FFB703] font-black py-4 rounded-xl text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wide"
           >
-            Login to Raider
+            Login to Rider
           </button>
 
           <button

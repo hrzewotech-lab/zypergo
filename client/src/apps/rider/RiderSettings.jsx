@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bell, Moon, Sun, Lock, Shield, HelpCircle, LogOut, ChevronRight, Smartphone, Settings as SettingsIcon, ChevronLeft, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function RaiderSettings({ user, onLogout }) {
+export default function RiderSettings({ user, onLogout }) {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [locationAccess, setLocationAccess] = useState(true);
@@ -130,7 +130,7 @@ export default function RaiderSettings({ user, onLogout }) {
           <LogOut size={20} /> Log Out Account
         </button>
         
-        <p className="text-center text-xs text-slate-400 font-bold mt-8">ZyperGo Raider App v2.1.0</p>
+        <p className="text-center text-xs text-slate-400 font-bold mt-8">ZyperGo Rider App v2.1.0</p>
       </div>
     </div>
   );

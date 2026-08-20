@@ -54,7 +54,11 @@ export default function MyShipments() {
         <div className="absolute right-0 top-0 opacity-10">
           <Package size={120} className="text-white transform rotate-12 translate-x-4 -translate-y-4" />
         </div>
-        <div className="relative z-10 flex items-center justify-between">
+        <div className="relative z-10 flex flex-col">
+          <div className="flex items-center gap-2 mb-6">
+            <img src="/images/logo.png" alt="ZyperGo" className="h-7 w-auto object-contain brightness-0 invert" />
+            <span className="font-black text-white tracking-tight text-xl">ZyperGo</span>
+          </div>
           <div>
             <h1 className="text-2xl font-black text-white mb-2">My Shipments</h1>
             <p className="text-teal-100 text-sm font-medium">Track and manage your orders</p>
@@ -62,19 +66,8 @@ export default function MyShipments() {
         </div>
       </div>
       
-      {/* Search Bar */}
-      <div className="px-4 -mt-6 relative z-20 mb-2">
-        <div className="bg-white rounded-2xl shadow-md p-2 flex items-center border border-slate-100">
-          <Search className="text-slate-400 ml-2" size={20} />
-          <input 
-            type="text" 
-            placeholder="Search Tracking ID..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent border-none outline-none px-3 py-2 text-sm font-bold text-slate-800"
-          />
-        </div>
-      </div>
+      {/* Spacing for list */}
+      <div className="px-4 mt-6 relative z-20 mb-2"></div>
 
       {/* List */}
       <div className="flex-1 px-4 overflow-y-auto space-y-4 pt-2">

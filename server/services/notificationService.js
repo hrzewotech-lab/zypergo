@@ -144,16 +144,16 @@ class NotificationService {
   }
 
   static notifyRiderAssigned(booking, customerPhone) {
-    this.sendSMS(customerPhone, `A Raider has been assigned to pickup your ZyperGo shipment (${booking.trackingId}).`);
-    this.sendPushNotification('customer_fcm_mock', 'Raider Assigned', 'A raider is assigned for your pickup.');
+    this.sendSMS(customerPhone, `A Rider has been assigned to pickup your ZyperGo shipment (${booking.trackingId}).`);
+    this.sendPushNotification('customer_fcm_mock', 'Rider Assigned', 'A rider is assigned for your pickup.');
   }
 
   static notifyPickupOTP(customerPhone, customerEmail, otp, trackingId) {
-    this.sendSMS(customerPhone, `Your pickup OTP for ZyperGo shipment is ${otp}. Do not share this with anyone except the Raider.`, 'Critical');
+    this.sendSMS(customerPhone, `Your pickup OTP for ZyperGo shipment is ${otp}. Do not share this with anyone except the Rider.`, 'Critical');
     if (customerEmail) {
       const htmlBody = this.generateEmailTemplate({
         title: 'Pickup Verification Code',
-        message: 'A Raider has arrived to pick up your shipment. Please share this secure code with them.',
+        message: 'A Rider has arrived to pick up your shipment. Please share this secure code with them.',
         otpCode: otp,
         footerNote: `Tracking ID: <strong>${trackingId}</strong>`
       });
@@ -177,7 +177,7 @@ class NotificationService {
     if (receiverEmail) {
       const htmlBody = this.generateEmailTemplate({
         title: 'Delivery Verification Code',
-        message: 'Your shipment is out for delivery. Please share this secure code with the Raider upon arrival.',
+        message: 'Your shipment is out for delivery. Please share this secure code with the Rider upon arrival.',
         otpCode: otp,
         footerNote: `Tracking ID: <strong>${booking.trackingId}</strong>`
       });

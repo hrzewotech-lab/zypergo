@@ -36,10 +36,10 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ error: 'Account is suspended or inactive' });
     }
 
-    if (user.role === 'Raider' && user.raiderDetails.approvalStatus !== 'Approved') {
+    if (user.role === 'Rider' && user.riderDetails.approvalStatus !== 'Approved') {
        return res.status(403).json({ 
          error: 'Account pending admin approval', 
-         status: user.raiderDetails.approvalStatus 
+         status: user.riderDetails.approvalStatus 
        });
     }
 
@@ -244,9 +244,9 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// 3. Raider Onboarding with Image Uploads via Cloudinary
+// 3. Rider Onboarding with Image Uploads via Cloudinary
 router.post(
-  '/raider/apply', 
+  '/rider/apply', 
   upload.fields([
     { name: 'profilePhoto', maxCount: 1 },
     { name: 'drivingLicense', maxCount: 1 },
@@ -277,9 +277,9 @@ router.post(
         name,
         phone,
         password,
-        role: 'Raider',
+        role: 'Rider',
         photoUrl: profilePhotoUrl,
-        raiderDetails: {
+        riderDetails: {
           vehicleType,
           vehicleRegistration,
           approvalStatus: 'Pending',
@@ -294,12 +294,12 @@ router.post(
       await user.save();
       
       res.status(201).json({
-        message: 'Raider application submitted successfully. Pending admin approval.',
+        message: 'Rider application submitted successfully. Pending admin approval.',
         userId: user._id
       });
     } catch (error) {
-      console.error('Raider application error:', error);
-      res.status(500).json({ error: 'Server error during raider application' });
+      console.error('Rider application error:', error);
+      res.status(500).json({ error: 'Server error during rider application' });
     }
   }
 );

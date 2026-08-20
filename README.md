@@ -6,7 +6,7 @@ ZyperGo is a modern, high-performance web application designed to handle complex
 
 ## 🚀 Features
 
-- **Multi-Tenant Subdomain Architecture**: Seamlessly route to different applications (Admin, Customer, Partner, Hub, Raider, etc.) using host-based routing.
+- **Multi-Tenant Subdomain Architecture**: Seamlessly route to different applications (Admin, Customer, Partner, Hub, Rider, etc.) using host-based routing.
 - **5-Star Premium UI**: Beautiful glassmorphism, dynamic 3D hover effects, scroll-linked animations, and highly responsive Tailwind CSS design.
 - **Perfect SEO**: Dynamically injected meta tags, Open Graph tags, and descriptions via our custom lightweight React hook.
 - **Monorepo Structure**: Frontend (Vite/React) and Backend (Express/Node.js) living in perfect harmony.
@@ -80,7 +80,7 @@ This project is configured using Vercel's officially recommended approach for mo
 7. Deploy!
 
 ### Subdomain Routing
-ZyperGo uses client-side host parsing (`window.location.hostname`) to serve different experiences based on the URL (Admin, Partner, Raider, etc.).
+ZyperGo uses client-side host parsing (`window.location.hostname`) to serve different experiences based on the URL (Admin, Partner, Rider, etc.).
 
 To enable this on the frontend:
 1. Go to your **Frontend Project Settings** in Vercel.

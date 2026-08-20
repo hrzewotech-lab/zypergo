@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import PortalApp from '../apps/PortalApp';
 import AdminApp from '../apps/AdminApp';
 import CustomerApp from '../apps/CustomerApp';
-import RaiderApp from '../apps/RaiderApp';
+import RiderApp from '../apps/RiderApp';
 import HamaliApp from '../apps/HamaliApp';
 import PartnerApp from '../apps/PartnerApp';
 import HubApp from '../apps/HubApp';
@@ -50,7 +50,7 @@ function AppRouter() {
     // Check if the hostname starts with any of our subdomains or Vercel hyphenated prefixes
     if (hostname.startsWith('admin.') || hostname.startsWith('admin-')) return 'admin';
     if (hostname.startsWith('customer.') || hostname.startsWith('customer-')) return 'customer';
-    if (hostname.startsWith('raider.') || hostname.startsWith('raider-')) return 'raider';
+    if (hostname.startsWith('rider.') || hostname.startsWith('rider-')) return 'rider';
     if (hostname.startsWith('hamali.') || hostname.startsWith('hamali-')) return 'hamali';
     if (hostname.startsWith('partner.') || hostname.startsWith('partner-')) return 'partner';
     if (hostname.startsWith('hub.') || hostname.startsWith('hub-')) return 'hub';
@@ -71,8 +71,8 @@ function AppRouter() {
     return <CustomerApp />;
   }
 
-  if (subdomain === 'raider') {
-    return <RaiderApp />;
+  if (subdomain === 'rider') {
+    return <RiderApp />;
   }
 
   if (subdomain === 'hamali') {

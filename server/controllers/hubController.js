@@ -227,8 +227,8 @@ exports.receiveParcel = async (req, res) => {
       location: hub.name
     });
     
-    if(booking.assignedRaiders && booking.assignedRaiders.length > 0) {
-       booking.assignedRaiders[booking.assignedRaiders.length - 1].status = 'Handed Over';
+    if(booking.assignedRiders && booking.assignedRiders.length > 0) {
+       booking.assignedRiders[booking.assignedRiders.length - 1].status = 'Handed Over';
     }
 
     await booking.save();
@@ -238,10 +238,10 @@ exports.receiveParcel = async (req, res) => {
 
     const HubRecord = require('../models/HubRecord');
     
-    // Determine the raider who dropped it off
-    let dropOffRaider = null;
-    if (booking.assignedRaiders && booking.assignedRaiders.length > 0) {
-      dropOffRaider = booking.assignedRaiders[booking.assignedRaiders.length - 1].raiderId;
+    // Determine the rider who dropped it off
+    let dropOffRider = null;
+    if (booking.assignedRiders && booking.assignedRiders.length > 0) {
+      dropOffRider = booking.assignedRiders[booking.assignedRiders.length - 1].riderId;
     }
 
     await HubRecord.create({
@@ -257,7 +257,7 @@ exports.receiveParcel = async (req, res) => {
         address: booking.dropLocation?.address,
         pincode: booking.dropLocation?.pincode
       },
-      actionBy: dropOffRaider || (req.user ? req.user.id : null),
+      actionBy: dropOffRider || (req.user ? req.user.id : null),
       notes: `Received at hub. Ack: ${acknowledgementType || 'Digital'}`
     });
 
@@ -344,14 +344,14 @@ exports.createManifest = async (req, res) => {
 // 4. Create last-mile route
 exports.createLastMileRoute = async (req, res) => {
   try {
-    const { bookingIds, raiderId, hubId } = req.body;
+    const { bookingIds, riderId, hubId } = req.body;
     
     await Booking.updateMany(
       { _id: { $in: bookingIds } },
       { 
         status: 'Out for Delivery',
         $push: {
-          assignedRaiders: { raiderId, status: 'Active' },
+          assignedRiders: { riderId, status: 'Active' },
           trackingHistory: { status: 'Out for Delivery', description: `Assigned for last mile delivery.` }
         }
       }

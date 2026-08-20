@@ -17,17 +17,17 @@ export default function SignupScreen({ role, onLoginSuccess }) {
   
   // OTP state
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState('details'); // details -> vehicle (Raider) -> documents (Raider) -> otp/success
+  const [step, setStep] = useState('details'); // details -> vehicle (Rider) -> documents (Rider) -> otp/success
   
   // UI States
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState(null);
 
-  // Raider Specific State
+  // Rider Specific State
   const licenseInputRef = useRef(null);
   const rcInputRef = useRef(null);
-  const [raiderData, setRaiderData] = useState({
+  const [riderData, setRiderData] = useState({
     vehicleType: 'Bike',
     vehicleRegistration: '',
     vehicleMake: '',
@@ -58,7 +58,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
       
       const data = await res.json();
       if (data.success) {
-        setRaiderData(prev => ({
+        setRiderData(prev => ({
           ...prev,
           documents: { ...prev.documents, [field]: data.url }
         }));
@@ -74,17 +74,17 @@ export default function SignupScreen({ role, onLoginSuccess }) {
 
   const handleDetailsNext = (e) => {
     e.preventDefault();
-    if (!name || !email || !phone || (role !== 'Raider' && !password)) {
+    if (!name || !email || !phone || (role !== 'Rider' && !password)) {
       setError('Please fill in all fields');
       return;
     }
-    if (role !== 'Raider' && password !== confirmPassword) {
+    if (role !== 'Rider' && password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
     
     setError('');
-    if (role === 'Raider') {
+    if (role === 'Rider') {
       setStep('vehicle');
     } else {
       triggerSendOtp();
@@ -101,8 +101,8 @@ export default function SignupScreen({ role, onLoginSuccess }) {
     setLoading(true);
     setError('');
     try {
-      const payload = { email, phone, name, raiderDetails: raiderData };
-      const res = await api.post('/auth/raider-apply', payload);
+      const payload = { email, phone, name, riderDetails: riderData };
+      const res = await api.post('/auth/rider-apply', payload);
       if (res.data.success) {
         setStep('success');
       }
@@ -118,8 +118,8 @@ export default function SignupScreen({ role, onLoginSuccess }) {
     setError('');
     try {
       const payload = { email, phone, role, name, password };
-      if (role === 'Raider') {
-        payload.raiderDetails = raiderData;
+      if (role === 'Rider') {
+        payload.riderDetails = riderData;
       }
       await api.post('/auth/send-otp', payload);
       setStep('otp');
@@ -162,7 +162,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
         <img src="/images/logo.png" alt="ZyperGo Logo" className="h-12 w-auto object-contain mx-auto mb-4" />
         <h1 className="text-2xl font-black text-black tracking-tight uppercase">ZyperGo {role}</h1>
         <p className="text-slate-800 mt-1 font-bold text-sm">
-          {role === 'Raider' ? 'Partner with us and start earning' : 'Create your account to get started'}
+          {role === 'Rider' ? 'Partner with us and start earning' : 'Create your account to get started'}
         </p>
       </div>
 
@@ -194,8 +194,8 @@ export default function SignupScreen({ role, onLoginSuccess }) {
           </div>
         )}
 
-        {/* Raider Progress Tracker */}
-        {role === 'Raider' && step !== 'otp' && step !== 'success' && (
+        {/* Rider Progress Tracker */}
+        {role === 'Rider' && step !== 'otp' && step !== 'success' && (
           <div className="flex justify-between border-b-2 border-slate-100 pb-4 mb-6 relative z-10 w-full px-2">
             {['details', 'vehicle', 'documents'].map((s, i) => {
               const isActive = step === s;
@@ -239,7 +239,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                 </div>
               </div>
               
-              {role !== 'Raider' && (
+              {role !== 'Rider' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">Password</label>
@@ -266,7 +266,7 @@ export default function SignupScreen({ role, onLoginSuccess }) {
             </div>
 
             <button type="submit" disabled={loading} className="w-full bg-black text-[#FFB703] font-black py-4 rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-70 flex items-center justify-center gap-3 mt-8">
-              {role === 'Raider' ? 'Next Step' : (loading ? <><Loader2 size={20} className="animate-spin"/> Processing...</> : 'Create Account')} {role === 'Raider' && <ArrowRight size={20}/>}
+              {role === 'Rider' ? 'Next Step' : (loading ? <><Loader2 size={20} className="animate-spin"/> Processing...</> : 'Create Account')} {role === 'Rider' && <ArrowRight size={20}/>}
             </button>
           </form>
         )}
@@ -278,35 +278,39 @@ export default function SignupScreen({ role, onLoginSuccess }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">Vehicle Type</label>
-                <select className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900 appearance-none" value={raiderData.vehicleType} onChange={e => setRaiderData({...raiderData, vehicleType: e.target.value})}>
-                  <option>Bike</option>
-                  <option>Auto</option>
-                  <option>Mini Truck</option>
-                  <option>Heavy Vehicle</option>
+                <select className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900 appearance-none" value={riderData.vehicleType} onChange={e => setRiderData({...riderData, vehicleType: e.target.value})}>
+                  <option>Scooter</option>
+                  <option>Mini 3W</option>
+                  <option>3 Wheeler</option>
+                  <option>Tata Ace</option>
+                  <option>Pickup 8ft</option>
+                  <option>Pickup 9ft</option>
+                  <option>14ft</option>
+                  <option>17ft</option>
                 </select>
               </div>
               <div>
                 <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">Company / Make</label>
-                <input required type="text" placeholder="e.g. Honda, Tata" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={raiderData.vehicleMake} onChange={e => setRaiderData({...raiderData, vehicleMake: e.target.value})} />
+                <input required type="text" placeholder="e.g. Honda, Tata" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={riderData.vehicleMake} onChange={e => setRiderData({...riderData, vehicleMake: e.target.value})} />
               </div>
               <div>
                 <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">Vehicle Model</label>
-                <input required type="text" placeholder="e.g. Activa 6G, Ace" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={raiderData.vehicleModel} onChange={e => setRaiderData({...raiderData, vehicleModel: e.target.value})} />
+                <input required type="text" placeholder="e.g. Activa 6G, Ace" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={riderData.vehicleModel} onChange={e => setRiderData({...riderData, vehicleModel: e.target.value})} />
               </div>
               <div>
                 <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">Registration No.</label>
-                <input required type="text" placeholder="MH 12 AB 1234" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={raiderData.vehicleRegistration} onChange={e => setRaiderData({...raiderData, vehicleRegistration: e.target.value})} />
+                <input required type="text" placeholder="MH 12 AB 1234" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={riderData.vehicleRegistration} onChange={e => setRiderData({...riderData, vehicleRegistration: e.target.value})} />
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">RC Book Number</label>
-              <input required type="text" placeholder="Enter RC Number" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={raiderData.rcNumber} onChange={e => setRaiderData({...raiderData, rcNumber: e.target.value})} />
+              <input required type="text" placeholder="Enter RC Number" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900" value={riderData.rcNumber} onChange={e => setRiderData({...riderData, rcNumber: e.target.value})} />
             </div>
 
             <div>
                <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">Home Address</label>
-               <textarea required rows="2" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900 resize-none" placeholder="Enter full address" value={raiderData.address} onChange={e => setRaiderData({...raiderData, address: e.target.value})}></textarea>
+               <textarea required rows="2" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none transition-all duration-200 font-bold text-slate-900 resize-none" placeholder="Enter full address" value={riderData.address} onChange={e => setRiderData({...riderData, address: e.target.value})}></textarea>
             </div>
 
             <div className="flex gap-3 pt-4 mt-6">
@@ -339,9 +343,9 @@ export default function SignupScreen({ role, onLoginSuccess }) {
                       <p className="text-[11px] text-slate-500 font-semibold">{doc.desc}</p>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setCameraConfig({ isOpen: true, field: doc.field })} disabled={uploadingDoc === doc.field} className={`w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 ${raiderData.documents[doc.field] ? 'bg-black text-[#FFB703]' : 'bg-white border border-slate-200 text-slate-600 hover:border-black hover:text-black'}`}>
-                    {uploadingDoc === doc.field ? <Loader2 size={16} className="animate-spin"/> : raiderData.documents[doc.field] ? <CheckCircle2 size={16}/> : <Camera size={16}/>}
-                    <span>{raiderData.documents[doc.field] ? 'Uploaded' : 'Upload / Capture'}</span>
+                  <button type="button" onClick={() => setCameraConfig({ isOpen: true, field: doc.field })} disabled={uploadingDoc === doc.field} className={`w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 ${riderData.documents[doc.field] ? 'bg-black text-[#FFB703]' : 'bg-white border border-slate-200 text-slate-600 hover:border-black hover:text-black'}`}>
+                    {uploadingDoc === doc.field ? <Loader2 size={16} className="animate-spin"/> : riderData.documents[doc.field] ? <CheckCircle2 size={16}/> : <Camera size={16}/>}
+                    <span>{riderData.documents[doc.field] ? 'Uploaded' : 'Upload / Capture'}</span>
                   </button>
                 </div>
               ))}
@@ -350,14 +354,14 @@ export default function SignupScreen({ role, onLoginSuccess }) {
             <div className="pt-2">
               <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Bank Details</label>
               <div className="grid grid-cols-2 gap-3">
-                <input required type="text" placeholder="Account Number" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none font-bold text-slate-900 transition-all" value={raiderData.bankDetails.accountNumber} onChange={e => setRaiderData({...raiderData, bankDetails: {...raiderData.bankDetails, accountNumber: e.target.value}})} />
-                <input required type="text" placeholder="IFSC Code" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none font-bold text-slate-900 transition-all" value={raiderData.bankDetails.ifscCode} onChange={e => setRaiderData({...raiderData, bankDetails: {...raiderData.bankDetails, ifscCode: e.target.value}})} />
+                <input required type="text" placeholder="Account Number" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none font-bold text-slate-900 transition-all" value={riderData.bankDetails.accountNumber} onChange={e => setRiderData({...riderData, bankDetails: {...riderData.bankDetails, accountNumber: e.target.value}})} />
+                <input required type="text" placeholder="IFSC Code" className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 outline-none font-bold text-slate-900 transition-all" value={riderData.bankDetails.ifscCode} onChange={e => setRiderData({...riderData, bankDetails: {...riderData.bankDetails, ifscCode: e.target.value}})} />
               </div>
             </div>
 
             <div className="flex gap-3 pt-6 mt-8">
               <button type="button" onClick={() => setStep('vehicle')} className="w-1/3 bg-slate-100 border border-slate-200 text-slate-600 font-bold py-4 rounded-xl hover:bg-slate-200 active:scale-95 transition-all">Back</button>
-              <button type="submit" disabled={loading || !raiderData.documents.drivingLicenseUrl || !raiderData.documents.rcUrl || !raiderData.documents.aadhaarUrl || !raiderData.documents.panUrl || !raiderData.documents.vehiclePicUrl || !raiderData.documents.profileImageUrl} className="w-2/3 bg-black text-[#FFB703] font-black py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-lg">
+              <button type="submit" disabled={loading || !riderData.documents.drivingLicenseUrl || !riderData.documents.rcUrl || !riderData.documents.aadhaarUrl || !riderData.documents.panUrl || !riderData.documents.vehiclePicUrl || !riderData.documents.profileImageUrl} className="w-2/3 bg-black text-[#FFB703] font-black py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-lg">
                 {loading ? <><Loader2 size={20} className="animate-spin"/> Submitting...</> : 'Submit'} {!loading && <ArrowRight size={20}/>}
               </button>
             </div>

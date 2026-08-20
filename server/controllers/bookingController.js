@@ -67,9 +67,14 @@ exports.createBooking = async (req, res) => {
       }
     } else {
       // Hardcoded fallback if DB is empty
-      if (actualWeight < 15) vehicleType = 'Bike';
-      else if (actualWeight < 500) vehicleType = 'Auto/Three-Wheeler';
-      else if (actualWeight < 2000) vehicleType = 'Mini Truck';
+      if (actualWeight <= 20) vehicleType = 'Scooter';
+      else if (actualWeight <= 90) vehicleType = 'Mini 3W';
+      else if (actualWeight <= 500) vehicleType = '3 Wheeler';
+      else if (actualWeight <= 750) vehicleType = 'Tata Ace';
+      else if (actualWeight <= 1200) vehicleType = 'Pickup 8ft';
+      else if (actualWeight <= 1700) vehicleType = 'Pickup 9ft';
+      else if (actualWeight <= 3500) vehicleType = '14ft';
+      else vehicleType = '17ft';
     }
 
     // Hub Assignment (Mock: Pick first available hubs for source/destination if Intercity)
@@ -208,9 +213,9 @@ exports.getBookingDetails = async (req, res) => {
     
     // Check if it's a tracking ID (ZYP... or ZGO...) or an ObjectId
     if (id.startsWith('ZYP') || id.startsWith('ZGO')) {
-      booking = await Booking.findOne({ trackingId: id }).populate('currentRider', 'name phone raiderDetails');
+      booking = await Booking.findOne({ trackingId: id }).populate('currentRider', 'name phone riderDetails');
     } else {
-      booking = await Booking.findById(id).populate('currentRider', 'name phone raiderDetails');
+      booking = await Booking.findById(id).populate('currentRider', 'name phone riderDetails');
     }
     
     if (!booking) {

@@ -11,9 +11,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/zypergo')
     if (record.bookingId) {
       const booking = await Booking.findById(record.bookingId);
       if (booking) {
-        let dropOffRaider = null;
-        if (booking.assignedRaiders && booking.assignedRaiders.length > 0) {
-          dropOffRaider = booking.assignedRaiders[booking.assignedRaiders.length - 1].raiderId;
+        let dropOffRider = null;
+        if (booking.assignedRiders && booking.assignedRiders.length > 0) {
+          dropOffRider = booking.assignedRiders[booking.assignedRiders.length - 1].riderId;
         }
 
         record.customerDetails = {
@@ -24,8 +24,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/zypergo')
           address: booking.dropLocation?.address,
           pincode: booking.dropLocation?.pincode
         };
-        if (!record.actionBy && dropOffRaider) {
-          record.actionBy = dropOffRaider;
+        if (!record.actionBy && dropOffRider) {
+          record.actionBy = dropOffRider;
         }
         await record.save();
         count++;

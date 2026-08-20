@@ -16,7 +16,7 @@ export default function HamaliDashboard() {
     setTimeout(() => {
       setActiveTask({
         manifestId: scanId,
-        vehicle: 'TS09 EA 1234 (Mini Truck)',
+        vehicle: 'TS09 EA 1234 (Tata Ace)',
         items: 45,
         startTime: Date.now()
       });

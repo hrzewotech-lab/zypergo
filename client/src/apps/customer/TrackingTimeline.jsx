@@ -59,6 +59,10 @@ export default function TrackingTimeline() {
   if (!trackingId) {
     return (
       <div className="bg-slate-50 min-h-full font-sans pb-24 p-6 animate-in fade-in duration-300">
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-200 pb-4">
+          <img src="/images/logo.png" alt="ZyperGo" className="h-6 w-auto object-contain" />
+          <span className="font-black text-[#006D77] tracking-tight text-lg">ZyperGo</span>
+        </div>
         <h1 className="text-2xl font-black text-slate-900 mb-6">Track Orders</h1>
         {activeShipments.length === 0 ? (
           <div className="bg-white rounded-3xl p-8 text-center shadow-sm border border-slate-100">
@@ -137,6 +141,10 @@ export default function TrackingTimeline() {
             <button onClick={() => navigate(-1)} className="pointer-events-auto w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-md text-slate-700 hover:scale-105 transition-transform active:scale-95">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
+            <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 pointer-events-auto">
+              <img src="/images/logo.png" alt="ZyperGo" className="h-5 w-auto object-contain" />
+              <span className="font-black text-[#006D77] tracking-tight text-sm">ZyperGo</span>
+            </div>
             <button onClick={handleShare} className="pointer-events-auto w-10 h-10 bg-[#006D77]/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-md text-white hover:scale-105 transition-transform active:scale-95">
               <Share2 size={18} />
             </button>
@@ -166,22 +174,22 @@ export default function TrackingTimeline() {
           </div>
         </div>
 
-        {/* Raider Details (If Assigned) */}
+        {/* Rider Details (If Assigned) */}
         {booking.currentRider && (
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
-                {booking.currentRider.raiderDetails?.profilePicture ? (
-                  <img src={booking.currentRider.raiderDetails.profilePicture} alt={booking.currentRider.name} className="w-full h-full object-cover" />
+                {booking.currentRider.riderDetails?.profilePicture ? (
+                  <img src={booking.currentRider.riderDetails.profilePicture} alt={booking.currentRider.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xl font-black text-slate-400">{booking.currentRider.name.charAt(0)}</span>
                 )}
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Assigned Raider</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Assigned Rider</p>
                 <p className="text-sm font-black text-slate-900">{booking.currentRider.name}</p>
                 <p className="text-xs font-medium text-slate-500 mt-0.5 flex items-center gap-1">
-                  <span className="text-amber-500">★</span> {booking.currentRider.raiderDetails?.performance?.rating || '4.9'}
+                  <span className="text-amber-500">★</span> {booking.currentRider.riderDetails?.performance?.rating || '4.9'}
                 </p>
               </div>
             </div>

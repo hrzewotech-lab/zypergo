@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import RaiderDashboard from './raider/RaiderDashboard';
-import RaiderProfile from './raider/RaiderProfile';
-import RaiderSettings from './raider/RaiderSettings';
-import RaiderEarnings from './raider/RaiderEarnings';
+import RiderDashboard from './rider/RiderDashboard';
+import RiderProfile from './rider/RiderProfile';
+import RiderSettings from './rider/RiderSettings';
+import RiderEarnings from './rider/RiderEarnings';
 import LoginScreen from '../components/Auth/LoginScreen';
 import SignupScreen from '../components/Auth/SignupScreen';
 import { ProtectedRoute, PublicRoute } from '../components/Auth/RouteGuards';
 import api from '../api';
-import RaiderWelcome from './raider/RaiderWelcome';
+import RiderWelcome from './rider/RiderWelcome';
 import { LayoutDashboard, Wallet, User as UserIcon, Settings, LogOut, Navigation } from 'lucide-react';
 
-function RaiderLayout({ children, onLogout, user }) {
+function RiderLayout({ children, onLogout, user }) {
   const navigate = useNavigate();
   const currentPath = window.location.pathname;
 
@@ -90,7 +90,7 @@ function RaiderLayout({ children, onLogout, user }) {
   );
 }
 
-export default function RaiderApp() {
+export default function RiderApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('zypergo_token'));
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -112,7 +112,7 @@ export default function RaiderApp() {
           if (userStr) {
              const u = JSON.parse(userStr);
              const userId = u.id || u._id;
-             const res = await api.get(`/raider/me?userId=${userId}`);
+             const res = await api.get(`/rider/me?userId=${userId}`);
              if (res.data.success) {
                 setUser(res.data.data);
                 localStorage.setItem('zypergo_user', JSON.stringify(res.data.data));
@@ -136,30 +136,30 @@ export default function RaiderApp() {
 
   if (loading) return <div className="flex h-screen items-center justify-center font-bold text-slate-500">Loading Profile...</div>;
 
-  const approvalStatus = user?.raiderDetails?.approvalStatus;
+  const approvalStatus = user?.riderDetails?.approvalStatus;
 
   return (
     <Routes>
       <Route path="/" element={
-        <PublicRoute requiredRole="Raider">
-          <RaiderWelcome />
+        <PublicRoute requiredRole="Rider">
+          <RiderWelcome />
         </PublicRoute>
       } />
       <Route path="/login" element={
-        <PublicRoute requiredRole="Raider">
-          <LoginScreen role="Raider" onLoginSuccess={handleLoginSuccess} />
+        <PublicRoute requiredRole="Rider">
+          <LoginScreen role="Rider" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
       <Route path="/signup" element={
-        <PublicRoute requiredRole="Raider">
-          <SignupScreen role="Raider" onLoginSuccess={handleLoginSuccess} />
+        <PublicRoute requiredRole="Rider">
+          <SignupScreen role="Rider" onLoginSuccess={handleLoginSuccess} />
         </PublicRoute>
       } />
       <Route path="/dashboard" element={
-        <ProtectedRoute requiredRole="Raider">
-          <RaiderLayout onLogout={handleClearAuth} user={user}>
+        <ProtectedRoute requiredRole="Rider">
+          <RiderLayout onLogout={handleClearAuth} user={user}>
             {approvalStatus === 'Approved' ? (
-              <RaiderDashboard user={user} onLogout={handleClearAuth} />
+              <RiderDashboard user={user} onLogout={handleClearAuth} />
             ) : (
             <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
               <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
@@ -174,28 +174,28 @@ export default function RaiderApp() {
               </div>
               </div>
             )}
-          </RaiderLayout>
+          </RiderLayout>
         </ProtectedRoute>
       } />
       <Route path="/profile" element={
-        <ProtectedRoute requiredRole="Raider">
-          <RaiderLayout onLogout={handleClearAuth} user={user}>
-            <RaiderProfile user={user} onLogout={handleClearAuth} />
-          </RaiderLayout>
+        <ProtectedRoute requiredRole="Rider">
+          <RiderLayout onLogout={handleClearAuth} user={user}>
+            <RiderProfile user={user} onLogout={handleClearAuth} />
+          </RiderLayout>
         </ProtectedRoute>
       } />
       <Route path="/earnings" element={
-        <ProtectedRoute requiredRole="Raider">
-          <RaiderLayout onLogout={handleClearAuth} user={user}>
-            <RaiderEarnings user={user} onLogout={handleClearAuth} />
-          </RaiderLayout>
+        <ProtectedRoute requiredRole="Rider">
+          <RiderLayout onLogout={handleClearAuth} user={user}>
+            <RiderEarnings user={user} onLogout={handleClearAuth} />
+          </RiderLayout>
         </ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <ProtectedRoute requiredRole="Raider">
-          <RaiderLayout onLogout={handleClearAuth} user={user}>
-            <RaiderSettings user={user} onLogout={handleClearAuth} />
-          </RaiderLayout>
+        <ProtectedRoute requiredRole="Rider">
+          <RiderLayout onLogout={handleClearAuth} user={user}>
+            <RiderSettings user={user} onLogout={handleClearAuth} />
+          </RiderLayout>
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />

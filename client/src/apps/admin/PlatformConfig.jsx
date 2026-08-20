@@ -8,9 +8,14 @@ export default function PlatformConfig() {
     broadcastTimeout: 5,
     proximityRadius: 10,
     vehicleThresholds: {
-      bike: { maxWeight: 20 },
-      auto: { maxWeight: 500 },
-      miniTruck: { maxWeight: 1000 }
+      scooter: { maxWeight: 20 },
+      mini3W: { maxWeight: 90 },
+      threeWheeler: { maxWeight: 500 },
+      tataAce: { maxWeight: 750 },
+      pickup8ft: { maxWeight: 1200 },
+      pickup9ft: { maxWeight: 1700 },
+      fourteenFt: { maxWeight: 3500 },
+      seventeenFt: { maxWeight: 6000 }
     },
     intercityCarriers: ['VRL Logistics', 'SRMT', 'APSRTC Cargo', 'KSRTC']
   });
@@ -86,10 +91,10 @@ export default function PlatformConfig() {
             </div>
 
             <div className="pt-4 border-t border-slate-100">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Raider Proximity Radius (km)</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Rider Proximity Radius (km)</label>
               <div className="flex items-center gap-4">
                 <input type="number" value={config.proximityRadius} onChange={e=>setConfig({...config, proximityRadius: e.target.value})} className="w-24 px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-[#006D77] outline-none"/>
-                <p className="text-xs text-slate-400">Radius to search for online Raiders during broadcast.</p>
+                <p className="text-xs text-slate-400">Radius to search for online Riders during broadcast.</p>
               </div>
             </div>
           </div>
@@ -100,28 +105,25 @@ export default function PlatformConfig() {
           <div className="bg-slate-50 border-b border-slate-200 p-4 font-bold text-slate-700 flex items-center gap-2">
             <Truck size={18} className="text-[#006D77]"/> Vehicle Thresholds (Max Weight)
           </div>
-          <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-100">
-              <span className="font-bold text-slate-700">2-Wheeler (Bike)</span>
-              <div className="flex items-center gap-2">
-                <input type="number" value={config.vehicleThresholds.bike.maxWeight} onChange={e=>setConfig({...config, vehicleThresholds: {...config.vehicleThresholds, bike: {maxWeight: e.target.value}}})} className="w-20 px-2 py-1 text-right border border-slate-300 rounded"/>
-                <span className="text-sm font-bold text-slate-400">KG</span>
+          <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+            {Object.entries({
+              scooter: 'Scooter',
+              mini3W: 'Mini 3W',
+              threeWheeler: '3 Wheeler',
+              tataAce: 'Tata Ace',
+              pickup8ft: 'Pickup 8ft',
+              pickup9ft: 'Pickup 9ft',
+              fourteenFt: '14ft',
+              seventeenFt: '17ft'
+            }).map(([key, label]) => (
+              <div key={key} className="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-100">
+                <span className="font-bold text-slate-700">{label}</span>
+                <div className="flex items-center gap-2">
+                  <input type="number" value={config.vehicleThresholds[key]?.maxWeight || ''} onChange={e=>setConfig({...config, vehicleThresholds: {...config.vehicleThresholds, [key]: {maxWeight: e.target.value}}})} className="w-20 px-2 py-1 text-right border border-slate-300 rounded"/>
+                  <span className="text-sm font-bold text-slate-400">KG</span>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-100">
-              <span className="font-bold text-slate-700">3-Wheeler (Auto)</span>
-              <div className="flex items-center gap-2">
-                <input type="number" value={config.vehicleThresholds.auto.maxWeight} onChange={e=>setConfig({...config, vehicleThresholds: {...config.vehicleThresholds, auto: {maxWeight: e.target.value}}})} className="w-20 px-2 py-1 text-right border border-slate-300 rounded"/>
-                <span className="text-sm font-bold text-slate-400">KG</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-100">
-              <span className="font-bold text-slate-700">Mini Truck (Tata Ace)</span>
-              <div className="flex items-center gap-2">
-                <input type="number" value={config.vehicleThresholds.miniTruck.maxWeight} onChange={e=>setConfig({...config, vehicleThresholds: {...config.vehicleThresholds, miniTruck: {maxWeight: e.target.value}}})} className="w-20 px-2 py-1 text-right border border-slate-300 rounded"/>
-                <span className="text-sm font-bold text-slate-400">KG</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 

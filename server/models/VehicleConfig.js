@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const vehicleConfigSchema = new mongoose.Schema({
   vehicleType: { 
     type: String, 
-    enum: ['Bike', 'Auto/Three-Wheeler', 'Mini Truck', 'Heavy Vehicle'],
+    enum: ['Scooter', 'Mini 3W', '3 Wheeler', 'Tata Ace', 'Pickup 8ft', 'Pickup 9ft', '14ft', '17ft'],
     required: true,
     unique: true
   },

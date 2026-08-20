@@ -41,13 +41,13 @@ exports.getPendingCOD = async (req, res) => {
       'payment.mode': 'Cash', 
       'payment.status': 'Completed', 
       'status': 'Delivered' 
-    }).populate('assignedRaiders.raiderId');
+    }).populate('assignedRiders.riderId');
 
     // Group by rider
     const pendingCod = {};
     codBookings.forEach(b => {
       // Find the active/delivery rider
-      const activeRider = b.assignedRaiders.find(r => r.status === 'Active')?.raiderId;
+      const activeRider = b.assignedRiders.find(r => r.status === 'Active')?.riderId;
       if (activeRider) {
         if (!pendingCod[activeRider._id]) {
           pendingCod[activeRider._id] = {
@@ -87,7 +87,7 @@ exports.logDeposit = async (req, res) => {
 
     // Zero out the pending deposit
     await User.findByIdAndUpdate(riderId, {
-      $inc: { 'raiderDetails.earnings.pendingDeposit': -amount }
+      $inc: { 'riderDetails.earnings.pendingDeposit': -amount }
     });
 
     res.status(201).json({ success: true, data: settlement });

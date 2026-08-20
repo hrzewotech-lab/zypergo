@@ -3,17 +3,17 @@ import { UserCheck, Clock, MapPin, Truck, CheckCircle2, XCircle, Search, FileTex
 import api from '../../api';
 
 export default function RiderManagement() {
-  const [raiders, setRaiders] = useState([]);
+  const [riders, setRiders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Pending');
   const [search, setSearch] = useState('');
-  const [selectedRaider, setSelectedRaider] = useState(null);
+  const [selectedRider, setSelectedRider] = useState(null);
 
-  const fetchRaiders = async () => {
+  const fetchRiders = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/raiders'); 
-      setRaiders(res.data.data);
+      const res = await api.get('/admin/riders'); 
+      setRiders(res.data.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -22,22 +22,22 @@ export default function RiderManagement() {
   };
 
   useEffect(() => {
-    fetchRaiders();
+    fetchRiders();
   }, []);
 
-  const approveRaider = async (id) => {
+  const approveRider = async (id) => {
     try {
-       await api.put(`/admin/raiders/${id}/approve`);
-       setRaiders(raiders.map(r => r._id === id ? { ...r, raiderDetails: { ...r.raiderDetails, approvalStatus: 'Approved' } } : r));
-       if (selectedRaider && selectedRaider._id === id) {
-         setSelectedRaider(null);
+       await api.put(`/admin/riders/${id}/approve`);
+       setRiders(riders.map(r => r._id === id ? { ...r, riderDetails: { ...r.riderDetails, approvalStatus: 'Approved' } } : r));
+       if (selectedRider && selectedRider._id === id) {
+         setSelectedRider(null);
        }
     } catch (err) {
        alert("Failed to approve: " + (err.response?.data?.error || err.message));
     }
   };
 
-  const filteredRaiders = raiders.filter(r => r.raiderDetails?.approvalStatus === activeTab && r.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredRiders = riders.filter(r => r.riderDetails?.approvalStatus === activeTab && r.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6 h-[calc(100vh-100px)] flex flex-col">
@@ -62,27 +62,27 @@ export default function RiderManagement() {
 
         <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredRaiders.length === 0 ? (
+            {filteredRiders.length === 0 ? (
                <div className="col-span-2 text-center py-12 text-slate-500 font-bold">No riders found in this category.</div>
             ) : (
-               filteredRaiders.map(rider => (
-                 <div key={rider._id} onClick={() => setSelectedRaider(rider)} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between cursor-pointer hover:border-slate-400 hover:shadow-md transition-all group">
+               filteredRiders.map(rider => (
+                 <div key={rider._id} onClick={() => setSelectedRider(rider)} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between cursor-pointer hover:border-slate-400 hover:shadow-md transition-all group">
                    <div className="flex justify-between items-start mb-4">
                      <div className="flex gap-3">
                        <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 text-xl">{rider.name.charAt(0)}</div>
                        <div>
                          <h3 className="font-bold text-slate-900">{rider.name}</h3>
-                         <p className="text-xs text-slate-500 flex items-center gap-1"><Truck size={12}/> {rider.raiderDetails?.vehicleType} ({rider.raiderDetails?.roleFlexibility})</p>
+                         <p className="text-xs text-slate-500 flex items-center gap-1"><Truck size={12}/> {rider.riderDetails?.vehicleType} ({rider.riderDetails?.roleFlexibility})</p>
                        </div>
                      </div>
-                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${activeTab === 'Pending' ? 'bg-amber-100 text-amber-700' : rider.raiderDetails?.isOnline ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                        {activeTab === 'Pending' ? 'Awaiting Review' : rider.raiderDetails?.isOnline ? 'Online' : 'Offline'}
+                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${activeTab === 'Pending' ? 'bg-amber-100 text-amber-700' : rider.riderDetails?.isOnline ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {activeTab === 'Pending' ? 'Awaiting Review' : rider.riderDetails?.isOnline ? 'Online' : 'Offline'}
                      </span>
                    </div>
                    
                    {activeTab === 'Pending' ? (
                      <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
-                       <button onClick={(e) => { e.stopPropagation(); approveRaider(rider._id); }} className="flex-1 bg-black hover:bg-slate-900 text-[#FFB703] font-black uppercase tracking-wider text-sm py-2 rounded-lg transition flex items-center justify-center gap-2">
+                       <button onClick={(e) => { e.stopPropagation(); approveRider(rider._id); }} className="flex-1 bg-black hover:bg-slate-900 text-[#FFB703] font-black uppercase tracking-wider text-sm py-2 rounded-lg transition flex items-center justify-center gap-2">
                          <CheckCircle2 size={16}/> Approve
                        </button>
                      </div>
@@ -90,7 +90,7 @@ export default function RiderManagement() {
                      <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[10px] uppercase font-bold text-slate-400">Total Earnings</p>
-                          <p className="font-bold text-slate-900">${rider.raiderDetails?.earnings?.totalEarnings || 0}</p>
+                          <p className="font-bold text-slate-900">${rider.riderDetails?.earnings?.totalEarnings || 0}</p>
                         </div>
                         <div>
                           <p className="text-[10px] uppercase font-bold text-slate-400">Punctuality</p>
@@ -105,13 +105,13 @@ export default function RiderManagement() {
         </div>
       </div>
 
-      {/* Raider Details Modal - A4 Form Style */}
-      {selectedRaider && (
+      {/* Rider Details Modal - A4 Form Style */}
+      {selectedRider && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           
           <div className="bg-white w-full max-w-3xl my-auto rounded-none sm:rounded-lg shadow-2xl flex flex-col relative animate-in zoom-in-95 duration-200">
             
-            <button onClick={() => setSelectedRaider(null)} className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors z-10 shadow-sm border border-slate-200">
+            <button onClick={() => setSelectedRider(null)} className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors z-10 shadow-sm border border-slate-200">
               <X size={20} />
             </button>
 
@@ -125,15 +125,15 @@ export default function RiderManagement() {
                  </div>
                  <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-widest text-slate-900">Partner Registration Form</h1>
                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-2">ZyperGo Logistics Official Record</p>
-                 <p className="text-xs font-bold text-slate-400 mt-1">ID: {selectedRaider._id.toUpperCase()}</p>
+                 <p className="text-xs font-bold text-slate-400 mt-1">ID: {selectedRider._id.toUpperCase()}</p>
               </div>
 
               {/* Top Section: Photo and Personal Details */}
               <div className="flex flex-col sm:flex-row gap-8 mb-10">
                  {/* Passport Photo Box */}
                  <div className="w-32 h-40 border-4 border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 relative">
-                   {selectedRaider.raiderDetails?.documents?.profileImageUrl ? (
-                     <img src={selectedRaider.raiderDetails.documents.profileImageUrl} alt="Applicant" className="w-full h-full object-cover" />
+                   {selectedRider.riderDetails?.documents?.profileImageUrl ? (
+                     <img src={selectedRider.riderDetails.documents.profileImageUrl} alt="Applicant" className="w-full h-full object-cover" />
                    ) : (
                      <span className="text-xs text-slate-400 uppercase font-bold text-center px-2">Affix Photo Here</span>
                    )}
@@ -143,19 +143,19 @@ export default function RiderManagement() {
                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div className="border-b border-dashed border-slate-300 pb-1">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</span>
-                      <p className="text-lg font-bold uppercase">{selectedRaider.name}</p>
+                      <p className="text-lg font-bold uppercase">{selectedRider.name}</p>
                     </div>
                     <div className="border-b border-dashed border-slate-300 pb-1">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number</span>
-                      <p className="text-lg font-bold font-sans">{selectedRaider.phone}</p>
+                      <p className="text-lg font-bold font-sans">{selectedRider.phone}</p>
                     </div>
                     <div className="border-b border-dashed border-slate-300 pb-1 col-span-1 sm:col-span-2">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</span>
-                      <p className="text-base font-bold font-sans">{selectedRaider.email}</p>
+                      <p className="text-base font-bold font-sans">{selectedRider.email}</p>
                     </div>
                     <div className="border-b border-dashed border-slate-300 pb-1 col-span-1 sm:col-span-2">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Residential Address</span>
-                      <p className="text-base font-bold">{selectedRaider.raiderDetails?.address || 'Not Provided'}</p>
+                      <p className="text-base font-bold">{selectedRider.riderDetails?.address || 'Not Provided'}</p>
                     </div>
                  </div>
               </div>
@@ -168,19 +168,19 @@ export default function RiderManagement() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div className="border-b border-dashed border-slate-300 pb-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</span>
-                    <p className="text-sm font-bold uppercase">{selectedRaider.raiderDetails?.vehicleType}</p>
+                    <p className="text-sm font-bold uppercase">{selectedRider.riderDetails?.vehicleType}</p>
                   </div>
                   <div className="border-b border-dashed border-slate-300 pb-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Make & Model</span>
-                    <p className="text-sm font-bold uppercase">{selectedRaider.raiderDetails?.vehicleMake} {selectedRaider.raiderDetails?.vehicleModel}</p>
+                    <p className="text-sm font-bold uppercase">{selectedRider.riderDetails?.vehicleMake} {selectedRider.riderDetails?.vehicleModel}</p>
                   </div>
                   <div className="border-b border-dashed border-slate-300 pb-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Registration No.</span>
-                    <p className="text-sm font-bold uppercase">{selectedRaider.raiderDetails?.vehicleRegistration}</p>
+                    <p className="text-sm font-bold uppercase">{selectedRider.riderDetails?.vehicleRegistration}</p>
                   </div>
                   <div className="border-b border-dashed border-slate-300 pb-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">RC Number</span>
-                    <p className="text-sm font-bold uppercase font-sans">{selectedRaider.raiderDetails?.rcNumber}</p>
+                    <p className="text-sm font-bold uppercase font-sans">{selectedRider.riderDetails?.rcNumber}</p>
                   </div>
                 </div>
               </div>
@@ -193,11 +193,11 @@ export default function RiderManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="border-b border-dashed border-slate-300 pb-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Number</span>
-                    <p className="text-sm font-bold font-sans tracking-wider">{selectedRaider.raiderDetails?.bankDetails?.accountNumber || 'Not Provided'}</p>
+                    <p className="text-sm font-bold font-sans tracking-wider">{selectedRider.riderDetails?.bankDetails?.accountNumber || 'Not Provided'}</p>
                   </div>
                   <div className="border-b border-dashed border-slate-300 pb-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IFSC Code</span>
-                    <p className="text-sm font-bold font-sans uppercase tracking-wider">{selectedRaider.raiderDetails?.bankDetails?.ifscCode || 'Not Provided'}</p>
+                    <p className="text-sm font-bold font-sans uppercase tracking-wider">{selectedRider.riderDetails?.bankDetails?.ifscCode || 'Not Provided'}</p>
                   </div>
                 </div>
               </div>
@@ -209,11 +209,11 @@ export default function RiderManagement() {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
-                    { label: 'Aadhaar Card', url: selectedRaider.raiderDetails?.documents?.aadhaarUrl },
-                    { label: 'PAN Card', url: selectedRaider.raiderDetails?.documents?.panUrl },
-                    { label: 'Driving License', url: selectedRaider.raiderDetails?.documents?.drivingLicenseUrl },
-                    { label: 'RC Book', url: selectedRaider.raiderDetails?.documents?.rcUrl },
-                    { label: 'Vehicle Photo', url: selectedRaider.raiderDetails?.documents?.vehiclePicUrl }
+                    { label: 'Aadhaar Card', url: selectedRider.riderDetails?.documents?.aadhaarUrl },
+                    { label: 'PAN Card', url: selectedRider.riderDetails?.documents?.panUrl },
+                    { label: 'Driving License', url: selectedRider.riderDetails?.documents?.drivingLicenseUrl },
+                    { label: 'RC Book', url: selectedRider.riderDetails?.documents?.rcUrl },
+                    { label: 'Vehicle Photo', url: selectedRider.riderDetails?.documents?.vehiclePicUrl }
                   ].map((doc, idx) => (
                     <div key={idx} className="border border-slate-300 p-2 relative group flex flex-col">
                       <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 border-b border-slate-200 pb-1 block text-center bg-slate-50">{doc.label}</span>
@@ -241,8 +241,8 @@ export default function RiderManagement() {
                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Admin Signature</p>
                  </div>
                  
-                 {selectedRaider.raiderDetails?.approvalStatus === 'Pending' && (
-                   <button onClick={() => approveRaider(selectedRaider._id)} className="px-8 py-4 bg-black text-[#FFB703] font-black uppercase tracking-widest text-sm shadow-xl active:scale-95 transition-all flex items-center gap-3 rounded-xl font-sans">
+                 {selectedRider.riderDetails?.approvalStatus === 'Pending' && (
+                   <button onClick={() => approveRider(selectedRider._id)} className="px-8 py-4 bg-black text-[#FFB703] font-black uppercase tracking-widest text-sm shadow-xl active:scale-95 transition-all flex items-center gap-3 rounded-xl font-sans">
                      <CheckCircle2 size={20} /> Authorize & Approve
                    </button>
                  )}

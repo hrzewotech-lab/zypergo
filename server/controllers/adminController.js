@@ -104,7 +104,7 @@ exports.getAllBookings = async (req, res) => {
       .populate('metadata.sourceHub', 'name')
       .populate('metadata.assignedPartner', 'companyName')
       .populate('sender', 'name phone')
-      .populate('assignedRaiders.raiderId', 'name phone')
+      .populate('assignedRiders.riderId', 'name phone')
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: bookings });
   } catch (error) {
@@ -133,10 +133,10 @@ exports.updateBookingAdmin = async (req, res) => {
   }
 };
 
-exports.assignRaider = async (req, res) => {
+exports.assignRider = async (req, res) => {
   try {
     const { id } = req.params;
-    const { raiderId } = req.body;
+    const { riderId } = req.body;
     const booking = await Booking.findOneAndUpdate(
       { 
         _id: id, 
@@ -144,12 +144,12 @@ exports.assignRaider = async (req, res) => {
       },
       {
         status: 'Rider Assigned',
-        currentRider: raiderId,
+        currentRider: riderId,
         $push: {
-          assignedRaiders: { raiderId, status: 'Active' },
+          assignedRiders: { riderId, status: 'Active' },
           trackingHistory: {
             status: 'Rider Assigned',
-            description: 'A Raider has been assigned.',
+            description: 'A Rider has been assigned.',
             scannedBy: req.user?._id
           }
         }
@@ -161,7 +161,7 @@ exports.assignRaider = async (req, res) => {
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to assign raider' });
+    res.status(500).json({ success: false, error: 'Failed to assign rider' });
   }
 };
 
@@ -191,12 +191,12 @@ exports.logTransit = async (req, res) => {
   }
 };
 
-exports.getAvailableRaiders = async (req, res) => {
+exports.getAvailableRiders = async (req, res) => {
   try {
-    const raiders = await User.find({ role: 'Raider', 'raiderDetails.isOnline': true }).select('name phone raiderDetails');
-    res.status(200).json({ success: true, data: raiders });
+    const riders = await User.find({ role: 'Rider', 'riderDetails.isOnline': true }).select('name phone riderDetails');
+    res.status(200).json({ success: true, data: riders });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to fetch raiders' });
+    res.status(500).json({ success: false, error: 'Failed to fetch riders' });
   }
 };
 
@@ -262,15 +262,15 @@ exports.createUser = async (req, res) => {
   }
 };
 
-exports.approveRaider = async (req, res) => {
+exports.approveRider = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
-    if (!user || user.role !== 'Raider') {
-      return res.status(404).json({ success: false, error: 'Raider not found' });
+    if (!user || user.role !== 'Rider') {
+      return res.status(404).json({ success: false, error: 'Rider not found' });
     }
 
-    user.raiderDetails.approvalStatus = 'Approved';
+    user.riderDetails.approvalStatus = 'Approved';
     
     // Generate secure random 8 character password
     const generatedPassword = Math.random().toString(36).slice(-8);
@@ -281,32 +281,32 @@ exports.approveRaider = async (req, res) => {
     if (user.email) {
        const htmlBody = NotificationService.generateEmailTemplate({
          title: 'You are Approved! 🎉',
-         message: `Hello ${user.name},<br><br>Your raider application has been <b>approved</b> by the admin team! You can now log in to the Raider App using your email address and the generated password below.`,
+         message: `Hello ${user.name},<br><br>Your rider application has been <b>approved</b> by the admin team! You can now log in to the Rider App using your email address and the generated password below.`,
          otpCode: generatedPassword,
-         buttonText: 'Login to Raider App',
-         buttonUrl: 'http://raider.localhost:5173',
+         buttonText: 'Login to Rider App',
+         buttonUrl: 'http://rider.localhost:5173',
          footerNote: 'Please change this password immediately after your first login.'
        });
 
        await NotificationService.sendEmail(
          user.email,
-         'You are approved! Welcome to ZyperGo Raiders',
+         'You are approved! Welcome to ZyperGo Riders',
          htmlBody
        );
     }
 
     res.status(200).json({ success: true, data: user });
   } catch (error) {
-    console.error('Error approving raider:', error);
-    res.status(500).json({ success: false, error: 'Failed to approve raider' });
+    console.error('Error approving rider:', error);
+    res.status(500).json({ success: false, error: 'Failed to approve rider' });
   }
 };
 
-exports.getRaiders = async (req, res) => {
+exports.getRiders = async (req, res) => {
   try {
-    const raiders = await User.find({ role: 'Raider' }).select('-password');
-    res.status(200).json({ success: true, data: raiders });
+    const riders = await User.find({ role: 'Rider' }).select('-password');
+    res.status(200).json({ success: true, data: riders });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to fetch raiders' });
+    res.status(500).json({ success: false, error: 'Failed to fetch riders' });
   }
 };

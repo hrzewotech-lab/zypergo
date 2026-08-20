@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, Truck, FileText, CheckCircle2, AlertTriangle, ArrowRight, Camera, Clock, Loader2 } from 'lucide-react';
 import api from '../../api';
 
-export default function RaiderOnboarding({ user, onComplete }) {
+export default function RiderOnboarding({ user, onComplete }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(null);
@@ -21,7 +21,7 @@ export default function RaiderOnboarding({ user, onComplete }) {
   });
 
   // If the user's status is already Pending, show the waiting screen
-  if (user?.raiderDetails?.approvalStatus === 'Pending') {
+  if (user?.riderDetails?.approvalStatus === 'Pending') {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
@@ -44,7 +44,7 @@ export default function RaiderOnboarding({ user, onComplete }) {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res = await api.post('/raider/onboard', {
+      const res = await api.post('/rider/onboard', {
         userId: user?._id || user?.id,
         ...formData
       });

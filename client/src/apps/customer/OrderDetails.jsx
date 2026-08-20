@@ -27,7 +27,7 @@ export default function OrderDetails() {
   if (!booking) return <div className="p-12 text-center text-slate-500 font-bold">No order information found.</div>;
 
   const isPending = !booking.status || booking.status === 'Pending' || booking.status === 'Booking Confirmed';
-  const hasRaider = !['Delivered', 'Cancelled', 'Failed'].includes(booking.status) && !isPending;
+  const hasRider = !['Delivered', 'Cancelled', 'Failed'].includes(booking.status) && !isPending;
   const otp = booking.proofOfDelivery?.otp || booking.trackingId.replace(/\D/g, '').slice(-4) || '5921';
 
   return (
@@ -57,7 +57,7 @@ export default function OrderDetails() {
            </button>
         </div>
 
-        {/* Waiting for Raider */}
+        {/* Waiting for Rider */}
         {isPending && (
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden animate-in slide-in-from-bottom-4 flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-[#FFB703] mb-3 border-[4px] border-white shadow-sm ring-1 ring-amber-100">
@@ -67,27 +67,27 @@ export default function OrderDetails() {
                </div>
             </div>
             <h3 className="font-black text-slate-900 text-base mb-1">Looking for a Delivery Partner</h3>
-            <p className="text-xs font-bold text-slate-500">Please wait while we assign the nearest available raider to your pickup location.</p>
+            <p className="text-xs font-bold text-slate-500">Please wait while we assign the nearest available rider to your pickup location.</p>
           </div>
         )}
 
-        {/* Raider Details (Rapido Style) */}
-        {hasRaider && booking.currentRider && (
+        {/* Rider Details (Rapido Style) */}
+        {hasRider && booking.currentRider && (
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 relative overflow-hidden animate-in slide-in-from-bottom-4">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#006D77] to-[#FFB703]"></div>
             
             <div className="flex justify-between items-start mb-4">
               <div className="flex gap-3">
                 <div className="w-14 h-14 bg-slate-100 rounded-full border-2 border-white shadow-sm overflow-hidden shrink-0 mt-1">
-                   <img src={booking.currentRider?.raiderDetails?.documents?.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.trackingId}`} alt="Raider" className="w-full h-full object-cover" />
+                   <img src={booking.currentRider?.riderDetails?.documents?.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.trackingId}`} alt="Rider" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h3 className="font-black text-slate-900 leading-tight text-base">{booking.currentRider.name}</h3>
                   <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mt-0.5">
-                    <span className="text-[#FFB703]">★</span> {booking.currentRider.raiderDetails?.performance?.rating || '4.8'} ({booking.currentRider.raiderDetails?.performance?.completedJobs || '120+'} deliveries)
+                    <span className="text-[#FFB703]">★</span> {booking.currentRider.riderDetails?.performance?.rating || '4.8'} ({booking.currentRider.riderDetails?.performance?.completedJobs || '120+'} deliveries)
                   </div>
                   <p className="text-[10px] font-black text-slate-600 mt-1.5 bg-slate-100 px-2.5 py-1 rounded-md inline-block uppercase tracking-wider">
-                    {booking.currentRider.raiderDetails?.vehicleRegistration || 'ZYP REG'} • {booking.currentRider.raiderDetails?.vehicleType || 'Bike'}
+                    {booking.currentRider.riderDetails?.vehicleRegistration || 'ZYP REG'} • {booking.currentRider.riderDetails?.vehicleType || 'Bike'}
                   </p>
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default function OrderDetails() {
 
             <div className="flex gap-3 mt-4 pt-4 border-t border-slate-50">
                <a href={`tel:${booking.currentRider.phone}`} className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors active:scale-95 shadow-sm">
-                 <Phone size={16} /> Call Raider
+                 <Phone size={16} /> Call Rider
                </a>
                <a href={`https://wa.me/91${booking.currentRider.phone}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#006D77] text-white py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-[#005a62] transition-colors shadow-md shadow-[#006D77]/20 active:scale-95">
                  <MessageCircle size={16} /> Message

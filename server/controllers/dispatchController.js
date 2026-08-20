@@ -37,7 +37,7 @@ exports.getPendingPickups = async (req, res) => {
   try {
     const bookings = await Booking.find({
       status: { $in: ['Booking Confirmed', 'Pending'] },
-      'assignedRaiders': { $size: 0 }
+      'assignedRiders': { $size: 0 }
     })
       .select('trackingId status pickupLocation dropLocation receiver packageDetails scheduling preferences metadata createdAt')
       .sort({ 'scheduling.date': 1, createdAt: 1 })
@@ -80,22 +80,22 @@ exports.getAvailableRiders = async (req, res) => {
     else if (mode === 'delivery') roleFilter.push('Delivery Only');
 
     const riders = await User.find({
-      role: 'Raider',
+      role: 'Rider',
       isActive: true,
-      'raiderDetails.isOnline': true,
-      'raiderDetails.isOnShift': true,
-      'raiderDetails.approvalStatus': 'Approved',
-      'raiderDetails.roleFlexibility': { $in: roleFilter }
+      'riderDetails.isOnline': true,
+      'riderDetails.isOnShift': true,
+      'riderDetails.approvalStatus': 'Approved',
+      'riderDetails.roleFlexibility': { $in: roleFilter }
     })
-      .select('name raiderDetails.vehicleType raiderDetails.currentLocation raiderDetails.performance raiderDetails.earnings raiderDetails.isOnBreak raiderDetails.assignedHub')
+      .select('name riderDetails.vehicleType riderDetails.currentLocation riderDetails.performance riderDetails.earnings riderDetails.isOnBreak riderDetails.assignedHub')
       .limit(50);
 
     // Count active tasks for each rider
     const riderIds = riders.map(r => r._id);
     const taskCounts = await Booking.aggregate([
-      { $unwind: '$assignedRaiders' },
-      { $match: { 'assignedRaiders.raiderId': { $in: riderIds }, 'assignedRaiders.status': 'Active' } },
-      { $group: { _id: '$assignedRaiders.raiderId', tasks: { $sum: 1 } } }
+      { $unwind: '$assignedRiders' },
+      { $match: { 'assignedRiders.riderId': { $in: riderIds }, 'assignedRiders.status': 'Active' } },
+      { $group: { _id: '$assignedRiders.riderId', tasks: { $sum: 1 } } }
     ]);
     const taskMap = {};
     taskCounts.forEach(t => { taskMap[t._id.toString()] = t.tasks; });
@@ -103,10 +103,10 @@ exports.getAvailableRiders = async (req, res) => {
     const enriched = riders.map(r => ({
       _id: r._id,
       name: r.name,
-      vehicleType: r.raiderDetails?.vehicleType,
-      currentLocation: r.raiderDetails?.currentLocation,
-      performance: r.raiderDetails?.performance,
-      isOnBreak: r.raiderDetails?.isOnBreak,
+      vehicleType: r.riderDetails?.vehicleType,
+      currentLocation: r.riderDetails?.currentLocation,
+      performance: r.riderDetails?.performance,
+      isOnBreak: r.riderDetails?.isOnBreak,
       activeTasks: taskMap[r._id.toString()] || 0
     }));
 
@@ -132,21 +132,21 @@ exports.autoAssignPickup = async (req, res) => {
 
     // Get eligible riders
     const riders = await User.find({
-      role: 'Raider',
+      role: 'Rider',
       isActive: true,
-      'raiderDetails.isOnline': true,
-      'raiderDetails.isOnShift': true,
-      'raiderDetails.isOnBreak': false,
-      'raiderDetails.approvalStatus': 'Approved',
-      'raiderDetails.roleFlexibility': { $in: ['Both', 'Pickup Only'] }
-    }).select('name raiderDetails');
+      'riderDetails.isOnline': true,
+      'riderDetails.isOnShift': true,
+      'riderDetails.isOnBreak': false,
+      'riderDetails.approvalStatus': 'Approved',
+      'riderDetails.roleFlexibility': { $in: ['Both', 'Pickup Only'] }
+    }).select('name riderDetails');
 
     // Get task counts
     const riderIds = riders.map(r => r._id);
     const taskCounts = await Booking.aggregate([
-      { $unwind: '$assignedRaiders' },
-      { $match: { 'assignedRaiders.raiderId': { $in: riderIds }, 'assignedRaiders.status': 'Active' } },
-      { $group: { _id: '$assignedRaiders.raiderId', tasks: { $sum: 1 } } }
+      { $unwind: '$assignedRiders' },
+      { $match: { 'assignedRiders.riderId': { $in: riderIds }, 'assignedRiders.status': 'Active' } },
+      { $group: { _id: '$assignedRiders.riderId', tasks: { $sum: 1 } } }
     ]);
     const taskMap = {};
     taskCounts.forEach(t => { taskMap[t._id.toString()] = t.tasks; });
@@ -156,7 +156,7 @@ exports.autoAssignPickup = async (req, res) => {
     const parcelWeight = booking.packageDetails?.weight || 1;
 
     // Vehicle capacity weights (kg)
-    const vehicleCapacity = { 'Bike': 15, 'Auto': 80, 'Mini Truck': 500, 'Heavy Vehicle': 3000 };
+    const vehicleCapacity = { 'Scooter': 20, 'Mini 3W': 90, '3 Wheeler': 500, 'Tata Ace': 750, 'Pickup 8ft': 1200, 'Pickup 9ft': 1700, '14ft': 3500, '17ft': 6000 };
 
     // Score each rider
     const scored = riders
@@ -164,19 +164,19 @@ exports.autoAssignPickup = async (req, res) => {
         const activeTasks = taskMap[r._id.toString()] || 0;
         if (activeTasks >= maxTasksPerRider) return null; // overloaded
 
-        const rLat = r.raiderDetails?.currentLocation?.lat;
-        const rLng = r.raiderDetails?.currentLocation?.lng;
+        const rLat = r.riderDetails?.currentLocation?.lat;
+        const rLng = r.riderDetails?.currentLocation?.lng;
         const distKm = haversineKm(rLat, rLng, pickupLat, pickupLng);
         if (distKm > maxKmFromPickup) return null; // too far
 
-        const vCap = vehicleCapacity[r.raiderDetails?.vehicleType] || 15;
+        const vCap = vehicleCapacity[r.riderDetails?.vehicleType] || 15;
         if (parcelWeight > vCap) return null; // can't carry
 
         // Normalised scores (higher is better)
         const distScore = 100 - normalise(distKm, 0, maxKmFromPickup); // closer = higher
         const loadScore = 100 - normalise(activeTasks, 0, maxTasksPerRider); // fewer tasks = higher
         const vehicleScore = normalise(vCap, 15, 3000);                   // bigger = higher
-        const perfScore = r.raiderDetails?.performance?.punctualityScore || 80;
+        const perfScore = r.riderDetails?.performance?.punctualityScore || 80;
 
         const w = pickupWeights;
         const composite =
@@ -186,7 +186,7 @@ exports.autoAssignPickup = async (req, res) => {
            perfScore * w.performanceScore) / 100;
 
         return {
-          rider: { _id: r._id, name: r.name, vehicleType: r.raiderDetails?.vehicleType, activeTasks, distKm: distKm.toFixed(1) },
+          rider: { _id: r._id, name: r.name, vehicleType: r.riderDetails?.vehicleType, activeTasks, distKm: distKm.toFixed(1) },
           distKm,
           score: composite
         };
@@ -204,7 +204,7 @@ exports.autoAssignPickup = async (req, res) => {
     await Booking.findByIdAndUpdate(bookingId, {
       status: 'Rider Assigned',
       $push: {
-        assignedRaiders: { raiderId: best.rider._id, status: 'Active' },
+        assignedRiders: { riderId: best.rider._id, status: 'Active' },
         trackingHistory: {
           status: 'Rider Assigned',
           description: `Auto-assigned to rider ${best.rider.name} (${best.rider.vehicleType}), ${best.distKm} km away. Score: ${best.score.toFixed(1)}`
@@ -240,20 +240,20 @@ exports.autoAssignLastMile = async (req, res) => {
 
     // Get eligible delivery riders
     const riders = await User.find({
-      role: 'Raider',
+      role: 'Rider',
       isActive: true,
-      'raiderDetails.isOnline': true,
-      'raiderDetails.isOnShift': true,
-      'raiderDetails.isOnBreak': false,
-      'raiderDetails.approvalStatus': 'Approved',
-      'raiderDetails.roleFlexibility': { $in: ['Both', 'Delivery Only'] }
-    }).select('name raiderDetails');
+      'riderDetails.isOnline': true,
+      'riderDetails.isOnShift': true,
+      'riderDetails.isOnBreak': false,
+      'riderDetails.approvalStatus': 'Approved',
+      'riderDetails.roleFlexibility': { $in: ['Both', 'Delivery Only'] }
+    }).select('name riderDetails');
 
     const riderIds = riders.map(r => r._id);
     const taskCounts = await Booking.aggregate([
-      { $unwind: '$assignedRaiders' },
-      { $match: { 'assignedRaiders.raiderId': { $in: riderIds }, 'assignedRaiders.status': 'Active' } },
-      { $group: { _id: '$assignedRaiders.raiderId', tasks: { $sum: 1 } } }
+      { $unwind: '$assignedRiders' },
+      { $match: { 'assignedRiders.riderId': { $in: riderIds }, 'assignedRiders.status': 'Active' } },
+      { $group: { _id: '$assignedRiders.riderId', tasks: { $sum: 1 } } }
     ]);
     const taskMap = {};
     taskCounts.forEach(t => { taskMap[t._id.toString()] = t.tasks; });
@@ -275,14 +275,14 @@ exports.autoAssignLastMile = async (req, res) => {
           if (activeTasks >= maxTasksPerRider) return null;
 
           const loadScore = 100 - normalise(activeTasks, 0, maxTasksPerRider);
-          const perfScore = r.raiderDetails?.performance?.punctualityScore || 80;
+          const perfScore = r.riderDetails?.performance?.punctualityScore || 80;
 
           const w = lastMileWeights;
           const composite =
             (loadScore * w.availabilityScore +
              perfScore * w.slaScore) / (w.availabilityScore + w.slaScore) * 100;
 
-          return { rider: { _id: r._id, name: r.name, vehicleType: r.raiderDetails?.vehicleType }, score: composite };
+          return { rider: { _id: r._id, name: r.name, vehicleType: r.riderDetails?.vehicleType }, score: composite };
         })
         .filter(Boolean)
         .sort((a, b) => b.score - a.score);
@@ -296,7 +296,7 @@ exports.autoAssignLastMile = async (req, res) => {
         {
           status: 'Out for Delivery',
           $push: {
-            assignedRaiders: { raiderId: best.rider._id, status: 'Active' },
+            assignedRiders: { riderId: best.rider._id, status: 'Active' },
             trackingHistory: {
               status: 'Out for Delivery',
               description: `Auto last-mile assigned to ${best.rider.name} (Cluster: ${cluster})`
@@ -326,13 +326,13 @@ exports.manualAssign = async (req, res) => {
     const { bookingId, riderId, notes } = req.body;
     if (!bookingId || !riderId) return res.status(400).json({ success: false, error: 'bookingId and riderId required.' });
 
-    const rider = await User.findById(riderId).select('name raiderDetails.vehicleType');
+    const rider = await User.findById(riderId).select('name riderDetails.vehicleType');
     if (!rider) return res.status(404).json({ success: false, error: 'Rider not found.' });
 
     const booking = await Booking.findByIdAndUpdate(bookingId, {
       status: 'Rider Assigned',
       $push: {
-        assignedRaiders: { raiderId: riderId, status: 'Active' },
+        assignedRiders: { riderId: riderId, status: 'Active' },
         trackingHistory: {
           status: 'Rider Assigned',
           scannedBy: req.user?.id,
@@ -517,7 +517,7 @@ exports.groupRoutes = async (req, res) => {
   try {
     const bookings = await Booking.find({
       status: { $in: ['Destination Hub Received', 'Sorted', 'Booking Confirmed'] },
-      'assignedRaiders': { $size: 0 }
+      'assignedRiders': { $size: 0 }
     }).select('trackingId dropLocation receiver packageDetails preferences');
 
     const clusters = {};
@@ -577,17 +577,17 @@ exports.broadcastToNearby = async (req, res) => {
 
     // Find all online riders
     const riders = await User.find({
-      role: 'Raider',
+      role: 'Rider',
       isActive: true,
-      'raiderDetails.isOnline': true,
-      'raiderDetails.isOnShift': true,
-      'raiderDetails.isOnBreak': false,
+      'riderDetails.isOnline': true,
+      'riderDetails.isOnShift': true,
+      'riderDetails.isOnBreak': false,
     });
 
     const nearbyRiders = [];
     riders.forEach(r => {
-      const rLat = r.raiderDetails?.currentLocation?.lat;
-      const rLng = r.raiderDetails?.currentLocation?.lng;
+      const rLat = r.riderDetails?.currentLocation?.lat;
+      const rLng = r.riderDetails?.currentLocation?.lng;
       if (rLat && rLng) {
         const dist = haversineKm(pickupLat, pickupLng, rLat, rLng);
         if (dist <= MAX_RADIUS) {
@@ -638,7 +638,7 @@ exports.acceptBooking = async (req, res) => {
         status: 'Rider Assigned',
         currentRider: riderId,
         $push: {
-          assignedRaiders: { raiderId: riderId, status: 'Active' },
+          assignedRiders: { riderId: riderId, status: 'Active' },
           trackingHistory: {
             status: 'Rider Assigned',
             description: `Booking accepted by rider ${riderId}.`

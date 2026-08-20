@@ -9,7 +9,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.sendOtp = async (req, res) => {
   try {
-    const { email, phone, role, name, password, raiderDetails } = req.body;
+    const { email, phone, role, name, password, riderDetails } = req.body;
     
     // We can allow either email or phone for login, but for signup we want both
     if (!email && !phone) return res.status(400).json({ success: false, error: 'Email or phone number is required' });
@@ -38,9 +38,9 @@ exports.sendOtp = async (req, res) => {
       user.password = password;
     }
 
-    if (raiderDetails && role === 'Raider') {
-      user.raiderDetails = {
-         ...raiderDetails,
+    if (riderDetails && role === 'Rider') {
+      user.riderDetails = {
+         ...riderDetails,
          approvalStatus: 'Pending',
          isOnline: false,
          isOnShift: false
@@ -110,8 +110,8 @@ exports.verifyOtp = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Account is suspended or inactive.' });
     }
 
-    if (user.role === 'Raider' && user.raiderDetails && user.raiderDetails.approvalStatus !== 'Approved') {
-      return res.status(403).json({ success: false, error: 'Raider account is pending admin approval.' });
+    if (user.role === 'Rider' && user.riderDetails && user.riderDetails.approvalStatus !== 'Approved') {
+      return res.status(403).json({ success: false, error: 'Rider account is pending admin approval.' });
     }
 
     // Special bypass for seed admin or mock
@@ -189,8 +189,8 @@ exports.loginWithPassword = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Account is suspended or inactive.' });
     }
 
-    if (user.role === 'Raider' && user.raiderDetails && user.raiderDetails.approvalStatus !== 'Approved') {
-      return res.status(403).json({ success: false, error: 'Raider account is pending admin approval.' });
+    if (user.role === 'Rider' && user.riderDetails && user.riderDetails.approvalStatus !== 'Approved') {
+      return res.status(403).json({ success: false, error: 'Rider account is pending admin approval.' });
     }
 
     if (!user.password) {
@@ -225,26 +225,26 @@ exports.loginWithPassword = async (req, res) => {
   }
 };
 
-exports.raiderApply = async (req, res) => {
+exports.riderApply = async (req, res) => {
   try {
-    const { name, email, phone, raiderDetails } = req.body;
+    const { name, email, phone, riderDetails } = req.body;
     
-    if (!name || !email || !phone || !raiderDetails) {
+    if (!name || !email || !phone || !riderDetails) {
       return res.status(400).json({ success: false, error: 'All fields are required' });
     }
 
-    let user = await User.findOne({ $or: [{ email }, { phone }], role: 'Raider' });
+    let user = await User.findOne({ $or: [{ email }, { phone }], role: 'Rider' });
     if (user) {
-      return res.status(400).json({ success: false, error: 'Raider account with this email/phone already exists' });
+      return res.status(400).json({ success: false, error: 'Rider account with this email/phone already exists' });
     }
 
     user = new User({
       name,
       email,
       phone,
-      role: 'Raider',
-      raiderDetails: {
-        ...raiderDetails,
+      role: 'Rider',
+      riderDetails: {
+        ...riderDetails,
         approvalStatus: 'Pending',
         isOnline: false,
         isOnShift: false
@@ -254,7 +254,7 @@ exports.raiderApply = async (req, res) => {
     await user.save();
     res.status(201).json({ success: true, message: 'Application submitted successfully. Waiting for admin approval.' });
   } catch (error) {
-    console.error('Raider apply error:', error);
+    console.error('Rider apply error:', error);
     res.status(500).json({ success: false, error: 'Failed to submit application' });
   }
 };

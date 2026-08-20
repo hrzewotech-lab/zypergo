@@ -38,8 +38,8 @@ app.use('/api/auth', authRoutes);
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
-const raiderRoutes = require('./routes/raiderRoutes');
-app.use('/api/raider', raiderRoutes);
+const riderRoutes = require('./routes/riderRoutes');
+app.use('/api/rider', riderRoutes);
 
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);

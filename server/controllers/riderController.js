@@ -10,13 +10,13 @@ exports.getAvailableJobs = async (req, res) => {
     
     if (userId) {
       const user = await User.findById(userId);
-      if (!user?.raiderDetails?.isOnline || !user?.raiderDetails?.isOnShift) {
+      if (!user?.riderDetails?.isOnline || !user?.riderDetails?.isOnShift) {
         return res.status(200).json({ success: true, data: [] });
       }
       
-      // Filter by the raider's specific vehicle type
-      if (user.raiderDetails?.vehicleType) {
-        query['metadata.vehicleType'] = user.raiderDetails.vehicleType;
+      // Filter by the rider's specific vehicle type
+      if (user.riderDetails?.vehicleType) {
+        query['metadata.vehicleType'] = user.riderDetails.vehicleType;
       }
     }
     
@@ -37,8 +37,8 @@ exports.updateLocation = async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, error: 'User ID is required' });
     
     await User.findByIdAndUpdate(userId, {
-      'raiderDetails.currentLocation': { lat, lng },
-      'raiderDetails.lastLocationUpdate': new Date()
+      'riderDetails.currentLocation': { lat, lng },
+      'riderDetails.lastLocationUpdate': new Date()
     });
 
     res.status(200).json({ success: true, message: 'Location updated' });
@@ -58,7 +58,7 @@ exports.acceptJob = async (req, res) => {
         $push: {
           trackingHistory: {
             status: 'Rider Assigned',
-            description: 'A Raider has accepted the job and is en route.'
+            description: 'A Rider has accepted the job and is en route.'
           }
         }
       },
@@ -89,7 +89,7 @@ exports.updateJobStatus = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    // Notify when Raider Arrives at Pickup
+    // Notify when Rider Arrives at Pickup
     if (status === 'Arrived at Pickup') {
       const expectedOtp = booking.proofOfDelivery?.otp || '1234';
       const customerPhone = booking.sender?.phone || booking.senderDetails?.phone || '9999999999';
@@ -97,7 +97,7 @@ exports.updateJobStatus = async (req, res) => {
       NotificationService.notifyPickupOTP(customerPhone, customerEmail, expectedOtp, booking.trackingId);
     }
 
-    // Generate and notify OTP when Raider is Out for Delivery
+    // Generate and notify OTP when Rider is Out for Delivery
     if (status === 'Out for Delivery') {
       const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
       if (!booking.proofOfDelivery) booking.proofOfDelivery = {};
@@ -144,8 +144,8 @@ exports.updateJobStatus = async (req, res) => {
         // Add to Rider's pending deposit
         await User.findByIdAndUpdate(userId, {
             $inc: {
-                'raiderDetails.earnings.pendingDeposit': Number(cashCollected),
-                'raiderDetails.earnings.cashCollected': Number(cashCollected)
+                'riderDetails.earnings.pendingDeposit': Number(cashCollected),
+                'riderDetails.earnings.cashCollected': Number(cashCollected)
             }
         });
     }
@@ -188,8 +188,8 @@ exports.updateJobStatus = async (req, res) => {
       
       await User.findByIdAndUpdate(userId, {
         $inc: {
-          'raiderDetails.earnings.totalEarnings': estimatedPayout,
-          'raiderDetails.earnings.walletBalance': estimatedPayout
+          'riderDetails.earnings.totalEarnings': estimatedPayout,
+          'riderDetails.earnings.walletBalance': estimatedPayout
         }
       });
     }
@@ -237,7 +237,7 @@ exports.verifyOtp = async (req, res) => {
 exports.handleTranshipment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { currentRaiderId } = req.body; 
+    const { currentRiderId } = req.body; 
 
     const booking = await Booking.findById(id);
     if (!booking) return res.status(404).json({ success: false, error: 'Job not found' });
@@ -251,11 +251,11 @@ exports.handleTranshipment = async (req, res) => {
     
     booking.trackingHistory.push({
       status: 'Relay Handoff Pending',
-      description: 'Current Raider has initiated a handover. Waiting for another Raider to accept.'
+      description: 'Current Rider has initiated a handover. Waiting for another Rider to accept.'
     });
 
     await booking.save();
-    // Return OTP to the initiating raider so they can display it
+    // Return OTP to the initiating rider so they can display it
     res.status(200).json({ success: true, data: booking, handoverOtp: generatedOtp });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to initiate transhipment' });
@@ -265,7 +265,7 @@ exports.handleTranshipment = async (req, res) => {
 exports.acceptHandover = async (req, res) => {
   try {
     const { id } = req.params;
-    const { otp, newRaiderId } = req.body;
+    const { otp, newRiderId } = req.body;
     
     const booking = await Booking.findById(id);
     if (!booking) return res.status(404).json({ success: false, error: 'Job not found' });
@@ -279,30 +279,30 @@ exports.acceptHandover = async (req, res) => {
       return res.status(400).json({ success: false, error: `Invalid Handover OTP (use ${expectedOtp} for testing).` });
     }
     
-    // Mark previous as handed over, add new raider
-    if (booking.assignedRaiders && booking.assignedRaiders.length > 0) {
-      booking.assignedRaiders[booking.assignedRaiders.length - 1].status = 'Handed Over';
+    // Mark previous as handed over, add new rider
+    if (booking.assignedRiders && booking.assignedRiders.length > 0) {
+      booking.assignedRiders[booking.assignedRiders.length - 1].status = 'Handed Over';
       
       booking.transhipmentLogs.push({
-        fromRaider: booking.assignedRaiders[booking.assignedRaiders.length - 1].raiderId,
-        toRaider: newRaiderId,
+        fromRider: booking.assignedRiders[booking.assignedRiders.length - 1].riderId,
+        toRider: newRiderId,
         timestamp: new Date(),
         status: 'Transhipment Complete'
       });
     }
     
-    booking.assignedRaiders.push({
-      raiderId: newRaiderId,
+    booking.assignedRiders.push({
+      riderId: newRiderId,
       status: 'Active'
     });
     
-    booking.currentRider = newRaiderId;
+    booking.currentRider = newRiderId;
     
     booking.status = 'In Transit'; 
     
     booking.trackingHistory.push({
       status: 'In Transit',
-      description: 'Package handed over successfully to a new Raider.'
+      description: 'Package handed over successfully to a new Rider.'
     });
     
     await booking.save();
@@ -316,7 +316,7 @@ exports.toggleShift = async (req, res) => {
   try {
     const { isOnline, isOnShift, isOnBreak, hubCheckIn } = req.body;
     // Mock user for now since no auth
-    // Update logic would go here: await User.findByIdAndUpdate(req.user._id, { 'raiderDetails.isOnline': isOnline, 'raiderDetails.isOnShift': isOnShift, 'raiderDetails.isOnBreak': isOnBreak });
+    // Update logic would go here: await User.findByIdAndUpdate(req.user._id, { 'riderDetails.isOnline': isOnline, 'riderDetails.isOnShift': isOnShift, 'riderDetails.isOnBreak': isOnBreak });
     
     let message = 'Status updated';
     if (hubCheckIn) message = 'Checked in at Hub successfully';
@@ -329,7 +329,7 @@ exports.toggleShift = async (req, res) => {
 };
 
 // --- Onboarding & Profile ---
-exports.onboardRaider = async (req, res) => {
+exports.onboardRider = async (req, res) => {
   try {
     const { userId, vehicleType, vehicleRegistration, roleFlexibility, address, bankDetails, emergencyContact, documents } = req.body;
     
@@ -337,8 +337,8 @@ exports.onboardRaider = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-    user.raiderDetails = {
-      ...user.raiderDetails,
+    user.riderDetails = {
+      ...user.riderDetails,
       vehicleType,
       vehicleRegistration,
       roleFlexibility,
@@ -379,9 +379,9 @@ exports.updateShift = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-    if (isOnline !== undefined) user.raiderDetails.isOnline = isOnline;
-    if (isOnShift !== undefined) user.raiderDetails.isOnShift = isOnShift;
-    if (isOnBreak !== undefined) user.raiderDetails.isOnBreak = isOnBreak;
+    if (isOnline !== undefined) user.riderDetails.isOnline = isOnline;
+    if (isOnShift !== undefined) user.riderDetails.isOnShift = isOnShift;
+    if (isOnBreak !== undefined) user.riderDetails.isOnBreak = isOnBreak;
 
     await user.save();
     
@@ -401,13 +401,13 @@ exports.withdrawEarnings = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, error: 'User not found' });
     
-    if ((user.raiderDetails?.earnings?.walletBalance || 0) < amount) {
+    if ((user.riderDetails?.earnings?.walletBalance || 0) < amount) {
       return res.status(400).json({ success: false, error: 'Insufficient balance' });
     }
     
     await User.findByIdAndUpdate(userId, {
       $inc: {
-        'raiderDetails.earnings.walletBalance': -amount
+        'riderDetails.earnings.walletBalance': -amount
       }
     });
     
@@ -423,7 +423,7 @@ exports.getHistory = async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, error: 'User ID is required' });
 
     const history = await Booking.find({
-      'assignedRaiders.raiderId': userId,
+      'assignedRiders.riderId': userId,
       status: { $in: ['Delivered', 'Source Hub Received'] }
     }).sort({ updatedAt: -1 });
 

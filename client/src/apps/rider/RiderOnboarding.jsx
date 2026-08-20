@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Truck, Upload, CheckCircle2, ChevronRight, User, Briefcase, Phone, MapPin } from 'lucide-react';
 
-export default function RaiderOnboarding({ onComplete }) {
+export default function RiderOnboarding({ onComplete }) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     vehicleType: '2-Wheeler (Bike)',
@@ -97,7 +97,7 @@ export default function RaiderOnboarding({ onComplete }) {
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Type</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {['2-Wheeler (Bike)', '3-Wheeler (Auto)', 'Mini Truck', 'Heavy Vehicle'].map(type => (
+                  {['Scooter', 'Mini 3W', '3 Wheeler', 'Tata Ace', 'Pickup 8ft', 'Pickup 9ft', '14ft', '17ft'].map(type => (
                     <button 
                       key={type}
                       type="button"

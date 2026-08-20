@@ -3,10 +3,10 @@ import { User as UserIcon, Settings as SettingsIcon, ChevronDown, LogOut } from 
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 
-export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
-  const [isOnline, setIsOnline] = useState(user?.raiderDetails?.isOnline || false);
-  const [isOnShift, setIsOnShift] = useState(user?.raiderDetails?.isOnShift || false);
-  const [isOnBreak, setIsOnBreak] = useState(user?.raiderDetails?.isOnBreak || false);
+export default function RiderHeader({ user, onLogout, onShowEarnings }) {
+  const [isOnline, setIsOnline] = useState(user?.riderDetails?.isOnline || false);
+  const [isOnShift, setIsOnShift] = useState(user?.riderDetails?.isOnShift || false);
+  const [isOnBreak, setIsOnBreak] = useState(user?.riderDetails?.isOnBreak || false);
   
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -14,10 +14,10 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
 
   // Sync state if user prop changes
   useEffect(() => {
-    if (user?.raiderDetails) {
-      setIsOnline(user.raiderDetails.isOnline || false);
-      setIsOnShift(user.raiderDetails.isOnShift || false);
-      setIsOnBreak(user.raiderDetails.isOnBreak || false);
+    if (user?.riderDetails) {
+      setIsOnline(user.riderDetails.isOnline || false);
+      setIsOnShift(user.riderDetails.isOnShift || false);
+      setIsOnBreak(user.riderDetails.isOnBreak || false);
     }
   }, [user]);
 
@@ -48,7 +48,7 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
         if (!isOnBreak) payload.isOnline = false;
       }
 
-      const res = await api.post('/raider/shift', payload);
+      const res = await api.post('/rider/shift', payload);
       if (res.data.success) {
          if (type === 'online') setIsOnline(payload.isOnline);
          if (type === 'shift') { setIsOnShift(payload.isOnShift); setIsOnline(payload.isOnline); setIsOnBreak(payload.isOnBreak || false); }
@@ -102,7 +102,7 @@ export default function RaiderHeader({ user, onLogout, onShowEarnings }) {
           {profileDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/60 py-2 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-3 border-b border-slate-100/50 mb-2 bg-slate-50/30 rounded-t-2xl mt-[-8px]">
-                <p className="text-sm font-black text-slate-900">{user?.name || 'Raider'}</p>
+                <p className="text-sm font-black text-slate-900">{user?.name || 'Rider'}</p>
                 <p className="text-xs font-bold text-slate-500 truncate">{user?.phone || user?.email || 'No contact info'}</p>
               </div>
               

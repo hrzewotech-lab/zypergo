@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Navigation, MapPin, Camera, Key, CheckCircle, Package, ArrowRight, Upload, XCircle, ScanBarcode, Banknote, Phone, CreditCard, FileText } from 'lucide-react';
 import api from '../../api';
 
-export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
+export default function RiderTaskFlow({ activeJob, onCompleteJob }) {
   const [taskStep, setTaskStep] = useState(() => {
     if (!activeJob) return 1;
     if (activeJob.status === 'Arrived at Pickup') return 2;
@@ -14,7 +14,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
   const [cash, setCash] = useState('');
   const [loading, setLoading] = useState(false);
   const [transhipmentMode, setTranshipmentMode] = useState(false);
-  const [scannedRaiderId, setScannedRaiderId] = useState('');
+  const [scannedRiderId, setScannedRiderId] = useState('');
   const [generatedHandoverOtp, setGeneratedHandoverOtp] = useState('');
   
   // NDR (Exception Handling) State
@@ -35,7 +35,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
       
       const payload = { 
         status, 
-        reason: exceptionReason || 'Raider action',
+        reason: exceptionReason || 'Rider action',
         cashCollected: cash || 0,
         parcelCondition,
         userId: user?._id
@@ -51,7 +51,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
         payload.gpsLocation = { lat: 17.4401, lng: 78.3489 };
       }
 
-      const res = await api.post(`/raider/jobs/${activeJob._id}/update-status`, payload);
+      const res = await api.post(`/rider/jobs/${activeJob._id}/update-status`, payload);
       
       if (res.data.success) {
         if (isComplete || status === 'Failed' || status === 'Cancelled') {
@@ -78,7 +78,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
   const verifyOtp = async (nextStep) => {
     setLoading(true);
     try {
-      const res = await api.post(`/raider/jobs/${activeJob._id}/verify-otp`, { otp });
+      const res = await api.post(`/rider/jobs/${activeJob._id}/verify-otp`, { otp });
       if (res.data.success) {
         setTaskStep(nextStep);
       }
@@ -95,7 +95,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
       const userStr = localStorage.getItem('zypergo_user');
       const user = userStr ? JSON.parse(userStr) : null;
       
-      const res = await api.post(`/raider/jobs/${activeJob._id}/transhipment`, { currentRaiderId: user?._id });
+      const res = await api.post(`/rider/jobs/${activeJob._id}/transhipment`, { currentRiderId: user?._id });
       if (res.data.success) {
         setGeneratedHandoverOtp(res.data.handoverOtp);
       } else {
@@ -443,7 +443,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                 
                 {generatedHandoverOtp ? (
                   <div className="mb-6">
-                    <p className="text-slate-500 text-sm mb-4">Show this OTP to the new Raider to securely transfer custody.</p>
+                    <p className="text-slate-500 text-sm mb-4">Show this OTP to the new Rider to securely transfer custody.</p>
                     <div className="text-5xl font-black text-[#006D77] tracking-[0.5em] text-center bg-teal-50 border border-teal-200 py-6 rounded-2xl shadow-inner mb-6">
                       {generatedHandoverOtp}
                     </div>
@@ -456,7 +456,7 @@ export default function RaiderTaskFlow({ activeJob, onCompleteJob }) {
                   </div>
                 ) : (
                   <div className="mb-6">
-                    <p className="text-slate-500 text-sm mb-6">Initiate a secure handover to another Raider.</p>
+                    <p className="text-slate-500 text-sm mb-6">Initiate a secure handover to another Rider.</p>
                     <button 
                       onClick={handleTranshipment} 
                       disabled={loading}

@@ -96,11 +96,10 @@ exports.calculatePrice = async (req, res) => {
     if (!baseRule) {
       // Dynamic fallback rules based on vehicle
       let vBase = 50; let vPerKm = 5; let vPerKg = 10;
-      if (vehicle === 'Bike') { vBase = 40; vPerKm = 8; vPerKg = 5; }
-      else if (vehicle === 'Auto') { vBase = 60; vPerKm = 10; vPerKg = 12; }
-      else if (vehicle === 'Car') { vBase = 100; vPerKm = 12; vPerKg = 10; }
-      else if (vehicle === 'Mini Truck') { vBase = 150; vPerKm = 15; vPerKg = 10; }
-      else if (vehicle === 'Heavy Truck') { vBase = 500; vPerKm = 25; vPerKg = 8; }
+      if (vehicle === 'Scooter') { vBase = 40; vPerKm = 8; vPerKg = 5; }
+      else if (vehicle === 'Mini 3W' || vehicle === '3 Wheeler') { vBase = 60; vPerKm = 10; vPerKg = 12; }
+      else if (vehicle === 'Tata Ace' || vehicle === 'Pickup 8ft') { vBase = 150; vPerKm = 15; vPerKg = 10; }
+      else if (vehicle === 'Pickup 9ft' || vehicle === '14ft' || vehicle === '17ft') { vBase = 500; vPerKm = 25; vPerKg = 8; }
 
       baseRule = {
         rates: { basePrice: vBase, perKgRate: vPerKg, perKmRate: vPerKm, handlingCost: 0, minimumCharge: vBase, gstPercentage: 18, insurancePercentage: 0, discountPercentage: 0, partnerCost: vBase * 0.4, riderCost: vBase * 0.3, marginPercentage: 20 }

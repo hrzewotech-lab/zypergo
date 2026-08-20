@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Truck, Navigation, CheckCircle2, MapPin, Package, AlertTriangle, Bell, Settings, Phone, Camera, ArrowRight, ShieldCheck, Clock, LayoutDashboard, Wallet, User as UserIcon, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
-import RaiderTaskFlow from './RaiderTaskFlow';
-import RaiderHeader from './RaiderHeader';
+import RiderTaskFlow from './RiderTaskFlow';
+import RiderHeader from './RiderHeader';
 
-export default function RaiderDashboard({ user, onLogout }) {
+export default function RiderDashboard({ user, onLogout }) {
   const [availableJobs, setAvailableJobs] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
@@ -29,7 +29,7 @@ export default function RaiderDashboard({ user, onLogout }) {
       const resAll = await api.get('/admin/bookings');
       if (resAll.data.success) {
         const allBookings = resAll.data.data;
-        const active = allBookings.filter(b => ['Rider Assigned', 'Rider On the Way', 'Arrived at Pickup', 'Picked Up', 'In Transit', 'Out for Delivery'].includes(b.status) && b.assignedRaiders?.some(r => r.raiderId === user?._id || true));
+        const active = allBookings.filter(b => ['Rider Assigned', 'Rider On the Way', 'Arrived at Pickup', 'Picked Up', 'In Transit', 'Out for Delivery'].includes(b.status) && b.assignedRiders?.some(r => r.riderId === user?._id || true));
         setMyJobs(active);
         
         if (active.length > 0 && !activeJob) {
@@ -39,7 +39,7 @@ export default function RaiderDashboard({ user, onLogout }) {
 
       // 2. Fetch Available Jobs (only works if online & on shift on backend)
       if (user?._id) {
-        const resAvail = await api.get(`/raider/jobs?userId=${user._id}`);
+        const resAvail = await api.get(`/rider/jobs?userId=${user._id}`);
         if (resAvail.data.success) {
           setAvailableJobs(resAvail.data.data);
         }
@@ -73,7 +73,7 @@ export default function RaiderDashboard({ user, onLogout }) {
             // Push to backend
             if (user?._id) {
                try {
-                 await api.post('/raider/location', { userId: user._id, lat: latitude, lng: longitude });
+                 await api.post('/rider/location', { userId: user._id, lat: latitude, lng: longitude });
                } catch (e) {
                  // Ignore background ping fails
                }
@@ -92,7 +92,7 @@ export default function RaiderDashboard({ user, onLogout }) {
       }
     };
 
-    if (user?.raiderDetails?.isOnline && user?.raiderDetails?.isOnShift) {
+    if (user?.riderDetails?.isOnline && user?.riderDetails?.isOnShift) {
       startTracking();
     } else {
       stopTracking();
@@ -106,7 +106,7 @@ export default function RaiderDashboard({ user, onLogout }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [user?.raiderDetails?.isOnline, user?.raiderDetails?.isOnShift]);
+  }, [user?.riderDetails?.isOnline, user?.riderDetails?.isOnShift]);
 
   const handleStatusUpdate = async (newStatus, payload = {}) => {
     if (!activeJob) return;
@@ -129,12 +129,12 @@ export default function RaiderDashboard({ user, onLogout }) {
 
   const acceptJob = async (job) => {
     if (job.status === 'Relay Handoff Pending' || job.status === 'Transhipment Pending') {
-      const enteredOtp = window.prompt("Enter the 4-digit Handover OTP from the other Raider:");
+      const enteredOtp = window.prompt("Enter the 4-digit Handover OTP from the other Rider:");
       if (!enteredOtp) return;
       
       setLoading(true);
       try {
-        const res = await api.post(`/raider/jobs/${job._id}/accept-handover`, { newRaiderId: user?._id, otp: enteredOtp });
+        const res = await api.post(`/rider/jobs/${job._id}/accept-handover`, { newRiderId: user?._id, otp: enteredOtp });
         if (res.data.success) {
           fetchJobs();
           setActiveJob(res.data.data);
@@ -150,7 +150,7 @@ export default function RaiderDashboard({ user, onLogout }) {
 
     setLoading(true);
     try {
-      const res = await api.put(`/admin/bookings/${job._id}/assign-raider`, { raiderId: user?._id });
+      const res = await api.put(`/admin/bookings/${job._id}/assign-rider`, { riderId: user?._id });
       if (res.data.success) {
         fetchJobs();
         setActiveJob(res.data.data);
@@ -174,12 +174,12 @@ export default function RaiderDashboard({ user, onLogout }) {
     }
 
     try {
-      // Use the actual raider endpoint which has the strict validations
-      const res = await api.post(`/raider/jobs/${activeJob._id}/update-status`, {
+      // Use the actual rider endpoint which has the strict validations
+      const res = await api.post(`/rider/jobs/${activeJob._id}/update-status`, {
         status: newStatus,
         otp,
         photoUrl,
-        reason: 'Updated via Raider App'
+        reason: 'Updated via Rider App'
       });
       if (res.data.success) {
         setActiveJob(res.data.data);
@@ -197,8 +197,8 @@ export default function RaiderDashboard({ user, onLogout }) {
       // Use existing endpoint
       const res = await api.post('/finance-settlements/deposit', {
         riderId: user?._id,
-        amount: user?.raiderDetails?.earnings?.pendingDeposit || 0,
-        expectedAmount: user?.raiderDetails?.earnings?.pendingDeposit || 0,
+        amount: user?.riderDetails?.earnings?.pendingDeposit || 0,
+        expectedAmount: user?.riderDetails?.earnings?.pendingDeposit || 0,
         notes: 'Deposited at Hub via App'
       });
       if (res.data.success) {
@@ -215,7 +215,7 @@ export default function RaiderDashboard({ user, onLogout }) {
     if (!activeJob) return null;
 
     return (
-      <RaiderTaskFlow 
+      <RiderTaskFlow 
         activeJob={activeJob} 
         onCompleteJob={() => {
           setActiveJob(null);
@@ -227,7 +227,7 @@ export default function RaiderDashboard({ user, onLogout }) {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col text-slate-900">
-      <RaiderHeader user={user} onLogout={onLogout} onShowEarnings={() => {}} />
+      <RiderHeader user={user} onLogout={onLogout} onShowEarnings={() => {}} />
       
       {isOffline && (
         <div className="bg-red-600 text-white text-center py-2 text-sm font-bold flex items-center justify-center gap-2 z-50">
@@ -251,7 +251,7 @@ export default function RaiderDashboard({ user, onLogout }) {
              </div>
            ) : (
              <div className="flex flex-col items-center text-center">
-                {(!user?.raiderDetails?.isOnline || !user?.raiderDetails?.isOnShift) ? (
+                {(!user?.riderDetails?.isOnline || !user?.riderDetails?.isOnShift) ? (
                    // Offline State
                    <div className="bg-white/70 backdrop-blur-xl p-10 rounded-3xl border border-white/60 max-w-sm w-full shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
                      <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-6 flex items-center justify-center border border-slate-200 shadow-inner">
@@ -305,7 +305,7 @@ export default function RaiderDashboard({ user, onLogout }) {
 
         </div>
 
-        {(!activeJob && availableJobs.length > 0 && user?.raiderDetails?.isOnline && user?.raiderDetails?.isOnShift) && (() => {
+        {(!activeJob && availableJobs.length > 0 && user?.riderDetails?.isOnline && user?.riderDetails?.isOnShift) && (() => {
           const job = availableJobs[0];
           const pickupParts = (job.pickupLocation?.address || '').toLowerCase().split(',').map(s => s.trim());
           const dropParts = (job.dropLocation?.address || '').toLowerCase().split(',').map(s => s.trim());

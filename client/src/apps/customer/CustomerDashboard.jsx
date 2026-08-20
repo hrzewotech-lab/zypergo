@@ -70,11 +70,15 @@ export default function CustomerDashboard() {
     <div className="flex flex-col bg-slate-50 min-h-full">
       {/* Top Header */}
       <div className="flex justify-between items-center px-4 py-4 md:px-8 md:pt-8 md:pb-4 bg-white md:bg-transparent sticky top-0 z-10 md:static shadow-sm md:shadow-none">
-        <div className="flex items-center gap-2 text-slate-800">
+        <div className="flex items-center gap-3 text-slate-800">
+          <div className="flex items-center gap-1.5 border-r border-slate-200 pr-3 mr-1">
+            <img src="/images/logo.png" alt="ZyperGo" className="h-6 w-auto object-contain" />
+            <span className="font-black text-[#006D77] tracking-tight text-lg">ZyperGo</span>
+          </div>
           <MapPin size={20} className="text-[#006D77]" />
           <div className="flex flex-col">
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Current Location</span>
-            <span className="text-sm font-black flex items-center gap-1">{locationName} <ChevronDownIcon /></span>
+            <span className="text-sm font-black flex items-center gap-1">{locationName}</span>
           </div>
         </div>
         <button 

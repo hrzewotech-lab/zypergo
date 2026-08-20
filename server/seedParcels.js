@@ -28,7 +28,7 @@ const seedParcels = async () => {
       {
         sender: customer._id,
         trackingId: 'ZGO-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        status: 'Booking Confirmed', // Visible to nearby raiders
+        status: 'Booking Confirmed', // Visible to nearby riders
         pickupLocation: {
           address: '123 Seed Street, Madhapur',
           pincode: '500081',
@@ -98,7 +98,7 @@ const seedParcels = async () => {
     ];
 
     await Booking.insertMany(bookingsToSeed);
-    console.log(`Successfully seeded ${bookingsToSeed.length} bookings for raiders to pick up.`);
+    console.log(`Successfully seeded ${bookingsToSeed.length} bookings for riders to pick up.`);
     
     process.exit(0);
   } catch (error) {

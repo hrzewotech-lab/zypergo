@@ -2,8 +2,8 @@ import React from 'react';
 import { User as UserIcon, MapPin, Truck, FileText, CheckCircle2, ShieldCheck, Mail, Phone, Calendar, ChevronLeft, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function RaiderProfile({ user, onLogout }) {
-  const approvalStatus = user?.raiderDetails?.approvalStatus || 'Pending';
+export default function RiderProfile({ user, onLogout }) {
+  const approvalStatus = user?.riderDetails?.approvalStatus || 'Pending';
   const navigate = useNavigate();
   
   return (
@@ -37,14 +37,14 @@ export default function RaiderProfile({ user, onLogout }) {
           <div className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col items-center text-center relative overflow-hidden">
              <div className="absolute top-0 right-0 w-32 h-32 bg-[#FFB703]/10 rounded-full blur-2xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
              
-             {user?.raiderDetails?.documents?.profileImageUrl ? (
-               <img src={user.raiderDetails.documents.profileImageUrl} alt="Profile" className="w-24 h-24 rounded-[2rem] object-cover mb-4 shadow-sm border border-slate-200" />
+             {user?.riderDetails?.documents?.profileImageUrl ? (
+               <img src={user.riderDetails.documents.profileImageUrl} alt="Profile" className="w-24 h-24 rounded-[2rem] object-cover mb-4 shadow-sm border border-slate-200" />
              ) : (
                <div className="w-24 h-24 bg-slate-100 rounded-[2rem] flex items-center justify-center mb-4 shadow-sm border border-slate-200">
                  <UserIcon size={40} className="text-slate-400" />
                </div>
              )}
-             <h2 className="text-2xl font-black text-slate-900 tracking-tight">{user?.name || 'Raider Name'}</h2>
+             <h2 className="text-2xl font-black text-slate-900 tracking-tight">{user?.name || 'Rider Name'}</h2>
              <p className="text-sm text-slate-500 font-medium mb-4">{user?.phone}</p>
              
              <div className={`px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm ${
@@ -60,7 +60,7 @@ export default function RaiderProfile({ user, onLogout }) {
              <h3 className="text-[10px] font-black uppercase tracking-widest mb-1 text-teal-200">Total Trips</h3>
              <p className="text-4xl font-black tracking-tighter mb-4">124</p>
              <h3 className="text-[10px] font-black uppercase tracking-widest mb-1 text-teal-200">Performance Score</h3>
-             <p className="text-2xl font-bold tracking-tight">{user?.raiderDetails?.performance?.completionRate || 100}%</p>
+             <p className="text-2xl font-bold tracking-tight">{user?.riderDetails?.performance?.completionRate || 100}%</p>
           </div>
         </div>
 
@@ -82,7 +82,7 @@ export default function RaiderProfile({ user, onLogout }) {
                 </div>
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 sm:col-span-2">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Address</p>
-                  <p className="font-bold text-slate-800 flex items-center gap-2"><MapPin size={14} className="text-slate-400"/> {user?.raiderDetails?.address || 'Not provided'}</p>
+                  <p className="font-bold text-slate-800 flex items-center gap-2"><MapPin size={14} className="text-slate-400"/> {user?.riderDetails?.address || 'Not provided'}</p>
                 </div>
              </div>
           </div>
@@ -95,11 +95,11 @@ export default function RaiderProfile({ user, onLogout }) {
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Vehicle Type</p>
-                  <p className="font-bold text-slate-800">{user?.raiderDetails?.vehicleType || 'Bike'}</p>
+                  <p className="font-bold text-slate-800">{user?.riderDetails?.vehicleType || 'Bike'}</p>
                 </div>
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Registration</p>
-                  <p className="font-bold text-slate-800 font-mono">{user?.raiderDetails?.vehicleRegistration || 'TS09EA1234'}</p>
+                  <p className="font-bold text-slate-800 font-mono">{user?.riderDetails?.vehicleRegistration || 'TS09EA1234'}</p>
                 </div>
              </div>
           </div>
@@ -116,7 +116,7 @@ export default function RaiderProfile({ user, onLogout }) {
                  { label: 'PAN Card', key: 'panUrl' },
                  { label: 'Vehicle RC', key: 'rcUrl' }
                ].map((doc) => {
-                 const docUrl = user?.raiderDetails?.documents?.[doc.key];
+                 const docUrl = user?.riderDetails?.documents?.[doc.key];
                  return (
                    <div key={doc.label} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
                      <span className="font-bold text-slate-700">{doc.label}</span>

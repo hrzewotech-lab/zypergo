@@ -14,7 +14,7 @@ export default function BookingManagement() {
 
   // Detail Panel
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [availableRaiders, setAvailableRaiders] = useState([]);
+  const [availableRiders, setAvailableRiders] = useState([]);
   
   // Transit Form
   const [transitData, setTransitData] = useState({ carrierName: '', vehicleNumber: '', dispatchTime: '', arrivalTime: '' });
@@ -48,25 +48,25 @@ export default function BookingManagement() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  const fetchRaiders = async () => {
+  const fetchRiders = async () => {
     try {
-      const res = await api.get('/admin/raiders/available');
-      setAvailableRaiders(res.data.data);
+      const res = await api.get('/admin/riders/available');
+      setAvailableRiders(res.data.data);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleAssignRaider = async (raiderId) => {
+  const handleAssignRider = async (riderId) => {
     if (!selectedBooking) return;
     try {
-      const res = await api.put(`/admin/bookings/${selectedBooking._id}/assign-raider`, { raiderId });
+      const res = await api.put(`/admin/bookings/${selectedBooking._id}/assign-rider`, { riderId });
       if (res.data.success) {
         setSelectedBooking(res.data.data);
         fetchBookings();
       }
     } catch (err) {
-      alert('Failed to assign raider');
+      alert('Failed to assign rider');
     }
   };
 
@@ -168,7 +168,7 @@ export default function BookingManagement() {
                 <tr><td colSpan="6" className="p-8 text-center text-slate-500">No bookings found for this filter.</td></tr>
               ) : (
                 bookings.map(b => (
-                  <tr key={b._id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => { setSelectedBooking(b); fetchRaiders(); }}>
+                  <tr key={b._id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => { setSelectedBooking(b); fetchRiders(); }}>
                     <td className="p-4 font-mono font-bold text-[#006D77]">{b.trackingId}</td>
                     <td className="p-4">
                       <p className="font-bold text-slate-800 flex items-center gap-1"><MapPin size={12}/> {b.pickupLocation.pincode} &rarr; {b.dropLocation.pincode}</p>
@@ -238,16 +238,16 @@ export default function BookingManagement() {
             {/* Manual Assignment */}
             {['Pending', 'Booking Confirmed'].includes(selectedBooking.status) && (
               <div>
-                <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Assign Raider</h4>
+                <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-4">Assign Rider</h4>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                   <select 
                     className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none mb-3"
-                    onChange={(e) => handleAssignRaider(e.target.value)}
+                    onChange={(e) => handleAssignRider(e.target.value)}
                     defaultValue=""
                   >
-                    <option value="" disabled>Select an active Raider...</option>
-                    {availableRaiders.map(r => (
-                      <option key={r._id} value={r._id}>{r.name} - {r.phone} ({r.raiderDetails?.vehicleType})</option>
+                    <option value="" disabled>Select an active Rider...</option>
+                    {availableRiders.map(r => (
+                      <option key={r._id} value={r._id}>{r.name} - {r.phone} ({r.riderDetails?.vehicleType})</option>
                     ))}
                   </select>
                 </div>

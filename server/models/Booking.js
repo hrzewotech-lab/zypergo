@@ -77,8 +77,8 @@ const bookingSchema = new mongoose.Schema({
     assignedPartner: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
     deliveryType: { type: String }
   },
-  assignedRaiders: [{
-    raiderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  assignedRiders: [{
+    riderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     assignedAt: { type: Date, default: Date.now },
     status: { type: String, enum: ['Active', 'Handed Over'], default: 'Active' }
   }],
@@ -87,8 +87,8 @@ const bookingSchema = new mongoose.Schema({
     ref: 'User'
   },
   transhipmentLogs: [{
-    fromRaider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    toRaider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    fromRider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    toRider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     location: { lat: Number, lng: Number },
     timestamp: { type: Date, default: Date.now },
     status: { type: String, default: 'Transhipment Complete' }

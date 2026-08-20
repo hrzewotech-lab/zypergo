@@ -23,8 +23,8 @@ const roles = [
     shadow: 'shadow-[0_10px_40px_-10px_rgba(226,149,120,0.3)]'
   },
   {
-    id: 'raider',
-    title: 'Raider',
+    id: 'rider',
+    title: 'Rider',
     description: 'Manage your pickup and delivery tasks',
     icon: <Truck strokeWidth={1.5} />,
     color: 'from-[#FFB703] to-[#FFD166]',
@@ -48,7 +48,7 @@ export default function LoginPage() {
   const handleRoleSelect = (roleId) => {
     const currentHost = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
-    const baseDomain = currentHost.replace(/^(admin[.-]|customer[.-]|raider[.-]|hamali[.-]|partner[.-]|hub[.-])/, '');
+    const baseDomain = currentHost.replace(/^(admin[.-]|customer[.-]|rider[.-]|hamali[.-]|partner[.-]|hub[.-])/, '');
     
     // Redirect to subdomain login (using hyphen for Vercel support)
     const protocol = window.location.protocol;
